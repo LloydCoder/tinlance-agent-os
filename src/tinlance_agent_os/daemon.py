@@ -107,7 +107,8 @@ class AgentOSDaemon:
         chunks: list[bytes] = []
         total = 0
         while True:
-            chunk = conn.recv(min(self.config.recv_chunk_bytes, self.config.max_request_bytes + 1 - total))
+            remaining = self.config.max_request_bytes + 1 - total
+            chunk = conn.recv(min(self.config.recv_chunk_bytes, remaining))
             if not chunk:
                 break
             chunks.append(chunk)
