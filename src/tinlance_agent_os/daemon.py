@@ -1,6 +1,6 @@
 """Local Agent OS control daemon over a Unix domain socket."""
 from __future__ import annotations
-import json, os, socket, threading
+import array, json, os, socket, threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -36,6 +36,7 @@ class AgentOSDaemon:
     def _handle(self, conn: socket.socket) -> None:
         with conn:
             conn.settimeout(5)
+            self._verify_peer(conn)
             raw = conn.recv(self.config.max_request_bytes + 1)
             if len(raw) > self.config.max_request_bytes:
                 self._send(conn, {"ok":False,"error":"request_too_large"}); return
@@ -48,6 +49,15 @@ class AgentOSDaemon:
                 self._send(conn, {"ok":False,"error":"invalid_request","detail":str(exc)})
             except Exception:
                 self._send(conn, {"ok":False,"error":"internal_error"})
+    @staticmethod
+    def _verify_peer(conn: socket.socket) -> None:
+        if not hasattr(socket, "SO_PEERCRED"):
+            return
+        creds = array.array("i", [0, 0, 0])
+        conn.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, creds)
+        if creds[1] != os.getuid():
+            raise PermissionError("local daemon peer is not the owning user")
+
     @staticmethod
     def _send(conn: socket.socket, response: dict[str, object]) -> None:
         conn.sendall((json.dumps(response,separators=(",",":"))+"\n").encode())
