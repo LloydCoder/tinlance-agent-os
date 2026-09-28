@@ -1,5 +1,4 @@
 """Capability-scoped extension SDK."""
-
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -8,7 +7,7 @@ from .applications import AgentManifest
 
 
 class Extension(Protocol):
-    def start(self, context: ExtensionContext) -> None: ...
+    def start(self, context: "ExtensionContext") -> None: ...
 
     def stop(self) -> None: ...
 
