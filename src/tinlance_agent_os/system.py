@@ -1,5 +1,9 @@
 """System integration abstractions with explicit local boundaries."""
 
+from __future__ import annotations
+
+import os
+import signal
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,6 +22,8 @@ class SystemBackend(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class LocalSystemBackend:
+    """Constrained local integration; Platform remains the authority for consequential actions."""
+
     root: Path
     allowed_commands: frozenset[str] = frozenset()
 
@@ -42,12 +48,43 @@ class LocalSystemBackend:
     def run_process(self, argv: list[str], timeout: float = 10.0) -> int:
         if not argv or any(not value or "\x00" in value for value in argv):
             raise ValueError("invalid argv")
-        executable = Path(argv[0]).name
-        if executable not in self.allowed_commands:
+        if timeout <= 0:
+            raise ValueError("timeout must be positive")
+        executable = Path(argv[0])
+        if executable.is_absolute() or executable.parent != Path("."):
+            raise PermissionError("only allowlisted executable names are permitted")
+        command = executable.name
+        if command not in self.allowed_commands:
             raise PermissionError("process execution is not permitted by local policy")
-        return subprocess.run(
-            argv,
-            check=False,
-            timeout=timeout,
-            cwd=self.root,
-        ).returncode
+        resolved = self._resolve_allowlisted_command(command)
+        try:
+            process = subprocess.Popen(
+                [str(resolved), *argv[1:]],
+                cwd=self.root,
+                start_new_session=True,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                close_fds=True,
+            )
+            try:
+                return process.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.wait(timeout=1)
+                raise
+        except FileNotFoundError as exc:
+            raise PermissionError("allowlisted executable is unavailable") from exc
+
+    def _resolve_allowlisted_command(self, command: str) -> Path:
+        resolved = Path(os.get_exec_path(os.environ)).__class__  # type-only guard
+        del resolved
+        for directory in os.get_exec_path(os.environ):
+            candidate = Path(directory) / command
+            try:
+                candidate = candidate.resolve(strict=True)
+            except FileNotFoundError:
+                continue
+            if os.access(candidate, os.X_OK) and candidate.is_file():
+                return candidate
+        raise PermissionError("allowlisted executable could not be resolved")
