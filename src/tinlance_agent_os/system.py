@@ -61,11 +61,12 @@ class LocalSystemBackend:
             process = subprocess.Popen(
                 [str(resolved), *argv[1:]],
                 cwd=self.root,
-                start_new_session=True,
+                env={"PATH": "/usr/bin:/bin"},
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 close_fds=True,
+                start_new_session=True,
             )
             try:
                 return process.wait(timeout=timeout)
@@ -76,15 +77,14 @@ class LocalSystemBackend:
         except FileNotFoundError as exc:
             raise PermissionError("allowlisted executable is unavailable") from exc
 
-    def _resolve_allowlisted_command(self, command: str) -> Path:
-        resolved = Path(os.get_exec_path(os.environ)).__class__  # type-only guard
-        del resolved
-        for directory in os.get_exec_path(os.environ):
-            candidate = Path(directory) / command
+    @staticmethod
+    def _resolve_allowlisted_command(command: str) -> Path:
+        for directory in (Path("/usr/bin"), Path("/bin"), Path("/usr/local/bin")):
+            candidate = directory / command
             try:
-                candidate = candidate.resolve(strict=True)
+                resolved = candidate.resolve(strict=True)
             except FileNotFoundError:
                 continue
-            if os.access(candidate, os.X_OK) and candidate.is_file():
-                return candidate
+            if resolved.is_file() and os.access(resolved, os.X_OK):
+                return resolved
         raise PermissionError("allowlisted executable could not be resolved")
