@@ -1,9 +1,9 @@
 """Durable local Agent OS state store."""
+
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-
 
 
 @dataclass(frozen=True, slots=True)
