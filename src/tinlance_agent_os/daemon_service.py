@@ -1,4 +1,5 @@
 """Application service for local Agent OS lifecycle."""
+
 from __future__ import annotations
 
 import json
@@ -10,6 +11,7 @@ from .contracts import AgentPlatformClient
 from .daemon import AgentOSDaemon, DaemonConfig
 from .domain import Session, Task, TaskState, Workspace, utc_now
 from .store import StateStore
+
 
 
 @dataclass(slots=True)
