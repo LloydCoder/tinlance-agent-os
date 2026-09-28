@@ -15,8 +15,8 @@ from .errors import (
     PlatformAuthenticationError,
     PlatformAuthorizationError,
     PlatformProtocolError,
-    PlatformUnavailableError,
     PlatformTransportError,
+    PlatformUnavailableError,
     PlatformVersionError,
 )
 
@@ -34,10 +34,17 @@ class PlatformRequestContext:
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
-        for value, name in ((self.tenant_id, 'tenant_id'), (self.subject_id, 'subject_id'), (self.request_id, 'request_id')):
+        values = (
+            (self.tenant_id, 'tenant_id'),
+            (self.subject_id, 'subject_id'),
+            (self.request_id, 'request_id'),
+        )
+        for value, name in values:
             if not value or value != value.strip():
                 raise ValueError(f'{name} must be non-empty and normalized')
-        if self.trace_id is not None and (not self.trace_id or self.trace_id != self.trace_id.strip()):
+        if self.trace_id is not None and (
+            not self.trace_id or self.trace_id != self.trace_id.strip()
+        ):
             raise ValueError('trace_id must be normalized when provided')
 
 class AccessTokenProvider(Protocol):
@@ -143,12 +150,19 @@ class HttpPlatformTransport:
                 time.sleep(self.retry_backoff_seconds * (2**attempt))
         if last_error is not None:
             if isinstance(last_error, _RetryableResponse):
-                raise PlatformUnavailableError('Platform remained unavailable after permitted retries') from last_error
+                raise PlatformUnavailableError(
+                    'Platform remained unavailable after permitted retries'
+                ) from last_error
             raise last_error
         raise PlatformUnavailableError('Platform request failed')
 
     def _send_once(self, body: bytes, headers: Mapping[str, str]) -> Mapping[str, object]:
-        request = urllib.request.Request(self.endpoint, data=body, headers=dict(headers), method='POST')
+        request = urllib.request.Request(
+            self.endpoint,
+            data=body,
+            headers=dict(headers),
+            method='POST',
+        )
         try:
             opener = urllib.request.build_opener(_NoRedirectHandler())
             with opener.open(request, timeout=self.timeout_seconds) as response:
