@@ -5,16 +5,19 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
+
 class FleetState(StrEnum):
     ONLINE = "online"
     OFFLINE = "offline"
     DRAINING = "draining"
+
 
 @dataclass(frozen=True, slots=True)
 class RemoteAgent:
     agent_id: str
     endpoint: str
     state: FleetState
+
 
 @dataclass(slots=True)
 class FleetRegistry:
