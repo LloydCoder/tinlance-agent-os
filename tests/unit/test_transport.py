@@ -60,12 +60,12 @@ def context() -> PlatformRequestContext:
 
 def test_https_is_required_by_default() -> None:
     with pytest.raises(ValueError):
-        HttpPlatformTransport("http://example.com", context(), StaticAccessTokenProvider("token"))
+        HttpPlatformTransport("http://example.com", StaticAccessTokenProvider("token"))
 
 
 def test_transport_propagates_authenticated_context(server) -> None:
     transport = HttpPlatformTransport(
-        server, context(), StaticAccessTokenProvider("secret"), allow_insecure_localhost=True
+        server, StaticAccessTokenProvider("secret"), allow_insecure_localhost=True
     )
     payload = transport.send(operation="health", payload={}, context=context(), idempotent=True)
     assert payload["ready"] is True
@@ -79,14 +79,14 @@ def test_authentication_and_version_fail_closed(server) -> None:
     Handler.response_status = 401
     with pytest.raises(PlatformAuthenticationError):
         HttpPlatformTransport(
-            server, context(), StaticAccessTokenProvider("secret"), allow_insecure_localhost=True
+            server, StaticAccessTokenProvider("secret"), allow_insecure_localhost=True
         ).send(operation="health", payload={}, context=context(), idempotent=True)
 
     Handler.response_status = 200
     Handler.response_body = {"api_version": "999", "status": "ok", "payload": {}}
     with pytest.raises(PlatformVersionError):
         HttpPlatformTransport(
-            server, context(), StaticAccessTokenProvider("secret"), allow_insecure_localhost=True
+            server, StaticAccessTokenProvider("secret"), allow_insecure_localhost=True
         ).send(operation="health", payload={}, context=context(), idempotent=True)
 
 
