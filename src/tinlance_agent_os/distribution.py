@@ -1,5 +1,4 @@
 """Production/distribution metadata and safe update state machine."""
-
 import hashlib
 from dataclasses import dataclass
 from enum import StrEnum
