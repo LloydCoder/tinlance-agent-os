@@ -227,6 +227,7 @@ class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
     ) -> urllib.request.Request | None:
         raise PlatformTransportError("Platform endpoint redirects are not permitted")
 
+
 class _RetryableResponse(PlatformTransportError):
     def __init__(self, status: int) -> None:
         super().__init__(f"retryable Platform response: HTTP {status}")
