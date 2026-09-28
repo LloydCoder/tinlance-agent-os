@@ -233,10 +233,10 @@ def test_daemon_handler_protocol_paths() -> None:
             return struct.pack("3i", 0, os.getuid(), 0)
 
     daemon = AgentOSDaemon(
-        DaemonConfig(Path("/tmp/unused.sock"), max_request_bytes=4),
+        DaemonConfig(Path("/tmp/unused.sock"), max_request_bytes=100),
         lambda request: {"ok": request["x"]},
     )
-    oversized = Connection(b"12345")
+    oversized = Connection(b"x" * 101)
     daemon._handle(oversized)
     assert b"request_too_large" in oversized.sent[0]
     invalid = Connection(b"not-json")
