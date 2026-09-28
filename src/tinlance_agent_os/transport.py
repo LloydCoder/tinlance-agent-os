@@ -48,6 +48,7 @@ class PlatformRequestContext:
         ):
             raise ValueError("trace_id must be normalized when provided")
 
+
 class AccessTokenProvider(Protocol):
     def token(self) -> str: ...
 
