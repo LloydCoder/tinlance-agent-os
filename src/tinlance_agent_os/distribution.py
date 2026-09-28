@@ -31,10 +31,7 @@ class ReleaseArtifact:
             raise ValueError("invalid release artifact metadata")
 
     def verify(self, data: bytes) -> bool:
-        return (
-            len(data) == self.size
-            and hashlib.sha256(data).hexdigest() == self.sha256.lower()
-        )
+        return len(data) == self.size and hashlib.sha256(data).hexdigest() == self.sha256.lower()
 
 
 @dataclass(slots=True)
