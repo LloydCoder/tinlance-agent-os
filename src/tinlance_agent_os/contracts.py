@@ -9,8 +9,8 @@ from .domain import (
     Agent,
     ApprovalRef,
     CapabilityRef,
-    EvidenceRef,
     Event,
+    EvidenceRef,
     PlatformRunRef,
     User,
 )
