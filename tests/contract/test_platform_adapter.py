@@ -36,7 +36,7 @@ class FakeTransport:
 
 def test_adapter_implements_all_boundary_operations() -> None:
     transport = FakeTransport()
-    adapter = AgentPlatformAdapter(transport, PlatformRequestContext("tenant-1", "user-1", None))
+    adapter = AgentPlatformAdapter(transport, PlatformRequestContext("tenant-1", "user-1", "seed"))
     assert adapter.get_principal().user_id == "user-1"
     assert adapter.list_agents()[0].agent_id == "a1"
     assert adapter.create_run(task_id="t1", agent_id="a1", intent="build").run_id == "r1"
