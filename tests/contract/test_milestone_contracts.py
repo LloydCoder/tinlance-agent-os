@@ -18,16 +18,11 @@ def test_application_manifest_is_declarative() -> None:
 
 def test_remote_registry_requires_secure_endpoint() -> None:
     registry = FleetRegistry({})
-    registry.register(
-        RemoteAgent("a", "https://example.invalid", FleetState.ONLINE)
-    )
+    registry.register(RemoteAgent("a", "https://example.invalid", FleetState.ONLINE))
     assert len(registry.available()) == 1
 
 
 def test_release_artifact_is_content_addressed() -> None:
-    assert ReleaseArtifact(
-        "1",
-        "0" * 64,
-        0,
-        "https://example.invalid",
-    ).verify(b"") is False
+    assert (
+        ReleaseArtifact("1", "0" * 64, 0, "https://example.invalid").verify(b"") is False
+    )
