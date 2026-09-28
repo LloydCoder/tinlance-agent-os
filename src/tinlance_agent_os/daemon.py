@@ -1,6 +1,7 @@
 """Local Agent OS control daemon over a Unix domain socket."""
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import socket
@@ -10,12 +11,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
+
 @dataclass(frozen=True, slots=True)
 class DaemonConfig:
     socket_path: Path
     max_request_bytes: int = 1_048_576
     backlog: int = 32
     request_timeout_seconds: float = 5.0
+
 
 class AgentOSDaemon:
     def __init__(
@@ -30,10 +33,8 @@ class AgentOSDaemon:
 
     def serve_forever(self) -> None:
         self.config.socket_path.parent.mkdir(parents=True, exist_ok=True)
-        try:
+        with contextlib.suppress(FileNotFoundError):
             self.config.socket_path.unlink()
-        except FileNotFoundError:
-            pass
         server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self._server = server
         server.bind(str(self.config.socket_path))
@@ -49,10 +50,8 @@ class AgentOSDaemon:
                 threading.Thread(target=self._handle, args=(conn,), daemon=True).start()
         finally:
             server.close()
-            try:
+            with contextlib.suppress(FileNotFoundError):
                 self.config.socket_path.unlink()
-            except FileNotFoundError:
-                pass
 
     def _handle(self, conn: socket.socket) -> None:
         with conn:
