@@ -1,47 +1,41 @@
-# Agent OS M0 Threat Model
+# Agent OS M0-M1 Threat Model
 
 ## Scope
-
-M0 covers the boundary between the Tinlance Agentic OS and the Tinlance Agent Platform.
-The OS is an environment and composition layer; the Platform remains the authority and
-governed execution layer.
+M1 adds the remote integration boundary between Agent OS and Agent Platform. Agent OS remains a composition and lifecycle layer; Agent Platform remains the authority and governed execution layer.
 
 ## Trust boundaries
-
-User -> OS UI/CLI -> OS daemon/services -> Agent Platform -> tools/MCP/sandbox/external systems.
+User -> Agent OS -> authenticated Platform adapter -> Agent Platform -> tools/MCP/sandbox/external systems.
 
 ## Untrusted inputs
+The OS treats model output, retrieved content, tool responses, external content, extension data, peer-agent messages and remote Platform response data as untrusted until validated against the typed OS contract.
 
-The OS must treat model output, retrieved content, tool responses, external content,
-extension-provided data and peer-agent messages as untrusted data. None can create
-authority, change tenant context, or bypass Platform authorization.
-
-## Security invariants
-
+## M1 controls
 1. Agent OS never grants execution authority.
-2. Agent OS never treats model output as authorization.
-3. Consequential work is requested through the Agent Platform boundary.
-4. Platform approval references are opaque to the OS; the OS does not validate them
-   as a substitute for Platform authorization.
-5. Platform evidence is referenced, not rewritten as OS security evidence.
-6. OS identifiers are correlation and lifecycle identifiers, not authorization claims.
-7. Future extensions must request capabilities through the governed Platform boundary.
-8. System access is abstracted and must not be silently available to arbitrary agents.
+2. Tenant and subject context is immutable for a transport instance.
+3. Each Platform operation receives a fresh request identifier.
+4. Credentials are carried only in the Authorization header and excluded from payloads.
+5. HTTPS is required for non-loopback endpoints.
+6. Endpoint redirects are rejected to prevent credential forwarding.
+7. Embedded endpoint credentials are rejected.
+8. Non-idempotent side-effecting operations are never automatically retried.
+9. Idempotent reads may retry only bounded transient failures.
+10. Remote response version and shape are validated before conversion to OS objects.
+11. Platform approval and evidence identifiers remain opaque references.
+12. OS never re-implements Platform authorization, policy, approval or execution.
+13. Architecture tests prevent direct Platform implementation imports.
 
 ## Threats
-
-| Threat | M0 control |
+| Threat | Control |
 |---|---|
-| Authority escalation | Platform is the sole execution authority |
-| Prompt injection | Untrusted content cannot create OS authority |
-| Confused deputy | Workspace/session identifiers do not authorize actions |
-| Cross-workspace access | Future adapters must preserve immutable context |
-| Approval bypass | OS stores references; Platform validates approvals |
+| Cross-tenant confused deputy | Tenant is explicit, immutable and transported on every request |
+| Credential leakage | Authorization header only; no redirects; no URL credentials |
+| Duplicate side effects | No automatic retries for non-idempotent operations |
+| Protocol downgrade/drift | API version mismatch fails closed |
+| Malformed remote data | Strict response validation |
+| Prompt injection / excessive agency | OS cannot convert model output into authority |
+| Approval bypass | OS receives opaque approval references only |
 | Evidence forgery | Platform remains evidence authority |
-| Extension abuse | Extension boundary is only defined, not privileged |
-| Local system escape | System provider is an abstraction, not direct agent access |
+| Domain dependency escalation | Architecture tests block domain-product imports |
 
 ## Residual risk
-
-M0 does not claim production isolation, durable persistence, authentication implementation,
-or Linux system enforcement. Those are later milestones/deployment responsibilities.
+Production still requires the Platform's real authenticated gateway, short-lived scoped credentials, durable telemetry and operational controls. Agent OS does not attempt to recreate those controls.
