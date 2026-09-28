@@ -1,7 +1,7 @@
 """Toolkit-neutral Agent OS shell/presentation model."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
-
 
 
 @dataclass(frozen=True, slots=True)
