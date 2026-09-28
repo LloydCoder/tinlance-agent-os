@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import cast
 from uuid import uuid4
 
-from .client import AgentPlatformClient
+from .contracts import AgentPlatformClient
 from .domain import Agent, ApprovalRef, CapabilityRef, Event, EvidenceRef, PlatformRunRef, User
 from .errors import PlatformProtocolError
 from .transport import PlatformRequestContext, PlatformTransport
@@ -19,6 +19,11 @@ def _string(payload: Mapping[str, object], key: str) -> str:
     if not isinstance(value, str) or not value:
         raise PlatformProtocolError(f"Platform payload field {key!r} must be a non-empty string")
     return value
+
+
+def _optional_string(payload: Mapping[str, object], key: str) -> str | None:
+    value = payload.get(key)
+    return value if isinstance(value, str) else None
 
 
 def _sequence(payload: Mapping[str, object], key: str) -> Sequence[Mapping[str, object]]:
@@ -121,9 +126,9 @@ class AgentPlatformAdapter(AgentPlatformClient):
                 raise PlatformProtocolError(
                     "event occurred_at is not a valid ISO-8601 timestamp"
                 ) from exc
-            session_id = item.get("session_id") if isinstance(item.get("session_id"), str) else None
-            task_id = item.get("task_id") if isinstance(item.get("task_id"), str) else None
-            agent_id = item.get("agent_id") if isinstance(item.get("agent_id"), str) else None
+            session_id = _optional_string(item, "session_id")
+            task_id = _optional_string(item, "task_id")
+            agent_id = _optional_string(item, "agent_id")
             platform_run_id = item.get("platform_run_id")
             if not isinstance(platform_run_id, str):
                 platform_run_id = run_id
