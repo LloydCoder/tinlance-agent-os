@@ -16,6 +16,7 @@ from tinlance_agent_os.daemon import AgentOSDaemon, DaemonConfig
 from tinlance_agent_os.daemon_service import LocalOSService
 from tinlance_agent_os.distribution import ReleaseArtifact, UpdateManager, UpdateState
 from tinlance_agent_os.extensions import ExtensionContext, ExtensionManager
+from tinlance_agent_os.enterprise import FleetRegistry, FleetState, RemoteAgent
 from tinlance_agent_os.memory import DataClassification, MemoryStore
 from tinlance_agent_os.shell import AgentShell, ShellCommand
 from tinlance_agent_os.store import StateStore
@@ -362,7 +363,14 @@ def test_application_and_extension_rejection_paths() -> None:
     else:
         raise AssertionError("uninstalled app should not enable")
     try:
-        AgentManifest("app", "App", "1", "0", "entry", (CapabilityRequest("x", "r"), CapabilityRequest("x", "r"))).validate()
+        AgentManifest(
+            "app",
+            "App",
+            "1",
+            "0",
+            "entry",
+            (CapabilityRequest("x", "r"), CapabilityRequest("x", "r")),
+        ).validate()
     except ValueError:
         pass
     else:
