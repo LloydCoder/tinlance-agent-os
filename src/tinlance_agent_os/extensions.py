@@ -36,9 +36,7 @@ class ExtensionManager:
         requested = {item.capability_id for item in manifest.capabilities}
         if not granted_capabilities <= requested:
             raise ValueError("grant exceeds declared request")
-        extension.start(
-            ExtensionContext(manifest.application_id, granted_capabilities)
-        )
+        extension.start(ExtensionContext(manifest.application_id, granted_capabilities))
         self.extensions[manifest.application_id] = extension
 
     def unload(self, application_id: str) -> None:
