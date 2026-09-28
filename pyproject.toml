@@ -13,7 +13,7 @@ authors = [{ name = "Tinlance" }]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["mypy>=1.17,<2", "pytest>=8.4,<9", "pytest-cov>=6,<7", "ruff>=0.13,<0.14"]
+dev = ["mypy>=1.17,<2", "pytest>=8.4,<9", "pytest-cov>=6,<7", "ruff>=0.13,<0.14", "pip-audit>=2.9,<3"]
 
 [project.scripts]
 agentos = "tinlance_agent_os.cli:main"
