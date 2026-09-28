@@ -1,4 +1,5 @@
 from tinlance_agent_os.applications import AgentManifest, CapabilityRequest
+
 from tinlance_agent_os.distribution import ReleaseArtifact
 from tinlance_agent_os.enterprise import FleetRegistry, FleetState, RemoteAgent
 
