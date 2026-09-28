@@ -3,9 +3,7 @@ from tinlance_agent_os.domain import Agent, TaskState
 
 
 def test_reference_client_delegates_execution_boundary() -> None:
-    client = ReferenceAgentPlatformClient(
-        agents=[Agent("agent-1", "Builder", "1.0.0")]
-    )
+    client = ReferenceAgentPlatformClient(agents=[Agent("agent-1", "Builder", "1.0.0")])
     run = client.create_run(
         task_id="task-1",
         agent_id="agent-1",
