@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tinlance-agent-os"
+version = "0.1.0"
+description = "Tinlance Agentic OS: an agent-native operating environment built on the governed Tinlance Agent Platform."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [{ name = "Tinlance" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["mypy>=1.17,<2", "pytest>=8.4,<9", "pytest-cov>=6,<7", "ruff>=0.13,<0.14"]
+
+[project.scripts]
+agentos = "tinlance_agent_os.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tinlance_agent_os"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["tinlance_agent_os"]
+
+[tool.pytest.ini_options]
+addopts = "-q --strict-config --strict-markers"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["tinlance_agent_os"]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
