@@ -119,3 +119,88 @@ def test_daemon_protocol_handler() -> None:
         lambda request: {"echo": request["x"]},
     )
     assert daemon.handler({"x": 1})["echo"] == 1
+
+
+def test_shell_commands_and_system_policy() -> None:
+    shell = AgentShell({})
+    shell.register(ShellCommand("health", "Health", lambda: "ok"))
+    assert shell.invoke("health") == "ok"
+    try:
+        shell.register(ShellCommand("health", "Duplicate", lambda: "bad"))
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("duplicate shell command should fail")
+    with TemporaryDirectory() as directory:
+        backend = LocalSystemBackend(Path(directory))
+        try:
+            backend.run_process(["echo", "ok"])
+        except PermissionError:
+            pass
+        else:
+            raise AssertionError("process execution should fail closed")
+        assert LocalSystemBackend(
+            Path(directory), frozenset({"echo"})
+        ).run_process(["echo", "ok"]) == 0
+
+
+def test_application_disable_and_restricted_memory() -> None:
+    manifest = AgentManifest("app", "App", "1", "0", "entry")
+    registry = ApplicationRegistry({})
+    registry.install(manifest)
+    registry.disable("app")
+    assert registry.items["app"][1].value == "disabled"
+    with TemporaryDirectory() as directory:
+        memory = MemoryStore(StateStore(Path(directory) / "state.db"))
+        try:
+            memory.put("ws", "scope", DataClassification.RESTRICTED, "secret")
+        except PermissionError:
+            pass
+        else:
+            raise AssertionError("restricted memory should fail closed")
+
+
+def test_reference_client_validation_and_cancel() -> None:
+    client = ReferenceAgentPlatformClient()
+    try:
+        client.create_run(task_id="", agent_id="a", intent="x")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("invalid run should fail")
+    run = client.create_run(task_id="t", agent_id="a", intent="x")
+    assert client.cancel_run(run_id=run.run_id).state == "cancelled"
+    assert client.list_capabilities(agent_id="a")
+    assert client.get_evidence(run_id=run.run_id)
+    try:
+        client.request_approval(run_id="", action="x")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("invalid approval should fail")
+
+
+def test_distribution_failure_and_workflow_unknown_dependency() -> None:
+    manager = UpdateManager()
+    data = b"release"
+    artifact = ReleaseArtifact(
+        "0.2.0",
+        hashlib.sha256(data).hexdigest(),
+        len(data),
+        "https://example.invalid/a",
+    )
+    try:
+        manager.stage(artifact, b"bad")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("bad artifact should fail")
+    try:
+        WorkflowEngine().ready_steps(
+            WorkflowDefinition("w", "ws", (WorkflowStep("a", "x"),)),
+            {"missing"},
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("unknown completed step should fail")
