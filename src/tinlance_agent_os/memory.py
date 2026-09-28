@@ -1,4 +1,5 @@
 """Scoped, classified local context/memory."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,11 +10,13 @@ from .domain import utc_now
 from .store import StateStore
 
 
+
 class DataClassification(StrEnum):
     PUBLIC = "public"
     INTERNAL = "internal"
     CONFIDENTIAL = "confidential"
     RESTRICTED = "restricted"
+
 
 @dataclass(frozen=True, slots=True)
 class MemoryItem:
@@ -23,6 +26,7 @@ class MemoryItem:
     classification: DataClassification
     content: str
     created_at: str
+
 
 @dataclass(slots=True)
 class MemoryStore:
