@@ -5,10 +5,11 @@
 Establish domain contracts, dependency boundaries, Platform adapter contract, security model,
 CI and architecture tests.
 
-## M1 — Agent Platform Adapter
+## M1 — Agent Platform Adapter — COMPLETE
 
-Implement a transport-backed adapter against the stable Platform API/SDK. Add contract,
-authentication, lifecycle, events, evidence and approval-reference integration.
+Implemented the versioned transport-backed adapter against the Platform API/SDK boundary,
+including authentication/context propagation, lifecycle, events, evidence, capabilities,
+approval references, compatibility checks, reliability controls and security tests.
 
 ## M2 — Local Agent OS Daemon
 
