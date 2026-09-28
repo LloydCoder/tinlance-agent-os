@@ -71,6 +71,7 @@ class StaticAccessTokenProvider:
     def token(self) -> str:
         return self.access_token
 
+
 class PlatformTransport(Protocol):
     def send(
         self,
