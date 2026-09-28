@@ -8,6 +8,7 @@ from uuid import uuid4
 from .domain import utc_now
 from .store import StateStore
 
+
 class DataClassification(StrEnum):
     PUBLIC = "public"
     INTERNAL = "internal"
