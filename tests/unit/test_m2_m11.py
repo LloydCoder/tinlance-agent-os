@@ -281,7 +281,7 @@ def test_system_rejects_absolute_executable_bypass() -> None:
 def test_daemon_accepts_fragmented_line_protocol() -> None:
     class Connection:
         def __init__(self) -> None:
-            self.parts = [b'{"x":', b'1}\n']
+            self.parts = [b'{"x":', b"1}\n"]
             self.sent: list[bytes] = []
 
         def __enter__(self) -> Connection:
