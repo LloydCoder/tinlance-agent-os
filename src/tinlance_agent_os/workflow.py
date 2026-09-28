@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+
 class WorkflowState(StrEnum):
     CREATED = "created"
     RUNNING = "running"
@@ -13,17 +14,20 @@ class WorkflowState(StrEnum):
     FAILED = "failed"
     CANCELLED = "cancelled"
 
+
 @dataclass(frozen=True, slots=True)
 class WorkflowStep:
     step_id: str
     intent: str
     depends_on: tuple[str, ...] = ()
 
+
 @dataclass(frozen=True, slots=True)
 class WorkflowDefinition:
     workflow_id: str
     workspace_id: str
     steps: tuple[WorkflowStep, ...]
+
 
 @dataclass(slots=True)
 class WorkflowEngine:
