@@ -1,5 +1,4 @@
 """Declarative agent application manifest and lifecycle model."""
-
 from dataclasses import dataclass, field
 from enum import StrEnum
 
