@@ -214,6 +214,7 @@ class HttpPlatformTransport:
             raise PlatformProtocolError("Platform response payload must be an object")
         return payload
 
+
 class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
     def redirect_request(
         self,
