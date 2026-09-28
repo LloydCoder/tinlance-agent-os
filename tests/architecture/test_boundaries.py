@@ -15,10 +15,7 @@ def test_no_domain_imports_from_integrations_or_apps() -> None:
 
 
 def test_m0_does_not_embed_domain_products() -> None:
-    source = "\n".join(
-        path.read_text()
-        for path in SRC.rglob("*.py")
-    )
+    source = "\n".join(path.read_text() for path in SRC.rglob("*.py"))
     forbidden = (
         "import fas",
         "import tads",
