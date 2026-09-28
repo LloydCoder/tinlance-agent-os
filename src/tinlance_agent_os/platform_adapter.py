@@ -118,12 +118,16 @@ class AgentPlatformAdapter(AgentPlatformClient):
 
     def get_events(self, *, run_id: str) -> Sequence[Event]:
         events: list[Event] = []
-        for item in _sequence(self._call("runs.events", {"run_id": run_id}, idempotent=True), "events"):
+        items = _sequence(
+            self._call("runs.events", {"run_id": run_id}, idempotent=True),
+            "events",
+        )
+        for item in items:
             occurred_at = _string(item, "occurred_at")
             try:
                 parsed_at = datetime.fromisoformat(occurred_at.replace("Z", "+00:00"))
             except ValueError as exc:
-                raise PlatformProtocolError("event occurred_at is not a valid ISO-8601 timestamp") from exc
+                raise PlatformProtocolError(\n                    "event occurred_at is not a valid ISO-8601 timestamp"\n                ) from exc
             events.append(
                 Event(
                     _string(item, "event_id"),
@@ -133,7 +137,7 @@ class AgentPlatformAdapter(AgentPlatformClient):
                     item.get("session_id") if isinstance(item.get("session_id"), str) else None,
                     item.get("task_id") if isinstance(item.get("task_id"), str) else None,
                     item.get("agent_id") if isinstance(item.get("agent_id"), str) else None,
-                    item.get("platform_run_id") if isinstance(item.get("platform_run_id"), str) else run_id,
+                    item.get("platform_run_id")\n                    if isinstance(item.get("platform_run_id"), str)\n                    else run_id,
                     _string(item, "correlation_id"),
                     "agent-platform",
                     item.get("payload") if isinstance(item.get("payload"), dict) else {},
