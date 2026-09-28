@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import struct
@@ -229,7 +230,7 @@ def test_daemon_handler_protocol_paths() -> None:
             self.sent.append(data)
 
         def getsockopt(self, *_args: object) -> bytes:
-            return struct.pack("3i", 0, 0, 0)
+            return struct.pack("3i", 0, os.getuid(), 0)
 
     daemon = AgentOSDaemon(
         DaemonConfig(Path("/tmp/unused.sock"), max_request_bytes=4),
