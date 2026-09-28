@@ -55,7 +55,7 @@ def server():
 
 
 def context() -> PlatformRequestContext:
-    return PlatformRequestContext("tenant-1", "subject-1", "request-1", "trace-1")
+    return PlatformRequestContext("tenant-1", "subject-1", "trace-1")
 
 
 def test_https_is_required_by_default() -> None:
