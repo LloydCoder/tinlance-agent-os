@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 
-
 class WorkflowState(StrEnum):
     CREATED = "created"
     RUNNING = "running"
@@ -15,7 +14,6 @@ class WorkflowState(StrEnum):
     CANCELLED = "cancelled"
 
 
-
 @dataclass(frozen=True, slots=True)
 class WorkflowStep:
     step_id: str
@@ -23,13 +21,11 @@ class WorkflowStep:
     depends_on: tuple[str, ...] = ()
 
 
-
 @dataclass(frozen=True, slots=True)
 class WorkflowDefinition:
     workflow_id: str
     workspace_id: str
     steps: tuple[WorkflowStep, ...]
-
 
 
 @dataclass(slots=True)
