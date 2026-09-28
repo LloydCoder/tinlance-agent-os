@@ -136,7 +136,8 @@ class HttpPlatformTransport:
             "X-Tinlance-API-Version": API_VERSION,
             "X-Tinlance-Tenant-ID": context.tenant_id,
             "X-Tinlance-Subject-ID": context.subject_id,
-            "X-Request-ID": context.request_id,\n            "Idempotency-Key": context.request_id,
+            "X-Request-ID": context.request_id,
+            "Idempotency-Key": context.request_id,
         }
         if context.trace_id:
             headers["traceparent"] = context.trace_id
