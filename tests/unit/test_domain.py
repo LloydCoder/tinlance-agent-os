@@ -1,4 +1,4 @@
-from datetime import timezone
+from datetime import UTC
 
 from tinlance_agent_os.domain import SessionState, Task, TaskState, utc_now
 
@@ -15,5 +15,5 @@ def test_task_defaults_are_os_state_only() -> None:
     )
     assert task.state is TaskState.CREATED
     assert task.platform_run_ids == ()
-    assert now.tzinfo is timezone.utc
+    assert now.tzinfo is UTC
     assert SessionState.ACTIVE.value == "active"
