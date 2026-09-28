@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import http.client
 import json
 import time
 import urllib.error
@@ -222,7 +223,7 @@ class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
         fp: object,
         code: int,
         msg: str,
-        headers: Mapping[str, str],
+        headers: http.client.HTTPMessage,
         newurl: str,
     ) -> urllib.request.Request | None:
         raise PlatformTransportError("Platform endpoint redirects are not permitted")
