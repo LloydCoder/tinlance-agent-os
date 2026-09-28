@@ -38,8 +38,10 @@ class MemoryStore:
     ) -> MemoryItem:
         if not all(value.strip() for value in (workspace_id, scope, content)):
             raise ValueError("memory fields are required")
-        if classification is DataClassification.RESTRICTED:
-            raise PermissionError("restricted memory requires an external governed memory provider")
+        if classification in {DataClassification.CONFIDENTIAL, DataClassification.RESTRICTED}:
+            raise PermissionError(
+                "confidential and restricted memory require an external governed memory provider"
+            )
         item = MemoryItem(
             str(uuid4()),
             workspace_id,
@@ -65,12 +67,18 @@ class MemoryStore:
         workspace_id: str,
         scope: str,
         query: str,
+        *,
+        limit: int = 100,
     ) -> tuple[MemoryItem, ...]:
-        rows = self.store.execute(
+        if not workspace_id.strip() or not scope.strip() or not query.strip():
+            raise ValueError("workspace_id, scope and query are required")
+        if not 1 <= limit <= 1000:
+            raise ValueError("limit must be between 1 and 1000")
+        rows = self.store.query(
             "SELECT memory_id,workspace_id,scope,classification,content,created_at "
             "FROM memory WHERE workspace_id=? AND scope=? AND content LIKE ? "
-            "ORDER BY created_at DESC",
-            (workspace_id, scope, f"%{query}%"),
+            "ORDER BY created_at DESC LIMIT ?",
+            (workspace_id, scope, f"%{query}%", limit),
         )
         return tuple(
             MemoryItem(
