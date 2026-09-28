@@ -35,7 +35,8 @@ class FakeTransport:
 
 
 def test_adapter_implements_all_boundary_operations() -> None:
-    transport = FakeTransport()\n    adapter = AgentPlatformAdapter(transport, PlatformRequestContext("tenant-1", "user-1"))
+    transport = FakeTransport()
+    adapter = AgentPlatformAdapter(transport, PlatformRequestContext("tenant-1", "user-1", None))
     assert adapter.get_principal().user_id == "user-1"
     assert adapter.list_agents()[0].agent_id == "a1"
     assert adapter.create_run(task_id="t1", agent_id="a1", intent="build").run_id == "r1"
@@ -44,4 +45,6 @@ def test_adapter_implements_all_boundary_operations() -> None:
     assert adapter.request_approval(run_id="r1", action="deploy").approval_id == "ap1"
     assert adapter.get_events(run_id="r1")[0].event_id == "e1"
     assert adapter.get_evidence(run_id="r1")[0].evidence_id == "ev1"
-    assert adapter.health()\n    request_ids = [call[3] for call in transport.calls]\n    assert len(request_ids) == len(set(request_ids))
+    assert adapter.health()
+    request_ids = [call[3] for call in transport.calls]
+    assert len(request_ids) == len(set(request_ids))
