@@ -11,6 +11,7 @@ from .daemon import AgentOSDaemon, DaemonConfig
 from .domain import Session, Task, TaskState, Workspace, utc_now
 from .store import StateStore
 
+
 @dataclass(slots=True)
 class LocalOSService:
     store: StateStore
