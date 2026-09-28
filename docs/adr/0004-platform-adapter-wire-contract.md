@@ -32,3 +32,7 @@ HTTPS is mandatory except for explicitly enabled loopback test endpoints. Redire
 ## Consequence
 
 The OS can change transport implementation without changing its domain contract, while the Platform retains a single authority plane.
+
+## Request identity
+
+Every request carries a fresh X-Request-ID. The same identifier is also sent as Idempotency-Key so the Platform gateway can deduplicate a consequential request when its semantics permit. Agent OS still never automatically retries non-idempotent operations; the key is a server-side safety aid, not a license to repeat side effects.

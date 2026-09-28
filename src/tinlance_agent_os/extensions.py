@@ -18,7 +18,7 @@ class ExtensionContext:
     granted_capabilities: frozenset[str]
 
     def require(self, capability: str) -> None:
-        if capability not in self.granted_capabilities:
+        if not capability.strip() or capability not in self.granted_capabilities:
             raise PermissionError("capability not granted")
 
 
@@ -36,6 +36,8 @@ class ExtensionManager:
         requested = {item.capability_id for item in manifest.capabilities}
         if not granted_capabilities <= requested:
             raise ValueError("grant exceeds declared request")
+        if any(not capability.strip() for capability in granted_capabilities):
+            raise ValueError("granted capabilities must be normalized")
         extension.start(ExtensionContext(manifest.application_id, granted_capabilities))
         self.extensions[manifest.application_id] = extension
 

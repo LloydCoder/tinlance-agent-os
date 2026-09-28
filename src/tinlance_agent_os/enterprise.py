@@ -3,6 +3,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
+from urllib.parse import urlparse
 
 
 class FleetState(StrEnum):
@@ -23,8 +24,13 @@ class FleetRegistry:
     agents: dict[str, RemoteAgent]
 
     def register(self, agent: RemoteAgent) -> None:
-        if not agent.endpoint.startswith(("https://", "unix://")):
-            raise ValueError("remote endpoint must use a secure scheme")
+        parsed = urlparse(agent.endpoint)
+        if parsed.scheme not in {"https", "unix"} or not parsed.netloc:
+            raise ValueError("remote endpoint must use https or unix with a non-empty authority")
+        if parsed.username is not None or parsed.password is not None or parsed.fragment:
+            raise ValueError("remote endpoint must not contain credentials or fragments")
+        if not agent.agent_id.strip():
+            raise ValueError("agent_id is required")
         self.agents[agent.agent_id] = agent
 
     def available(self) -> Sequence[RemoteAgent]:

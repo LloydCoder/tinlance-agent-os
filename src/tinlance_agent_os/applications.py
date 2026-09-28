@@ -30,22 +30,29 @@ class AgentManifest:
     metadata: dict[str, str] = field(default_factory=dict)
 
     def validate(self) -> None:
-        if not all(
-            value.strip()
-            for value in (
-                self.application_id,
-                self.name,
-                self.version,
-                self.min_os_version,
-                self.entrypoint,
-            )
-        ):
+        required = (
+            self.application_id,
+            self.name,
+            self.version,
+            self.min_os_version,
+            self.entrypoint,
+        )
+        if any(not value.strip() for value in required):
             raise ValueError("manifest fields are required")
+        capability_ids = [item.capability_id for item in self.capabilities]
+        if len(capability_ids) != len(set(capability_ids)):
+            raise ValueError("duplicate capability request")
         if any(
             not capability.capability_id.strip() or not capability.reason.strip()
             for capability in self.capabilities
         ):
             raise ValueError("invalid capability request")
+        if any(not key.strip() or not value.strip() for key, value in self.metadata.items()):
+            raise ValueError("manifest metadata must be non-empty")
+        if not self.entrypoint.strip() or any(
+            character in self.entrypoint for character in "\x00\r\n"
+        ):
+            raise ValueError("invalid entrypoint")
 
 
 @dataclass(slots=True)
@@ -54,16 +61,24 @@ class ApplicationRegistry:
 
     def install(self, manifest: AgentManifest) -> None:
         manifest.validate()
-        self.items[manifest.application_id] = (
-            manifest,
-            ApplicationState.INSTALLED,
-        )
+        current = self.items.get(manifest.application_id)
+        if current is not None and current[0] != manifest:
+            raise ValueError("application is already installed with a different manifest")
+        self.items[manifest.application_id] = (manifest, ApplicationState.INSTALLED)
 
     def enable(self, application_id: str) -> AgentManifest:
-        manifest, _ = self.items[application_id]
+        manifest, state = self.items[application_id]
+        if state is ApplicationState.UNINSTALLED:
+            raise ValueError("uninstalled application cannot be enabled")
         self.items[application_id] = (manifest, ApplicationState.ENABLED)
         return manifest
 
     def disable(self, application_id: str) -> None:
-        manifest, _ = self.items[application_id]
+        manifest, state = self.items[application_id]
+        if state is ApplicationState.UNINSTALLED:
+            raise ValueError("uninstalled application cannot be disabled")
         self.items[application_id] = (manifest, ApplicationState.DISABLED)
+
+    def uninstall(self, application_id: str) -> None:
+        manifest, _ = self.items[application_id]
+        self.items[application_id] = (manifest, ApplicationState.UNINSTALLED)
