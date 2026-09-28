@@ -49,7 +49,9 @@ class AgentManifest:
             raise ValueError("invalid capability request")
         if any(not key.strip() or not value.strip() for key, value in self.metadata.items()):
             raise ValueError("manifest metadata must be non-empty")
-        if not self.entrypoint.strip() or any(character in self.entrypoint for character in "\x00\r\n"):
+        if not self.entrypoint.strip() or any(
+            character in self.entrypoint for character in "\x00\r\n"
+        ):
             raise ValueError("invalid entrypoint")
 
 
