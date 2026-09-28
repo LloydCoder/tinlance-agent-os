@@ -75,7 +75,8 @@ class StateStore:
                 CREATE INDEX IF NOT EXISTS idx_sessions_workspace ON sessions(workspace_id);
                 CREATE INDEX IF NOT EXISTS idx_tasks_workspace ON tasks(workspace_id);
                 CREATE INDEX IF NOT EXISTS idx_tasks_session ON tasks(session_id);
-                CREATE INDEX IF NOT EXISTS idx_events_workspace_time ON events(workspace_id, occurred_at);
+                CREATE INDEX IF NOT EXISTS idx_events_workspace_time
+                    ON events(workspace_id, occurred_at);
                 CREATE INDEX IF NOT EXISTS idx_memory_workspace_scope_time
                     ON memory(workspace_id, scope, created_at);
                 CREATE INDEX IF NOT EXISTS idx_workflows_workspace ON workflows(workspace_id);
