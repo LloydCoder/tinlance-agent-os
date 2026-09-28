@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import struct
 
 from tinlance_agent_os.applications import (
     AgentManifest,
@@ -204,3 +205,42 @@ def test_distribution_failure_and_workflow_unknown_dependency() -> None:
         pass
     else:
         raise AssertionError("unknown completed step should fail")
+
+
+def test_daemon_handler_protocol_paths() -> None:
+    class Connection:
+        def __init__(self, payload: bytes) -> None:
+            self.payload = payload
+            self.sent: list[bytes] = []
+
+        def __enter__(self) -> "Connection":
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return
+
+        def settimeout(self, _value: float) -> None:
+            return
+
+        def recv(self, _size: int) -> bytes:
+            return self.payload
+
+        def sendall(self, data: bytes) -> None:
+            self.sent.append(data)
+
+        def getsockopt(self, *_args: object) -> bytes:
+            return struct.pack("3i", 0, 0, 0)
+
+    daemon = AgentOSDaemon(
+        DaemonConfig(Path("/tmp/unused.sock"), max_request_bytes=4),
+        lambda request: {"ok": request["x"]},
+    )
+    oversized = Connection(b"12345")
+    daemon._handle(oversized)
+    assert b"request_too_large" in oversized.sent[0]
+    invalid = Connection(b"not-json")
+    daemon._handle(invalid)
+    assert b"invalid_request" in invalid.sent[0]
+    valid = Connection(b'{"x":1}')
+    daemon._handle(valid)
+    assert b'"ok":true' in valid.sent[0]
