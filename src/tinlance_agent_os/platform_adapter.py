@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import cast
+from uuid import uuid4
 
 from .client import AgentPlatformClient
 from .domain import Agent, ApprovalRef, CapabilityRef, Event, EvidenceRef, PlatformRunRef, User
@@ -56,10 +57,11 @@ class AgentPlatformAdapter(AgentPlatformClient):
         *,
         idempotent: bool,
     ) -> Mapping[str, object]:
+        request_context = replace(self.context, request_id=str(uuid4()))
         return self.transport.send(
             operation=operation,
             payload=payload,
-            context=self.context,
+            context=request_context,
             idempotent=idempotent,
         )
 
