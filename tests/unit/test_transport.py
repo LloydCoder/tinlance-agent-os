@@ -27,7 +27,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         length = int(self.headers["Content-Length"])
-        Handler.last_headers = {key: value for key, value in self.headers.items()}
+        Handler.last_headers = {key.lower(): value for key, value in self.headers.items()}
         Handler.last_body = json.loads(self.rfile.read(length))
         self.send_response(Handler.response_status)
         self.send_header("Content-Type", "application/json")
@@ -69,8 +69,8 @@ def test_transport_propagates_authenticated_context(server) -> None:
     )
     payload = transport.send(operation="health", payload={}, context=context(), idempotent=True)
     assert payload["ready"] is True
-    assert Handler.last_headers["Authorization"] == "Bearer secret"
-    assert Handler.last_headers["X-Tinlance-Tenant-ID"] == "tenant-1"
+    assert Handler.last_headers["authorization"] == "Bearer secret"
+    assert Handler.last_headers["x-tinlance-tenant-id"] == "tenant-1"
     assert Handler.last_body["api_version"] == API_VERSION
     assert Handler.last_body["subject_id"] == "subject-1"
 
