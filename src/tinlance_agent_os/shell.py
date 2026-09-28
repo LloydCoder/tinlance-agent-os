@@ -5,8 +5,6 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
-
-
 class ShellCommand:
     command_id: str
     title: str
