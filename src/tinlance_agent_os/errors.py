@@ -1,5 +1,6 @@
 """Errors raised at the Agent Platform integration boundary."""
 
+
 class PlatformAdapterError(RuntimeError):
     """Base error for failures crossing the Agent Platform boundary."""
 
