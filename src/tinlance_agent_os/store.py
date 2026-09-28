@@ -7,8 +7,6 @@ from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
-
-
 class StateStore:
     path: Path
 
