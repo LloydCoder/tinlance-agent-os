@@ -1,9 +1,9 @@
 """System integration abstractions with explicit local boundaries."""
+
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
-
 
 
 class SystemBackend(Protocol):
@@ -14,7 +14,6 @@ class SystemBackend(Protocol):
     def notify(self, title: str, body: str) -> None: ...
 
     def run_process(self, argv: list[str], timeout: float = 10.0) -> int: ...
-
 
 
 @dataclass(frozen=True, slots=True)
