@@ -94,5 +94,5 @@ def test_non_json_fails_closed(server) -> None:
     Handler.response_body = {"api_version": API_VERSION, "status": "ok", "payload": []}
     with pytest.raises(PlatformProtocolError):
         HttpPlatformTransport(
-            server, context(), StaticAccessTokenProvider("secret"), allow_insecure_localhost=True
+            server, StaticAccessTokenProvider("secret"), allow_insecure_localhost=True
         ).send(operation="health", payload={}, context=context(), idempotent=True)
