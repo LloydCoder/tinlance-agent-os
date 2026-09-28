@@ -5,6 +5,9 @@ import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import struct
+import socket
+import threading
+import time
 
 from tinlance_agent_os.applications import (
     AgentManifest,
@@ -420,3 +423,52 @@ def test_distribution_and_system_validation_paths() -> None:
             pass
         else:
             raise AssertionError("non-positive process timeout should fail")
+
+
+def test_daemon_serves_real_unix_socket_and_shutdown() -> None:
+    with TemporaryDirectory() as directory:
+        socket_path = Path(directory) / "agentos.sock"
+        daemon = AgentOSDaemon(
+            DaemonConfig(socket_path, request_timeout_seconds=1),
+            lambda request: {"echo": request["x"]},
+        )
+        thread = threading.Thread(target=daemon.serve_forever, daemon=True)
+        thread.start()
+        for _ in range(50):
+            if socket_path.exists():
+                break
+            time.sleep(0.01)
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            client.connect(str(socket_path))
+            client.sendall(b'{"x":1}\n')
+            response = client.recv(1024)
+        assert b'"echo":1' in response
+        daemon.shutdown()
+        thread.join(timeout=2)
+        assert not thread.is_alive()
+
+
+def test_local_service_validates_lifecycle_and_daemon_operations() -> None:
+    with TemporaryDirectory() as directory:
+        service = LocalOSService(
+            StateStore(Path(directory) / "state.db"),
+            ReferenceAgentPlatformClient(),
+        )
+        workspace = service.create_workspace("owner")
+        session = service.create_session(workspace.workspace_id, "owner", "agent")
+        task = service.create_task(
+            workspace.workspace_id,
+            session.session_id,
+            "agent",
+            "run",
+        )
+        run = service.dispatch(task)
+        assert run.task_id == task.task_id
+        assert service.handle({"operation": "health"})["ready"] is True
+        assert service.handle({"operation": "principal"})["user_id"] == "reference-user"
+        try:
+            service.handle({})
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("missing daemon operation should fail")
