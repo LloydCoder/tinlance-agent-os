@@ -1,5 +1,4 @@
 """System integration abstractions with explicit local boundaries."""
-
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
