@@ -1,0 +1,81 @@
+# Tinlance Agentic OS Architecture
+
+## Boundary
+
+Tinlance Agentic OS is the human/agent/organization environment above Tinlance Agent
+Platform. It owns workspaces, sessions, tasks, workflows, applications, presentation,
+and system integration. Tinlance Agent Platform owns authority and governed execution.
+
+## Dependency direction
+
+`contracts -> domain -> services -> integrations -> apps`
+
+The Agent Platform integration is an adapter boundary. OS code must not import Agent
+Platform implementation internals.
+
+## Authority boundary
+
+`User intent -> OS task -> Platform request -> Platform authorization/policy/approval
+-> Platform execution -> Platform evidence/events -> OS presentation`
+
+Agent OS may compose and request work. It may not independently authorize consequential
+actions.
+
+## Core M0 objects
+
+- User
+- Workspace
+- Session
+- Agent
+- Task
+- Run reference
+- Capability reference
+- Approval reference
+- Evidence reference
+- Event
+
+An OS Session is not a Platform Run. A session may contain multiple tasks and a task may
+produce multiple Platform runs.
+
+## Planes
+
+### Experience plane
+CLI, future desktop, workspace and human interaction.
+
+### OS control plane
+Agent lifecycle, sessions, tasks, workflows and context.
+
+### Platform authority plane
+Identity, tenancy, authorization, policy, approvals, budgets and governed execution.
+This remains in Agent Platform.
+
+### Evidence/telemetry plane
+Platform evidence/events plus OS correlation and presentation. The OS does not replace
+Platform evidence authority.
+
+## Future integration model
+
+```
+Agentic OS
+   |
+   +-- Agent Platform adapter
+   +-- FDSE adapter
+   +-- FAS adapter
+   +-- TADS adapter
+   +-- domain/product adapters
+   |
+   +-- System abstractions
+```
+
+Domain products remain optional integrations and never become Agent OS core dependencies.
+
+## M0 non-goals
+
+- desktop shell
+- workflow engine implementation
+- memory/vector database
+- extension runtime
+- Linux process sandbox
+- direct model-provider integration
+- replacement authorization engine
+- replacement evidence/audit store
