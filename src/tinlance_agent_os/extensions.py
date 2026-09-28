@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from .applications import AgentManifest, ApplicationState
+from .applications import AgentManifest
 
 
 class Extension(Protocol):
