@@ -140,9 +140,9 @@ def test_shell_commands_and_system_policy() -> None:
             pass
         else:
             raise AssertionError("process execution should fail closed")
-        assert LocalSystemBackend(
-            Path(directory), frozenset({"echo"})
-        ).run_process(["echo", "ok"]) == 0
+        assert (
+            LocalSystemBackend(Path(directory), frozenset({"echo"})).run_process(["echo", "ok"]) == 0
+        )
 
 
 def test_application_disable_and_restricted_memory() -> None:
