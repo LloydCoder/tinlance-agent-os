@@ -28,8 +28,4 @@ class FleetRegistry:
         self.agents[agent.agent_id] = agent
 
     def available(self) -> Sequence[RemoteAgent]:
-        return tuple(
-            agent
-            for agent in self.agents.values()
-            if agent.state is FleetState.ONLINE
-        )
+        return tuple(agent for agent in self.agents.values() if agent.state is FleetState.ONLINE)
