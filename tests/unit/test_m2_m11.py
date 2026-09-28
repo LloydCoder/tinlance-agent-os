@@ -229,7 +229,8 @@ def test_daemon_handler_protocol_paths() -> None:
             return
 
         def recv(self, _size: int) -> bytes:
-            return self.payload
+            payload, self.payload = self.payload, b""
+            return payload
 
         def sendall(self, data: bytes) -> None:
             self.sent.append(data)
@@ -309,3 +310,105 @@ def test_daemon_accepts_fragmented_line_protocol() -> None:
     connection = Connection()
     daemon._handle(connection)
     assert b'"ok":true' in connection.sent[0]
+
+
+def test_daemon_rejects_bad_peer_and_empty_request() -> None:
+    class Connection:
+        def __init__(self, payload: bytes, uid: int) -> None:
+            self.payload = payload
+            self.uid = uid
+            self.sent: list[bytes] = []
+
+        def __enter__(self) -> Connection:
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return
+
+        def settimeout(self, _value: float) -> None:
+            return
+
+        def recv(self, _size: int) -> bytes:
+            payload, self.payload = self.payload, b""
+            return payload
+
+        def sendall(self, data: bytes) -> None:
+            self.sent.append(data)
+
+        def getsockopt(self, *_args: object) -> bytes:
+            return struct.pack("3i", 0, self.uid, 0)
+
+    daemon = AgentOSDaemon(
+        DaemonConfig(Path("/tmp/unused.sock")),
+        lambda _request: {"ok": True},
+    )
+    forbidden = Connection(b"{}", os.getuid() + 1)
+    daemon._handle(forbidden)
+    assert b'"forbidden"' in forbidden.sent[0]
+    empty = Connection(b"", os.getuid())
+    daemon._handle(empty)
+    assert b'"invalid_request"' in empty.sent[0]
+
+
+def test_application_and_extension_rejection_paths() -> None:
+    manifest = AgentManifest("app", "App", "1", "0", "entry")
+    registry = ApplicationRegistry({})
+    registry.install(manifest)
+    registry.uninstall("app")
+    try:
+        registry.enable("app")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("uninstalled app should not enable")
+    try:
+        AgentManifest("app", "App", "1", "0", "entry", (CapabilityRequest("x", "r"), CapabilityRequest("x", "r"))).validate()
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("duplicate capability should fail")
+
+
+def test_workflow_failure_and_cancel_paths() -> None:
+    definition = WorkflowDefinition("w", "ws", (WorkflowStep("a", "one"),))
+    engine = WorkflowEngine()
+    execution = engine.start(definition)
+    failed = engine.fail_step(definition, execution, "a")
+    assert failed.state is WorkflowState.FAILED
+    cancelled = engine.cancel(definition, execution)
+    assert cancelled.state is WorkflowState.CANCELLED
+
+
+def test_memory_and_remote_validation_paths() -> None:
+    with TemporaryDirectory() as directory:
+        memory = MemoryStore(StateStore(Path(directory) / "state.db"))
+        try:
+            memory.search("ws", "scope", "")
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("empty memory query should fail")
+    registry = FleetRegistry({})
+    try:
+        registry.register(RemoteAgent("a", "http://example.invalid", FleetState.ONLINE))
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("insecure remote endpoint should fail")
+
+
+def test_distribution_and_system_validation_paths() -> None:
+    try:
+        ReleaseArtifact("", "0" * 64, 0, "https://example.invalid/a")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("empty release version should fail")
+    with TemporaryDirectory() as directory:
+        backend = LocalSystemBackend(Path(directory))
+        try:
+            backend.run_process(["echo"], timeout=0)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("non-positive process timeout should fail")
