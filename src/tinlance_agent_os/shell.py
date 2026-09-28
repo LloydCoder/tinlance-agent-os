@@ -1,16 +1,20 @@
 """Toolkit-neutral Agent OS shell/presentation model."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 
 
+
 @dataclass(frozen=True, slots=True)
+
 
 class ShellCommand:
     command_id: str
     title: str
     handler: Callable[[], object]
+
 
 @dataclass(slots=True)
 class AgentShell:
