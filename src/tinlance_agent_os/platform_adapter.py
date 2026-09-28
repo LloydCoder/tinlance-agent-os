@@ -121,7 +121,9 @@ class AgentPlatformAdapter(AgentPlatformClient):
                 raise PlatformProtocolError(
                     "event occurred_at is not a valid ISO-8601 timestamp"
                 ) from exc
-            session_id = (\n                item.get("session_id") if isinstance(item.get("session_id"), str) else None\n            )
+            session_id = (
+                item.get("session_id") if isinstance(item.get("session_id"), str) else None
+            )
             task_id = item.get("task_id") if isinstance(item.get("task_id"), str) else None
             agent_id = item.get("agent_id") if isinstance(item.get("agent_id"), str) else None
             platform_run_id = item.get("platform_run_id")
