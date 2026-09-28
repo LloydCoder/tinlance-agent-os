@@ -92,7 +92,10 @@ class AgentPlatformAdapter(AgentPlatformClient):
             {'agent_id': agent_id},
             idempotent=True,
         )
-        return tuple(CapabilityRef(_string(item, 'capability_id')) for item in _sequence(payload, 'capabilities'))
+        return tuple(
+            CapabilityRef(_string(item, 'capability_id'))
+            for item in _sequence(payload, 'capabilities')
+        )
 
     def request_approval(self, *, run_id: str, action: str) -> ApprovalRef:
         payload = self._call(
@@ -142,7 +145,10 @@ class AgentPlatformAdapter(AgentPlatformClient):
 
     def get_evidence(self, *, run_id: str) -> Sequence[EvidenceRef]:
         payload = self._call('runs.evidence', {'run_id': run_id}, idempotent=True)
-        return tuple(EvidenceRef(_string(item, 'evidence_id')) for item in _sequence(payload, 'evidence'))
+        return tuple(
+            EvidenceRef(_string(item, 'evidence_id'))
+            for item in _sequence(payload, 'evidence')
+        )
 
     def health(self) -> bool:
         payload = self._call('health', {}, idempotent=True)
