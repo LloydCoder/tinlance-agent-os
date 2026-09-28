@@ -1,7 +1,8 @@
-"""Presentation/shell model independent of GUI toolkit."""
+"""Toolkit-neutral Agent OS shell/presentation model."""
 from __future__ import annotations
-from dataclasses import dataclass
+
 from collections.abc import Callable
+from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class ShellCommand:
@@ -11,9 +12,12 @@ class ShellCommand:
 
 @dataclass(slots=True)
 class AgentShell:
-    commands: dict[str,ShellCommand]
-    def register(self, command: ShellCommand)->None:
-        if command.command_id in self.commands: raise ValueError("duplicate shell command")
-        self.commands[command.command_id]=command
-    def invoke(self, command_id: str)->object:
+    commands: dict[str, ShellCommand]
+
+    def register(self, command: ShellCommand) -> None:
+        if command.command_id in self.commands:
+            raise ValueError("duplicate shell command")
+        self.commands[command.command_id] = command
+
+    def invoke(self, command_id: str) -> object:
         return self.commands[command_id].handler()
