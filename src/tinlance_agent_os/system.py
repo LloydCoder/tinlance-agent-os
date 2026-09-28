@@ -6,11 +6,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
+
 class SystemBackend(Protocol):
     def read_file(self, path: Path) -> bytes: ...
+
     def write_file(self, path: Path, data: bytes) -> None: ...
+
     def notify(self, title: str, body: str) -> None: ...
+
     def run_process(self, argv: list[str], timeout: float = 10.0) -> int: ...
+
 
 @dataclass(frozen=True, slots=True)
 class LocalSystemBackend:
