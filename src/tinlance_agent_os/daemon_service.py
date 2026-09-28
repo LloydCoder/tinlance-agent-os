@@ -1,5 +1,6 @@
 """Application service for local Agent OS lifecycle."""
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
@@ -59,12 +60,18 @@ class LocalOSService:
     ) -> Task:
         if not all(value.strip() for value in (workspace_id, session_id, agent_id, intent)):
             raise ValueError("task fields are required")
+        if len(dependencies) != len(set(dependencies)) or any(
+            not dependency.strip() for dependency in dependencies
+        ):
+            raise ValueError("task dependencies must be unique and non-empty")
         rows = self.store.query(
             "SELECT workspace_id,user_id,agent_id,state FROM sessions WHERE session_id=?",
             (session_id,),
         )
         if not rows or rows[0][0] != workspace_id or rows[0][2] != agent_id:
             raise PermissionError("task does not belong to the supplied session/workspace/agent")
+        if rows[0][3] != "active":
+            raise ValueError("tasks may only be created in active sessions")
         task = Task(
             str(uuid4()),
             workspace_id,
@@ -82,8 +89,8 @@ class LocalOSService:
                 task.agent_id,
                 task.intent,
                 task.state.value,
-                __import__("json").dumps(dependencies),
-                __import__("json").dumps(()),
+                json.dumps(dependencies),
+                json.dumps(()),
                 task.created_at.isoformat(),
             )
         )
@@ -105,8 +112,8 @@ class LocalOSService:
                 task.agent_id,
                 task.intent,
                 TaskState.RUNNING.value,
-                __import__("json").dumps(tuple(task.dependencies)),
-                __import__("json").dumps((*task.platform_run_ids, run.run_id)),
+                json.dumps(tuple(task.dependencies)),
+                json.dumps((*task.platform_run_ids, run.run_id)),
                 task.created_at.isoformat(),
             )
         )
