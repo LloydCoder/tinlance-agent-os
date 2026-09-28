@@ -1,8 +1,8 @@
 """Remote/fleet integration seams above the Platform authority plane."""
+
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-
 
 
 class FleetState(StrEnum):
@@ -11,13 +11,11 @@ class FleetState(StrEnum):
     DRAINING = "draining"
 
 
-
 @dataclass(frozen=True, slots=True)
 class RemoteAgent:
     agent_id: str
     endpoint: str
     state: FleetState
-
 
 
 @dataclass(slots=True)
