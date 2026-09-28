@@ -12,6 +12,9 @@ license = { text = "Apache-2.0" }
 authors = [{ name = "Tinlance" }]
 dependencies = []
 
+[project.optional-dependencies]
+dev = ["mypy>=1.17", "pytest>=8.4", "pytest-cov>=6.2", "ruff>=0.13"]
+
 [project.scripts]
 agentos = "tinlance_agent_os.cli:main"
 
