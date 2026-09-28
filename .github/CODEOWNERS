@@ -1,0 +1,6 @@
+# Security-sensitive repository surfaces
+/.github/ @LloydCoder
+/security/ @LloydCoder
+/docs/adr/ @LloydCoder
+/src/tinlance_agent_os/platform_adapter.py @LloydCoder
+/src/tinlance_agent_os/transport.py @LloydCoder
