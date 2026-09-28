@@ -20,7 +20,7 @@ from tinlance_agent_os.memory import DataClassification, MemoryStore
 from tinlance_agent_os.shell import AgentShell, ShellCommand
 from tinlance_agent_os.store import StateStore
 from tinlance_agent_os.system import LocalSystemBackend
-from tinlance_agent_os.workflow import WorkflowDefinition, WorkflowEngine, WorkflowStep
+from tinlance_agent_os.workflow import WorkflowDefinition, WorkflowEngine, WorkflowState, WorkflowStep
 
 
 def test_workflow_validation_and_ready_steps() -> None:
@@ -245,3 +245,62 @@ def test_daemon_handler_protocol_paths() -> None:
     valid = Connection(b'{"x":1}')
     daemon._handle(valid)
     assert b'"ok":true' in valid.sent[0]
+
+
+def test_workflow_execution_lifecycle() -> None:
+    definition = WorkflowDefinition(
+        "w",
+        "ws",
+        (WorkflowStep("a", "one"), WorkflowStep("b", "two", ("a",))),
+    )
+    engine = WorkflowEngine()
+    execution = engine.start(definition)
+    assert execution.state is WorkflowState.RUNNING
+    execution = engine.complete_step(definition, execution, "a")
+    assert execution.completed == frozenset({"a"})
+    execution = engine.complete_step(definition, execution, "b")
+    assert execution.state is WorkflowState.COMPLETED
+
+
+def test_system_rejects_absolute_executable_bypass() -> None:
+    with TemporaryDirectory() as directory:
+        backend = LocalSystemBackend(Path(directory), frozenset({"echo"}))
+        try:
+            backend.run_process(["/bin/echo", "ok"])
+        except PermissionError:
+            pass
+        else:
+            raise AssertionError("absolute executable bypass should fail")
+
+
+def test_daemon_accepts_fragmented_line_protocol() -> None:
+    class Connection:
+        def __init__(self) -> None:
+            self.parts = [b'{"x":', b'1}\n']
+            self.sent: list[bytes] = []
+
+        def __enter__(self) -> Connection:
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return
+
+        def settimeout(self, _value: float) -> None:
+            return
+
+        def recv(self, _size: int) -> bytes:
+            return self.parts.pop(0) if self.parts else b""
+
+        def sendall(self, data: bytes) -> None:
+            self.sent.append(data)
+
+        def getsockopt(self, *_args: object) -> bytes:
+            return struct.pack("3i", 0, os.getuid(), 0)
+
+    daemon = AgentOSDaemon(
+        DaemonConfig(Path("/tmp/unused.sock"), max_request_bytes=100),
+        lambda request: {"ok": request["x"]},
+    )
+    connection = Connection()
+    daemon._handle(connection)
+    assert b'"ok":true' in connection.sent[0]
