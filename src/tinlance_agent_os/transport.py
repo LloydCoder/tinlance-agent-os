@@ -100,10 +100,8 @@ class HttpPlatformTransport:
             raise ValueError("endpoint must be an absolute HTTP(S) URL")
         if parsed.username is not None or parsed.password is not None:
             raise ValueError("endpoint must not contain embedded credentials")
-        if parsed.scheme == "http" and not (
-            self.allow_insecure_localhost
-            and parsed.hostname in {"127.0.0.1", "::1", "localhost"}
-        ):
+        is_localhost = parsed.hostname in {"127.0.0.1", "::1", "localhost"}
+        if parsed.scheme == "http" and not (self.allow_insecure_localhost and is_localhost):
             raise ValueError("HTTPS is required unless insecure localhost is explicitly enabled")
         if self.timeout_seconds <= 0 or self.max_retries < 0 or self.retry_backoff_seconds < 0:
             raise ValueError("transport limits must be valid")
