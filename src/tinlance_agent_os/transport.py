@@ -122,11 +122,9 @@ class HttpPlatformTransport:
             raise PlatformAuthenticationError("access token provider returned an invalid token")
         body = json.dumps(
             {
-                "api_version": API_VERSION,
                 "operation": operation,
                 "tenant_id": context.tenant_id,
                 "subject_id": context.subject_id,
-                "request_id": context.request_id,
                 "payload": dict(payload),
             },
             separators=(",", ":"),
@@ -206,7 +204,8 @@ class HttpPlatformTransport:
             raise PlatformProtocolError("Platform response is not valid UTF-8 JSON") from exc
         if not isinstance(decoded, dict):
             raise PlatformProtocolError("Platform response must be a JSON object")
-        if decoded.get("api_version") != API_VERSION:
+        response_version = str(response_headers.get("X-Tinlance-API-Version", ""))
+        if response_version != API_VERSION:
             raise PlatformVersionError("Platform response API version is incompatible")
         if decoded.get("status") not in {"ok", "accepted"}:
             raise PlatformProtocolError("Platform response status is invalid")
