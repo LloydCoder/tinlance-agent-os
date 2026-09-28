@@ -93,11 +93,16 @@ class WorkflowEngine:
         self.validate(definition)
         if execution.workflow_id != definition.workflow_id:
             raise ValueError("execution does not belong to workflow")
-        if execution.state not in {WorkflowState.RUNNING, WorkflowState.WAITING_INPUT, WorkflowState.WAITING_APPROVAL}:
+        if execution.state not in {
+            WorkflowState.RUNNING,
+            WorkflowState.WAITING_INPUT,
+            WorkflowState.WAITING_APPROVAL,
+        }:
             raise ValueError("workflow is not executable")
         if step_id not in {step.step_id for step in definition.steps}:
             raise ValueError("unknown workflow step")
-        if step_id not in {step.step_id for step in self.ready_steps(definition, set(execution.completed))}:
+        ready = self.ready_steps(definition, set(execution.completed))
+        if step_id not in {step.step_id for step in ready}:
             raise ValueError("workflow step is not ready")
         completed = frozenset((*execution.completed, step_id))
         state = (
@@ -125,7 +130,9 @@ class WorkflowEngine:
             failed_step=step_id,
         )
 
-    def cancel(self, definition: WorkflowDefinition, execution: WorkflowExecution) -> WorkflowExecution:
+    def cancel(
+        self, definition: WorkflowDefinition, execution: WorkflowExecution
+    ) -> WorkflowExecution:
         self.validate(definition)
         if execution.workflow_id != definition.workflow_id:
             raise ValueError("execution does not belong to workflow")
