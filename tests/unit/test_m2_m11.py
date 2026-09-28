@@ -15,6 +15,7 @@ from tinlance_agent_os.daemon_service import LocalOSService
 from tinlance_agent_os.distribution import ReleaseArtifact, UpdateManager, UpdateState
 from tinlance_agent_os.extensions import ExtensionContext, ExtensionManager
 from tinlance_agent_os.memory import DataClassification, MemoryStore
+from tinlance_agent_os.shell import AgentShell, ShellCommand
 from tinlance_agent_os.store import StateStore
 from tinlance_agent_os.system import LocalSystemBackend
 from tinlance_agent_os.workflow import WorkflowDefinition, WorkflowEngine, WorkflowStep
