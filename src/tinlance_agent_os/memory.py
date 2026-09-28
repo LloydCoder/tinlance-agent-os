@@ -1,11 +1,11 @@
 """Scoped, classified local context/memory."""
+
 from dataclasses import dataclass
 from enum import StrEnum
 from uuid import uuid4
 
 from .domain import utc_now
 from .store import StateStore
-
 
 
 class DataClassification(StrEnum):
