@@ -1,7 +1,5 @@
 """Scoped, classified local context/memory."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import StrEnum
 from uuid import uuid4
