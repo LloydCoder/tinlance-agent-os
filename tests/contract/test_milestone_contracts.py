@@ -23,6 +23,4 @@ def test_remote_registry_requires_secure_endpoint() -> None:
 
 
 def test_release_artifact_is_content_addressed() -> None:
-    assert (
-        ReleaseArtifact("1", "0" * 64, 0, "https://example.invalid").verify(b"") is False
-    )
+    assert ReleaseArtifact("1", "0" * 64, 0, "https://example.invalid").verify(b"") is False
