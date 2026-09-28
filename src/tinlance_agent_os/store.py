@@ -1,4 +1,5 @@
 """Durable local Agent OS state store."""
+
 from __future__ import annotations
 
 import sqlite3
@@ -7,7 +8,9 @@ from pathlib import Path
 from typing import Any
 
 
+
 @dataclass(frozen=True, slots=True)
+
 
 class StateStore:
     path: Path
