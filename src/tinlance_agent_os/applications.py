@@ -1,7 +1,7 @@
 """Declarative agent application manifest and lifecycle model."""
+
 from dataclasses import dataclass, field
 from enum import StrEnum
-
 
 
 class ApplicationState(StrEnum):
@@ -12,13 +12,11 @@ class ApplicationState(StrEnum):
     UNINSTALLED = "uninstalled"
 
 
-
 @dataclass(frozen=True, slots=True)
 class CapabilityRequest:
     capability_id: str
     reason: str
     optional: bool = False
-
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,7 +46,6 @@ class AgentManifest:
             for capability in self.capabilities
         ):
             raise ValueError("invalid capability request")
-
 
 
 @dataclass(slots=True)
