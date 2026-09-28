@@ -1,16 +1,15 @@
 """Capability-scoped extension SDK."""
+
 from dataclasses import dataclass
 from typing import Protocol
 
 from .applications import AgentManifest
 
 
-
 class Extension(Protocol):
     def start(self, context: "ExtensionContext") -> None: ...
 
     def stop(self) -> None: ...
-
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,7 +20,6 @@ class ExtensionContext:
     def require(self, capability: str) -> None:
         if capability not in self.granted_capabilities:
             raise PermissionError("capability not granted")
-
 
 
 @dataclass(slots=True)
