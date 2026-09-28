@@ -4,7 +4,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+
 @dataclass(frozen=True, slots=True)
+
 class ShellCommand:
     command_id: str
     title: str
