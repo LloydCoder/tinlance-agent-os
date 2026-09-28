@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from .contracts import AgentPlatformClient
 from .daemon import AgentOSDaemon, DaemonConfig
-from .domain import Session, Task, TaskState, Workspace, utc_now
+from .domain import PlatformRunRef, Session, Task, TaskState, Workspace, utc_now
 from .store import StateStore
 
 
@@ -75,7 +75,7 @@ class LocalOSService:
         )
         return task
 
-    def dispatch(self, task: Task):
+    def dispatch(self, task: Task) -> PlatformRunRef:
         run = self.platform.create_run(
             task_id=task.task_id,
             agent_id=task.agent_id,
