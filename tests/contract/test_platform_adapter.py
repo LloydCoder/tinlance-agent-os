@@ -6,11 +6,11 @@ from tinlance_agent_os.transport import PlatformRequestContext
 
 class FakeTransport:
     def __init__(self) -> None:
-        self.calls: list[tuple[str, dict[str, object], bool]] = []
+        self.calls: list[tuple[str, dict[str, object], bool, str]] = []
 
     def send(self, *, operation, payload, context, idempotent):
         assert context.tenant_id == "tenant-1"
-        self.calls.append((operation, dict(payload), idempotent))
+        self.calls.append((operation, dict(payload), idempotent, context.request_id))
         responses = {
             "principal.get": {"user_id": "user-1"},
             "agents.list": {"agents": [{"agent_id": "a1", "name": "Builder", "version": "1.2"}]},
@@ -46,4 +46,4 @@ def test_adapter_implements_all_boundary_operations() -> None:
     assert adapter.request_approval(run_id="r1", action="deploy").approval_id == "ap1"
     assert adapter.get_events(run_id="r1")[0].event_id == "e1"
     assert adapter.get_evidence(run_id="r1")[0].evidence_id == "ev1"
-    assert adapter.health()
+    assert adapter.health()\n    request_ids = [call[3] for call in adapter._call.__self__.transport.calls]\n    assert len(request_ids) == len(set(request_ids))
