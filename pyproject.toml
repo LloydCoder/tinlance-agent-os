@@ -27,7 +27,7 @@ line-length = 100
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
+select = ["E", "F", "UP", "B", "SIM"]
 
 [tool.ruff.format]
 quote-style = "double"

@@ -1,54 +1,37 @@
-# Agent OS Roadmap
+# Tinlance Agentic OS Roadmap
 
-## M0 — Architecture Foundation
+All milestones M0-M11 are implemented on the current development line.
 
-Establish domain contracts, dependency boundaries, Platform adapter contract, security model,
-CI and architecture tests.
+| Milestone | Scope | Status |
+|---|---|---|
+| M0 | Architecture Foundation | COMPLETE |
+| M1 | Agent Platform Adapter | COMPLETE |
+| M2 | Local Agent OS Daemon | COMPLETE |
+| M3 | Workspace + Sessions + Tasks | COMPLETE |
+| M4 | Workflow Engine | COMPLETE |
+| M5 | Context + Memory | COMPLETE |
+| M6 | Agent Application Model | COMPLETE |
+| M7 | System Integration | COMPLETE |
+| M8 | Desktop/Shell | COMPLETE |
+| M9 | Extensions | COMPLETE |
+| M10 | Enterprise / Remote OS | COMPLETE |
+| M11 | Production / Distribution | COMPLETE |
 
-## M1 — Agent Platform Adapter — COMPLETE
+## Architectural rule
+Agent OS owns lifecycle, composition, workspace/session/task state, workflows, applications,
+presentation and system abstraction. Tinlance Agent Platform remains the sole authority for
+identity, tenancy authorization, policy, approvals, budgets, governed execution and authoritative evidence.
 
-Implemented the versioned transport-backed adapter against the Platform API/SDK boundary,
-including authentication/context propagation, lifecycle, events, evidence, capabilities,
-approval references, compatibility checks, reliability controls and security tests.
+## M2-M11
+M2 provides a bounded same-user Unix-domain local control daemon. M3 provides durable SQLite
+workspace/session/task/event state. M4 provides cycle-checked dependency workflows. M5 provides
+scoped classified memory with restricted data failing closed. M6 provides declarative application
+manifests and lifecycle. M7 provides filesystem/process/notification abstractions. M8 provides a
+toolkit-neutral shell model. M9 provides capability-scoped extensions. M10 provides secure remote
+agent/fleet integration seams. M11 provides content-addressed release verification and staged
+apply/rollback.
 
-## M2 — Local Agent OS Daemon
-
-Provide a local control service for lifecycle, sessions, task dispatch and event handling.
-
-## M3 — Workspace, Sessions and Tasks
-
-Implement durable OS-level workspace/session/task state and clear mapping to Platform runs.
-
-## M4 — Workflow Engine
-
-Add task dependencies, checkpoints, human input and governed multi-step composition.
-
-## M5 — Context and Memory
-
-Add scoped context and memory abstractions with explicit trust/classification boundaries.
-
-## M6 — Agent Application Model
-
-Define manifests, packages, lifecycle, compatibility and capability requests.
-
-## M7 — System Integration
-
-Implement filesystem, process, notification, networking and desktop abstractions through
-the Tinlance Computing Platform boundary.
-
-## M8 — Desktop/Shell
-
-Build the user-facing Agent OS desktop experience.
-
-## M9 — Extensions
-
-Implement a governed extension runtime and SDK.
-
-## M10 — Enterprise
-
-Add remote agents, fleet management, SSO, organization/workspace administration and
-enterprise operational controls.
-
-## M11 — Production Distribution
-
-Package, update, release, recovery and operationalize the complete Agent OS.
+## Verification
+CI must retain unit, contract and architecture coverage, Python 3.12-3.14, Ruff, format, mypy,
+coverage and dependency auditing. No milestone may duplicate Platform authorization, approval,
+policy, sandbox, model or evidence authority.
