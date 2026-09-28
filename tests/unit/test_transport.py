@@ -22,6 +22,7 @@ from tinlance_agent_os.transport import (
 class Handler(BaseHTTPRequestHandler):
     response_status = 200
     response_body = {"status": "ok", "payload": {"ready": True}}
+    response_version = API_VERSION
     last_headers: dict[str, str] = {}
     last_body: dict[str, object] = {}
 
@@ -31,7 +32,7 @@ class Handler(BaseHTTPRequestHandler):
         Handler.last_body = json.loads(self.rfile.read(length))
         self.send_response(Handler.response_status)
         self.send_header("Content-Type", "application/json")
-        self.send_header("X-Tinlance-API-Version", API_VERSION)
+        self.send_header("X-Tinlance-API-Version", Handler.response_version)
         encoded = json.dumps(Handler.response_body).encode()
         self.send_header("Content-Length", str(len(encoded)))
         self.end_headers()
@@ -44,6 +45,7 @@ class Handler(BaseHTTPRequestHandler):
 @pytest.fixture
 def server():
     Handler.response_status = 200
+    Handler.response_version = API_VERSION
     Handler.response_body = {"status": "ok", "payload": {"ready": True}}
     server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
     thread = Thread(target=server.serve_forever, daemon=True)
@@ -84,8 +86,8 @@ def test_authentication_and_version_fail_closed(server) -> None:
         ).send(operation="health", payload={}, context=context(), idempotent=True)
 
     Handler.response_status = 200
-    Handler.send_header if False else None
     Handler.response_status = 200
+    Handler.response_version = "999"
     Handler.response_body = {"status": "ok", "payload": {}}
     with pytest.raises(PlatformVersionError):
         HttpPlatformTransport(
@@ -94,6 +96,7 @@ def test_authentication_and_version_fail_closed(server) -> None:
 
 
 def test_non_json_fails_closed(server) -> None:
+    Handler.response_version = API_VERSION
     Handler.response_body = {"status": "ok", "payload": []}
     with pytest.raises(PlatformProtocolError):
         HttpPlatformTransport(
