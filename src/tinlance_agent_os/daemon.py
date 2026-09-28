@@ -1,5 +1,4 @@
 """Local Agent OS control daemon over a Unix domain socket."""
-
 import contextlib
 import json
 import os
