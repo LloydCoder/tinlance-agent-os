@@ -213,7 +213,7 @@ def test_daemon_handler_protocol_paths() -> None:
             self.payload = payload
             self.sent: list[bytes] = []
 
-        def __enter__(self) -> "Connection":
+        def __enter__(self) -> Connection:
             return self
 
         def __exit__(self, *_args: object) -> None:
