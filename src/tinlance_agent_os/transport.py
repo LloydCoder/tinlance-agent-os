@@ -94,13 +94,13 @@ class HttpPlatformTransport:
 
     def __post_init__(self) -> None:
         parsed = urlparse(self.endpoint)
-        if parsed.scheme not in {'https', 'http'} or not parsed.netloc:
+        if parsed.scheme not in {"https", "http"} or not parsed.netloc:
             raise ValueError("endpoint must be an absolute HTTP(S) URL")
         if parsed.username is not None or parsed.password is not None:
             raise ValueError("endpoint must not contain embedded credentials")
-        if parsed.scheme == 'http' and not (
+        if parsed.scheme == "http" and not (
             self.allow_insecure_localhost
-            and parsed.hostname in {'127.0.0.1', '::1', 'localhost'}
+            and parsed.hostname in {"127.0.0.1", "::1", "localhost"}
         ):
             raise ValueError("HTTPS is required unless insecure localhost is explicitly enabled")
         if self.timeout_seconds <= 0 or self.max_retries < 0 or self.retry_backoff_seconds < 0:
@@ -121,14 +121,14 @@ class HttpPlatformTransport:
             raise PlatformAuthenticationError("access token provider returned an invalid token")
         body = json.dumps(
             {
-                'api_version': API_VERSION,
-                'operation': operation,
-                'tenant_id': context.tenant_id,
-                'subject_id': context.subject_id,
-                'request_id': context.request_id,
-                'payload': dict(payload),
+                "api_version": API_VERSION,
+                "operation": operation,
+                "tenant_id": context.tenant_id,
+                "subject_id": context.subject_id,
+                "request_id": context.request_id,
+                "payload": dict(payload),
             },
-            separators=(',', ':'),
+            separators=(",", ":"),
         ).encode("utf-8")
         headers = {
             "Accept": "application/json",
@@ -154,7 +154,7 @@ class HttpPlatformTransport:
         if last_error is not None:
             if isinstance(last_error, _RetryableResponse):
                 raise PlatformUnavailableError(
-                    'Platform remained unavailable after permitted retries'
+                    "Platform remained unavailable after permitted retries"
                 ) from last_error
             raise last_error
         raise PlatformUnavailableError("Platform request failed")
@@ -170,8 +170,8 @@ class HttpPlatformTransport:
             opener = urllib.request.build_opener(_NoRedirectHandler())
             with opener.open(request, timeout=self.timeout_seconds) as response:
                 raw = response.read(MAX_RESPONSE_BYTES + 1)
-                status = getattr(response, 'status', 200)
-                response_headers = getattr(response, 'headers', {})
+                status = getattr(response, "status", 200)
+                response_headers = getattr(response, "headers", {})
         except urllib.error.HTTPError as exc:
             if exc.code in RETRYABLE_STATUS_CODES:
                 raise _RetryableResponse(exc.code) from exc
@@ -196,16 +196,16 @@ class HttpPlatformTransport:
             raise PlatformTransportError(f"Platform returned HTTP {status}")
         if len(raw) > MAX_RESPONSE_BYTES:
             raise PlatformProtocolError("Platform response exceeds the maximum permitted size")
-        content_type = str(response_headers.get('Content-Type', ''))
+        content_type = str(response_headers.get("Content-Type", ""))
         if "json" not in content_type.lower():
             raise PlatformProtocolError("Platform response must be JSON")
         try:
-            decoded = json.loads(raw.decode('utf-8'))
+            decoded = json.loads(raw.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise PlatformProtocolError("Platform response is not valid UTF-8 JSON") from exc
         if not isinstance(decoded, dict):
             raise PlatformProtocolError("Platform response must be a JSON object")
-        if decoded.get('api_version') != API_VERSION:
+        if decoded.get("api_version") != API_VERSION:
             raise PlatformVersionError("Platform response API version is incompatible")
         if decoded.get("status") not in {"ok", "accepted"}:
             raise PlatformProtocolError("Platform response status is invalid")
