@@ -1,7 +1,5 @@
 """Remote/fleet integration seams above the Platform authority plane."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
