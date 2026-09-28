@@ -1,4 +1,5 @@
 """Local Agent OS control daemon over a Unix domain socket."""
+
 from __future__ import annotations
 
 import contextlib
@@ -12,12 +13,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+
 @dataclass(frozen=True, slots=True)
 class DaemonConfig:
     socket_path: Path
     max_request_bytes: int = 1_048_576
     backlog: int = 32
     request_timeout_seconds: float = 5.0
+
 
 
 class AgentOSDaemon:
