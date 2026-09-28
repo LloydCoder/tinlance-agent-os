@@ -39,9 +39,7 @@ class MemoryStore:
         if not all(value.strip() for value in (workspace_id, scope, content)):
             raise ValueError("memory fields are required")
         if classification is DataClassification.RESTRICTED:
-            raise PermissionError(
-                "restricted memory requires an external governed memory provider"
-            )
+            raise PermissionError("restricted memory requires an external governed memory provider")
         item = MemoryItem(
             str(uuid4()),
             workspace_id,
