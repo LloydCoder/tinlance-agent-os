@@ -1,0 +1,5 @@
+mypy>=1.17,<2
+pytest>=8.4,<9
+pytest-cov>=6,<7
+ruff>=0.13,<0.14
+pip-audit>=2.9,<3
