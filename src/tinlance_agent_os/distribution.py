@@ -1,7 +1,5 @@
 """Production/distribution metadata and safe update state machine."""
 
-from __future__ import annotations
-
 import hashlib
 from dataclasses import dataclass
 from enum import StrEnum
