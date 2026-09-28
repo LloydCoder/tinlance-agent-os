@@ -28,4 +28,4 @@ jobs:
       - name: Pytest
         run: pytest --cov=tinlance_agent_os --cov-report=term-missing
       - name: Dependency audit
-        run: pip-audit
+        run: pip-audit -r requirements-dev.txt
