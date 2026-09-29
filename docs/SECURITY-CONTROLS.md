@@ -15,6 +15,7 @@ This document is the implementation-level security companion to security/threat-
 | Local IPC | Same-user peer enforcement | SO_PEERCRED where supported |
 | IPC resource use | Bounded request size/time | Daemon config |
 | Local state | Durable SQLite | WAL + synchronous FULL |
+| Task/run integrity | Dispatch only from durable OS task state | Task identity and Platform run lifecycle reconciliation |
 | Database integrity | Referential integrity | SQLite foreign keys |
 | Memory | Workspace/scope isolation | Query predicates + classified storage |
 | Sensitive memory | Fail closed | Confidential/restricted rejection |
