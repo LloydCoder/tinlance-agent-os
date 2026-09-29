@@ -22,9 +22,9 @@ def test_local_os_service_exposes_platform_lifecycle(tmp_path) -> None:
     assert service.handle({"operation": "health"}) == {"ready": True}
     assert service.handle({"operation": "principal"}) == {"user_id": "reference-user"}
     assert service.handle({"operation": "agents"}) == {"agents": []}
-    assert service.handle(
-        {"operation": "capabilities", "agent_id": "agent-a"}
-    ) == {"capabilities": [{"capability_id": "agent:agent-a:capabilities"}]}
+    assert service.handle({"operation": "capabilities", "agent_id": "agent-a"}) == {
+        "capabilities": [{"capability_id": "agent:agent-a:capabilities"}]
+    }
 
     dispatched = service.handle(
         {
