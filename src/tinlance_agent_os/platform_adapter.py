@@ -6,7 +6,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import cast
-from uuid import uuid4
+from hashlib import sha256
+import json
 
 from .contracts import AgentPlatformClient
 from .domain import Agent, ApprovalRef, CapabilityRef, Event, EvidenceRef, PlatformRunRef, User
@@ -45,6 +46,15 @@ class AgentPlatformAdapter(AgentPlatformClient):
     transport: PlatformTransport
     context: PlatformRequestContext
 
+    @staticmethod
+    def _stable_request_id(operation: str, payload: Mapping[str, object]) -> str:
+        canonical = json.dumps(
+            {"operation": operation, "payload": dict(payload)},
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        return sha256(canonical.encode("utf-8")).hexdigest()
+
     def _call(
         self,
         operation: str,
@@ -52,7 +62,10 @@ class AgentPlatformAdapter(AgentPlatformClient):
         *,
         idempotent: bool,
     ) -> Mapping[str, object]:
-        request_context = replace(self.context, request_id=str(uuid4()))
+        request_context = replace(
+            self.context,
+            request_id=self._stable_request_id(operation, payload),
+        )
         return self.transport.send(
             operation=operation,
             payload=payload,
@@ -79,7 +92,7 @@ class AgentPlatformAdapter(AgentPlatformClient):
         payload = self._call(
             "runs.create",
             {"task_id": task_id, "agent_id": agent_id, "intent": intent},
-            idempotent=False,
+            idempotent=True,
         )
         return PlatformRunRef(
             _string(payload, "run_id"),
@@ -122,7 +135,7 @@ class AgentPlatformAdapter(AgentPlatformClient):
                 "resource": resource or action,
                 "reason": reason or "Agent OS requested governed approval",
             },
-            idempotent=False,
+            idempotent=True,
         )
         return ApprovalRef(_string(payload, "approval_id"))
 
