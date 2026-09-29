@@ -142,7 +142,6 @@ class StateStore:
             db.execute("PRAGMA foreign_keys=ON")
             db.execute("INSERT INTO workflows VALUES (?,?,?,?,?)", row)
 
-
     def get_task(self, task_id: str) -> sqlite3.Row | None:
         rows = self.query(
             "SELECT task_id,workspace_id,session_id,agent_id,intent,state,dependencies,"
