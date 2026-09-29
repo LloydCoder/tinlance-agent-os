@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
@@ -140,3 +141,26 @@ class StateStore:
         with sqlite3.connect(self.path) as db:
             db.execute("PRAGMA foreign_keys=ON")
             db.execute("INSERT INTO workflows VALUES (?,?,?,?,?)", row)
+
+
+    def get_task(self, task_id: str) -> sqlite3.Row | None:
+        rows = self.query(
+            "SELECT task_id,workspace_id,session_id,agent_id,intent,state,dependencies,"
+            "platform_run_ids,created_at FROM tasks WHERE task_id=?",
+            (task_id,),
+        )
+        return rows[0] if rows else None
+
+    def find_task_by_platform_run(self, run_id: str) -> sqlite3.Row | None:
+        rows = self.query(
+            "SELECT task_id,workspace_id,session_id,agent_id,intent,state,dependencies,"
+            "platform_run_ids,created_at FROM tasks"
+        )
+        for row in rows:
+            try:
+                run_ids = json.loads(row["platform_run_ids"])
+            except (TypeError, json.JSONDecodeError):
+                continue
+            if isinstance(run_ids, list) and run_id in run_ids:
+                return row
+        return None
