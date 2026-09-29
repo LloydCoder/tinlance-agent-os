@@ -21,6 +21,26 @@ Platform implementation internals.
 Agent OS may compose and request work. It may not independently authorize consequential
 actions.
 
+## Agent Platform API v1.1
+
+The OS adapter uses a provider-neutral transport and the Platform v1.1 request/response envelope.
+
+Supported operations:
+
+- principal.get
+- agents.list
+- runs.create
+- runs.cancel
+- capabilities.list
+- approvals.request
+- runs.events
+- runs.evidence
+- health
+
+Request identity is propagated with tenant/subject context, a fresh X-Request-ID, optional W3C traceparent, and a bearer credential. Non-idempotent run creation, cancellation and approval requests are never automatically retried.
+
+The Platform is authoritative for identity, tenant membership, authorization, policy and approval. Agent OS treats returned approval and evidence identifiers as opaque references.
+
 ## Core M0 objects
 
 - User

@@ -54,7 +54,14 @@ class ReferenceAgentPlatformClient(AgentPlatformClient):
     def list_capabilities(self, *, agent_id: str) -> Sequence[CapabilityRef]:
         return (CapabilityRef(f"agent:{agent_id}:capabilities"),)
 
-    def request_approval(self, *, run_id: str, action: str) -> ApprovalRef:
+    def request_approval(
+        self,
+        *,
+        run_id: str,
+        action: str,
+        resource: str | None = None,
+        reason: str | None = None,
+    ) -> ApprovalRef:
         if not run_id or not action:
             raise ValueError("run_id and action are required")
         return ApprovalRef(f"approval:{run_id}:{action}")
