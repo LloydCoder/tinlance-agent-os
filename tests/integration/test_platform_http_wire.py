@@ -4,7 +4,11 @@ import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from tinlance_agent_os.transport import HttpPlatformTransport, PlatformRequestContext, StaticAccessTokenProvider
+from tinlance_agent_os.transport import (
+    HttpPlatformTransport,
+    PlatformRequestContext,
+    StaticAccessTokenProvider,
+)
 
 
 class Handler(BaseHTTPRequestHandler):
