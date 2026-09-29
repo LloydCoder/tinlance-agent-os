@@ -21,6 +21,13 @@ from .domain import (
 from .store import StateStore
 
 
+def _required_text(request: dict[str, object], key: str) -> str:
+    value = request.get(key)
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{key} is required")
+    return value
+
+
 @dataclass(slots=True)
 class LocalOSService:
     store: StateStore
@@ -181,23 +188,12 @@ class LocalOSService:
                 ]
             }
         if operation == "dispatch":
-            task_id = request.get("task_id")
-            agent_id = request.get("agent_id")
-            workspace_id = request.get("workspace_id")
-            session_id = request.get("session_id")
-            intent = request.get("intent")
-            values = (task_id, agent_id, workspace_id, session_id, intent)
-            if not all(isinstance(value, str) and value.strip() for value in values):
-                raise ValueError(
-                    "task_id, agent_id, workspace_id, session_id and intent are required"
-                )
-            task = Task(
-                task_id,
-                workspace_id,
-                session_id,
-                agent_id,
-                intent,
-            )
+            task_id = _required_text(request, "task_id")
+            agent_id = _required_text(request, "agent_id")
+            workspace_id = _required_text(request, "workspace_id")
+            session_id = _required_text(request, "session_id")
+            intent = _required_text(request, "intent")
+            task = Task(task_id, workspace_id, session_id, agent_id, intent)
             run = self.dispatch(task)
             return {"run_id": run.run_id, "task_id": run.task_id, "state": run.state}
         if operation == "cancel":
@@ -207,19 +203,11 @@ class LocalOSService:
             run = self.cancel(run_id)
             return {"run_id": run.run_id, "task_id": run.task_id, "state": run.state}
         if operation == "approval":
-            run_id = request.get("run_id")
-            action = request.get("action")
-            resource = request.get("resource")
-            reason = request.get("reason")
-            values = (run_id, action, resource, reason)
-            if not all(isinstance(value, str) and value.strip() for value in values):
-                raise ValueError("run_id, action, resource and reason are required")
-            approval = self.request_approval(
-                run_id,
-                action,
-                resource,
-                reason,
-            )
+            run_id = _required_text(request, "run_id")
+            action = _required_text(request, "action")
+            resource = _required_text(request, "resource")
+            reason = _required_text(request, "reason")
+            approval = self.request_approval(run_id, action, resource, reason)
             return {"approval_id": approval.approval_id}
         if operation == "events":
             run_id = request.get("run_id")
