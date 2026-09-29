@@ -179,7 +179,9 @@ class LocalOSService:
             if not all(isinstance(value, str) and value.strip() for value in (
                 task_id, agent_id, workspace_id, session_id, intent
             )):
-                raise ValueError("task_id, agent_id, workspace_id, session_id and intent are required")
+                raise ValueError(
+                    "task_id, agent_id, workspace_id, session_id and intent are required"
+                )
             task = Task(task_id, workspace_id, session_id, agent_id, intent)
             run = self.dispatch(task)
             return {"run_id": run.run_id, "task_id": run.task_id, "state": run.state}
