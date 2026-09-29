@@ -426,6 +426,7 @@ This separation prevents the repository from claiming security properties that o
 ## Documentation
 
 - Architecture: docs/ARCHITECTURE.md
+- Agent Platform integration contract: docs/architecture/agent-platform-integration.md
 - Roadmap: docs/ROADMAP.md
 - M1 status: docs/M1-STATUS.md
 - M2-M11 status: docs/M2-M11-STATUS.md
