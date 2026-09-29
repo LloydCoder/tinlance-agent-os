@@ -29,11 +29,11 @@ def test_local_os_service_exposes_platform_lifecycle(tmp_path) -> None:
     dispatched = service.handle(
         {
             "operation": "dispatch",
-            "task_id": "task-2",
+            "task_id": task.task_id,
             "agent_id": "agent-a",
             "workspace_id": workspace.workspace_id,
             "session_id": session.session_id,
-            "intent": "inspect again",
+            "intent": "inspect repository",
         }
     )
     assert dispatched["state"] == "running"
