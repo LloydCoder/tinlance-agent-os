@@ -30,13 +30,14 @@ The OS treats model output, retrieved content, tool responses, external content,
 |---|---|
 | Cross-tenant confused deputy | Tenant is explicit, immutable and transported on every request |
 | Credential leakage | Authorization header only; no redirects; no URL credentials |
-| Duplicate side effects | No automatic retries for non-idempotent operations |
+| Duplicate side effects | No automatic retries for non-idempotent operations; Platform request IDs support server-side idempotency |
 | Protocol downgrade/drift | API version mismatch fails closed |
 | Malformed remote data | Strict response validation |
 | Prompt injection / excessive agency | OS cannot convert model output into authority |
 | Approval bypass | OS receives opaque approval references only |
 | Evidence forgery | Platform remains evidence authority |
 | Domain dependency escalation | Architecture tests block domain-product imports |
+| Local task spoofing | Dispatch requires a previously persisted task whose identity matches the request |
 
 ## Residual risk
 Production still requires the Platform's real authenticated gateway, short-lived scoped credentials, durable telemetry and operational controls. Agent OS does not attempt to recreate those controls.
