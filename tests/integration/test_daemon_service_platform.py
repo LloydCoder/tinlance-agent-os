@@ -26,14 +26,16 @@ def test_local_os_service_exposes_platform_lifecycle(tmp_path) -> None:
         "capabilities": [{"capability_id": "agent:agent-a:capabilities"}]
     }
 
+    task2 = service.create_task(
+        workspace.workspace_id,
+        session.session_id,
+        "agent-a",
+        "inspect again",
+    )
     dispatched = service.handle(
         {
             "operation": "dispatch",
-            "task_id": task.task_id,
-            "agent_id": "agent-a",
-            "workspace_id": workspace.workspace_id,
-            "session_id": session.session_id,
-            "intent": "inspect repository",
+            "task_id": task2.task_id,
         }
     )
     assert dispatched["state"] == "running"
