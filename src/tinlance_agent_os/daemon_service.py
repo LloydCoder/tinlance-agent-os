@@ -196,12 +196,29 @@ class LocalOSService:
         resource: str,
         reason: str,
     ) -> ApprovalRef:
-        return self.platform.request_approval(
+        approval = self.platform.request_approval(
             run_id=run_id,
             action=action,
             resource=resource,
             reason=reason,
         )
+        task_row = self.store.find_task_by_platform_run(run_id)
+        if task_row is not None:
+            task = self._task_from_row(task_row)
+            self.store.upsert_task(
+                (
+                    task.task_id,
+                    task.workspace_id,
+                    task.session_id,
+                    task.agent_id,
+                    task.intent,
+                    TaskState.WAITING_APPROVAL.value,
+                    json.dumps(tuple(task.dependencies)),
+                    json.dumps(tuple(task.platform_run_ids)),
+                    task.created_at.isoformat(),
+                )
+            )
+        return approval
 
     def events(self, run_id: str) -> tuple[Event, ...]:
         return tuple(self.platform.get_events(run_id=run_id))
@@ -257,22 +274,6 @@ class LocalOSService:
             resource = _required_text(request, "resource")
             reason = _required_text(request, "reason")
             approval = self.request_approval(run_id, action, resource, reason)
-            task_row = self.store.find_task_by_platform_run(run_id)
-            if task_row is not None:
-                task = self._task_from_row(task_row)
-                self.store.upsert_task(
-                    (
-                        task.task_id,
-                        task.workspace_id,
-                        task.session_id,
-                        task.agent_id,
-                        task.intent,
-                        TaskState.WAITING_APPROVAL.value,
-                        json.dumps(tuple(task.dependencies)),
-                        json.dumps(tuple(task.platform_run_ids)),
-                        task.created_at.isoformat(),
-                    )
-                )
             return {"approval_id": approval.approval_id}
         if operation == "events":
             run_id = request.get("run_id")
