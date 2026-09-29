@@ -3,7 +3,7 @@
 ## Decision
 Agent OS integrates with Agent Platform through a provider-neutral transport and a versioned request/response envelope. The concrete HTTP transport is an adapter; it does not contain authorization, policy, approval, budget or execution logic.
 
-The HTTP request body is the canonical Platform APIRequest shape: tenant identifier, authenticated subject identifier, operation name and operation payload. API version and correlation metadata are carried in headers so the body remains compatible with the Platform API contract.
+The HTTP request body is the canonical Platform APIRequest shape. The adapter also requires X-Tinlance-API-Version: 1.1 and a fresh X-Request-ID: tenant identifier, authenticated subject identifier, operation name and operation payload. API version and correlation metadata are carried in headers so the body remains compatible with the Platform API contract.
 The bearer credential is transported only in the HTTP Authorization header and is never placed in the operation payload. The response body follows the Platform APIResponse shape; the negotiated API version is carried in the X-Tinlance-API-Version response header.
 
 ## Operations
