@@ -119,6 +119,29 @@ class LocalOSService:
         )
         return run
 
+    def cancel(self, run_id: str) -> PlatformRunRef:
+        return self.platform.cancel_run(run_id=run_id)
+
+    def request_approval(
+        self,
+        run_id: str,
+        action: str,
+        resource: str,
+        reason: str,
+    ):
+        return self.platform.request_approval(
+            run_id=run_id,
+            action=action,
+            resource=resource,
+            reason=reason,
+        )
+
+    def events(self, run_id: str):
+        return self.platform.get_events(run_id=run_id)
+
+    def evidence(self, run_id: str):
+        return self.platform.get_evidence(run_id=run_id)
+
     def daemon(self, socket_path: str) -> AgentOSDaemon:
         return AgentOSDaemon(DaemonConfig(Path(socket_path).resolve()), self.handle)
 
@@ -130,4 +153,61 @@ class LocalOSService:
             return {"ready": self.platform.health()}
         if operation == "principal":
             return {"user_id": self.platform.get_principal().user_id}
+        if operation == "agents":
+            return {
+                "agents": [
+                    {"agent_id": agent.agent_id, "name": agent.name, "version": agent.version}
+                    for agent in self.platform.list_agents()
+                ]
+            }
+        if operation == "capabilities":
+            agent_id = request.get("agent_id")
+            if not isinstance(agent_id, str):
+                raise ValueError("agent_id is required")
+            return {
+                "capabilities": [
+                    {"capability_id": capability.capability_id}
+                    for capability in self.platform.list_capabilities(agent_id=agent_id)
+                ]
+            }
+        if operation == "dispatch":
+            task_id = request.get("task_id")
+            agent_id = request.get("agent_id")
+            workspace_id = request.get("workspace_id")
+            session_id = request.get("session_id")
+            intent = request.get("intent")
+            if not all(isinstance(value, str) and value.strip() for value in (
+                task_id, agent_id, workspace_id, session_id, intent
+            )):
+                raise ValueError("task_id, agent_id, workspace_id, session_id and intent are required")
+            task = Task(task_id, workspace_id, session_id, agent_id, intent)
+            run = self.dispatch(task)
+            return {"run_id": run.run_id, "task_id": run.task_id, "state": run.state}
+        if operation == "cancel":
+            run_id = request.get("run_id")
+            if not isinstance(run_id, str):
+                raise ValueError("run_id is required")
+            run = self.cancel(run_id)
+            return {"run_id": run.run_id, "task_id": run.task_id, "state": run.state}
+        if operation == "approval":
+            run_id = request.get("run_id")
+            action = request.get("action")
+            resource = request.get("resource")
+            reason = request.get("reason")
+            if not all(isinstance(value, str) and value.strip() for value in (
+                run_id, action, resource, reason
+            )):
+                raise ValueError("run_id, action, resource and reason are required")
+            approval = self.request_approval(run_id, action, resource, reason)
+            return {"approval_id": approval.approval_id}
+        if operation == "events":
+            run_id = request.get("run_id")
+            if not isinstance(run_id, str):
+                raise ValueError("run_id is required")
+            return {"events": list(self.events(run_id))}
+        if operation == "evidence":
+            run_id = request.get("run_id")
+            if not isinstance(run_id, str):
+                raise ValueError("run_id is required")
+            return {"evidence": list(self.evidence(run_id))}
         raise ValueError("unsupported operation")
