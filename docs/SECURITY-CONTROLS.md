@@ -11,7 +11,7 @@ This document is the implementation-level security companion to security/threat-
 | Transport | HTTPS by default | Endpoint validation |
 | Redirects | No credential forwarding | Redirect handler rejects redirects |
 | Protocol | Version and schema validation | Transport/adapter |
-| Reliability | No blind retries of side effects | Explicit idempotent flag |
+| Reliability | Consequential retries use stable replay keys | Deterministic request IDs + explicit idempotent flag; durable deduplication remains Platform-owned |
 | Local IPC | Same-user peer enforcement | SO_PEERCRED where supported |
 | IPC resource use | Bounded request size/time | Daemon config |
 | Local state | Durable SQLite | WAL + synchronous FULL |
