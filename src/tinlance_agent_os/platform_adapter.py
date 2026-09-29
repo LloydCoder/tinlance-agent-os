@@ -101,7 +101,7 @@ class AgentPlatformAdapter(AgentPlatformClient):
         )
 
     def cancel_run(self, *, run_id: str) -> PlatformRunRef:
-        payload = self._call("runs.cancel", {"run_id": run_id}, idempotent=False)
+        payload = self._call("runs.cancel", {"run_id": run_id}, idempotent=True)
         return PlatformRunRef(
             _string(payload, "run_id"),
             _string(payload, "task_id"),
