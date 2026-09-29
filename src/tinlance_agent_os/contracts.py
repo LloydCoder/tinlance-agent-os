@@ -17,10 +17,11 @@ from .domain import (
 
 
 class AgentPlatformClient(Protocol):
-    """Minimal authority-preserving boundary to Tinlance Agent Platform.
+    """Authority-preserving boundary to Tinlance Agent Platform.
 
-    Implementations may use HTTP, RPC, or another transport. They must not
-    reproduce Platform authorization logic locally.
+    Implementations transport requests and references only. They must not
+    reproduce Platform authorization, policy, approval, sandbox, or evidence
+    authority locally.
     """
 
     def get_principal(self) -> User: ...
@@ -33,7 +34,14 @@ class AgentPlatformClient(Protocol):
 
     def list_capabilities(self, *, agent_id: str) -> Sequence[CapabilityRef]: ...
 
-    def request_approval(self, *, run_id: str, action: str) -> ApprovalRef: ...
+    def request_approval(
+        self,
+        *,
+        run_id: str,
+        action: str,
+        resource: str | None = None,
+        reason: str | None = None,
+    ) -> ApprovalRef: ...
 
     def get_events(self, *, run_id: str) -> Sequence[Event]: ...
 
