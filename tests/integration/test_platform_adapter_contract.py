@@ -37,15 +37,17 @@ class ContractHandler(BaseHTTPRequestHandler):
             payload = {"approval_id": "approval-a"}
         elif operation == "runs.events":
             payload = {
-                "events": [{
-                    "event_id": "event-a",
-                    "event_type": "run.created",
-                    "occurred_at": "2026-09-29T00:00:00+00:00",
-                    "workspace_id": "workspace-a",
-                    "correlation_id": "corr-a",
-                    "platform_run_id": body["payload"]["run_id"],
-                    "payload": {},
-                }]
+                "events": [
+                    {
+                        "event_id": "event-a",
+                        "event_type": "run.created",
+                        "occurred_at": "2026-09-29T00:00:00+00:00",
+                        "workspace_id": "workspace-a",
+                        "correlation_id": "corr-a",
+                        "platform_run_id": body["payload"]["run_id"],
+                        "payload": {},
+                    }
+                ]
             }
         elif operation == "runs.evidence":
             payload = {"evidence": [{"evidence_id": "evidence-a"}]}
