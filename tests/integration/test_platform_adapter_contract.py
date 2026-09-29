@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import contextlib
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from uuid import uuid4
 
 from tinlance_agent_os.platform_adapter import AgentPlatformAdapter
-from tinlance_agent_os.transport import PlatformRequestContext, HttpPlatformTransport, StaticAccessTokenProvider
+from tinlance_agent_os.transport import (
+    HttpPlatformTransport,
+    PlatformRequestContext,
+    StaticAccessTokenProvider,
+)
 
 
 class ContractHandler(BaseHTTPRequestHandler):
@@ -45,7 +50,11 @@ class ContractHandler(BaseHTTPRequestHandler):
         elif operation == "runs.evidence":
             payload = {"evidence": [{"evidence_id": "evidence-a"}]}
         elif operation == "runs.cancel":
-            payload = {"run_id": body["payload"]["run_id"], "task_id": "task-a", "state": "cancelled"}
+            payload = {
+                "run_id": body["payload"]["run_id"],
+                "task_id": "task-a",
+                "state": "cancelled",
+            }
         else:
             self.send_response(400)
             self.end_headers()
@@ -74,7 +83,12 @@ def test_adapter_round_trips_against_v11_http_contract() -> None:
         )
         adapter = AgentPlatformAdapter(
             transport,
-            PlatformRequestContext("tenant-a", "user-a", str(uuid4()), "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"),
+            PlatformRequestContext(
+                "tenant-a",
+                "user-a",
+                str(uuid4()),
+                "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+            ),
         )
         assert adapter.health() is True
         assert adapter.get_principal().user_id == "user-a"
@@ -126,10 +140,8 @@ def test_adapter_does_not_retry_non_idempotent_operations() -> None:
             transport,
             PlatformRequestContext("tenant-a", "user-a", str(uuid4())),
         )
-        try:
+        with contextlib.suppress(Exception):
             adapter.create_run(task_id="task-a", agent_id="agent-a", intent="inspect")
-        except Exception:
-            pass
         assert CountingHandler.attempts == 1
     finally:
         server.shutdown()
