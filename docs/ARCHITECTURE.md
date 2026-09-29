@@ -89,7 +89,13 @@ Agentic OS
 
 Domain products remain optional integrations and never become Agent OS core dependencies.
 
-## M0 non-goals
+## Current implementation boundary
+
+M0–M11 repository capabilities are implemented and tested. The following are intentionally deployment/provider seams rather than missing repository features: enterprise IdP/SSO, hosted fleet control, production telemetry backend, artifact signing service, desktop toolkit, durable Platform infrastructure and production sandbox supervision.
+
+The historical M0 non-goals below are retained only as historical scope notes; they do not override the current roadmap or implementation.
+
+## M0 historical non-goals
 
 - desktop shell
 - workflow engine implementation
