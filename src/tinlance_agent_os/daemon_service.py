@@ -113,31 +113,79 @@ class LocalOSService:
         )
         return task
 
+    @staticmethod
+    def _task_from_row(row: object) -> Task:
+        dependencies = json.loads(row["dependencies"])
+        platform_run_ids = json.loads(row["platform_run_ids"])
+        if not isinstance(dependencies, list) or not isinstance(platform_run_ids, list):
+            raise ValueError("stored task collections are invalid")
+        return Task(
+            row["task_id"],
+            row["workspace_id"],
+            row["session_id"],
+            row["agent_id"],
+            row["intent"],
+            TaskState(row["state"]),
+            tuple(dependencies),
+            tuple(platform_run_ids),
+            __import__("datetime").datetime.fromisoformat(row["created_at"]),
+        )
+
     def dispatch(self, task: Task) -> PlatformRunRef:
         if not task.task_id or not task.agent_id or not task.intent.strip():
             raise ValueError("task is invalid")
+        stored = self.store.get_task(task.task_id)
+        if stored is None:
+            raise PermissionError("task must be created in Agent OS before dispatch")
+        stored_task = self._task_from_row(stored)
+        if (
+            stored_task.workspace_id != task.workspace_id
+            or stored_task.session_id != task.session_id
+            or stored_task.agent_id != task.agent_id
+            or stored_task.intent != task.intent
+        ):
+            raise PermissionError("task identity does not match durable OS state")
+        if stored_task.state not in {TaskState.CREATED, TaskState.READY}:
+            raise ValueError("task is not dispatchable")
         run = self.platform.create_run(
-            task_id=task.task_id,
-            agent_id=task.agent_id,
-            intent=task.intent,
+            task_id=stored_task.task_id,
+            agent_id=stored_task.agent_id,
+            intent=stored_task.intent,
         )
         self.store.upsert_task(
             (
-                task.task_id,
-                task.workspace_id,
-                task.session_id,
-                task.agent_id,
-                task.intent,
+                stored_task.task_id,
+                stored_task.workspace_id,
+                stored_task.session_id,
+                stored_task.agent_id,
+                stored_task.intent,
                 TaskState.RUNNING.value,
-                json.dumps(tuple(task.dependencies)),
-                json.dumps((*task.platform_run_ids, run.run_id)),
-                task.created_at.isoformat(),
+                json.dumps(tuple(stored_task.dependencies)),
+                json.dumps((*stored_task.platform_run_ids, run.run_id)),
+                stored_task.created_at.isoformat(),
             )
         )
         return run
 
     def cancel(self, run_id: str) -> PlatformRunRef:
-        return self.platform.cancel_run(run_id=run_id)
+        run = self.platform.cancel_run(run_id=run_id)
+        task_row = self.store.find_task_by_platform_run(run_id)
+        if task_row is not None:
+            task = self._task_from_row(task_row)
+            self.store.upsert_task(
+                (
+                    task.task_id,
+                    task.workspace_id,
+                    task.session_id,
+                    task.agent_id,
+                    task.intent,
+                    TaskState.CANCELLED.value,
+                    json.dumps(tuple(task.dependencies)),
+                    json.dumps(tuple(task.platform_run_ids)),
+                    task.created_at.isoformat(),
+                )
+            )
+        return run
 
     def request_approval(
         self,
@@ -189,11 +237,10 @@ class LocalOSService:
             }
         if operation == "dispatch":
             task_id = _required_text(request, "task_id")
-            agent_id = _required_text(request, "agent_id")
-            workspace_id = _required_text(request, "workspace_id")
-            session_id = _required_text(request, "session_id")
-            intent = _required_text(request, "intent")
-            task = Task(task_id, workspace_id, session_id, agent_id, intent)
+            stored = self.store.get_task(task_id)
+            if stored is None:
+                raise PermissionError("task must be created before dispatch")
+            task = self._task_from_row(stored)
             run = self.dispatch(task)
             return {"run_id": run.run_id, "task_id": run.task_id, "state": run.state}
         if operation == "cancel":
@@ -208,6 +255,22 @@ class LocalOSService:
             resource = _required_text(request, "resource")
             reason = _required_text(request, "reason")
             approval = self.request_approval(run_id, action, resource, reason)
+            task_row = self.store.find_task_by_platform_run(run_id)
+            if task_row is not None:
+                task = self._task_from_row(task_row)
+                self.store.upsert_task(
+                    (
+                        task.task_id,
+                        task.workspace_id,
+                        task.session_id,
+                        task.agent_id,
+                        task.intent,
+                        TaskState.WAITING_APPROVAL.value,
+                        json.dumps(tuple(task.dependencies)),
+                        json.dumps(tuple(task.platform_run_ids)),
+                        task.created_at.isoformat(),
+                    )
+                )
             return {"approval_id": approval.approval_id}
         if operation == "events":
             run_id = request.get("run_id")
