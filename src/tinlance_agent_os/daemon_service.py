@@ -7,7 +7,17 @@ from uuid import uuid4
 
 from .contracts import AgentPlatformClient
 from .daemon import AgentOSDaemon, DaemonConfig
-from .domain import PlatformRunRef, Session, Task, TaskState, Workspace, utc_now
+from .domain import (
+    ApprovalRef,
+    Event,
+    EvidenceRef,
+    PlatformRunRef,
+    Session,
+    Task,
+    TaskState,
+    Workspace,
+    utc_now,
+)
 from .store import StateStore
 
 
@@ -128,7 +138,7 @@ class LocalOSService:
         action: str,
         resource: str,
         reason: str,
-    ) -> object:
+    ) -> ApprovalRef:
         return self.platform.request_approval(
             run_id=run_id,
             action=action,
@@ -136,10 +146,10 @@ class LocalOSService:
             reason=reason,
         )
 
-    def events(self, run_id: str) -> tuple[object, ...]:
+    def events(self, run_id: str) -> tuple[Event, ...]:
         return self.platform.get_events(run_id=run_id)
 
-    def evidence(self, run_id: str) -> tuple[object, ...]:
+    def evidence(self, run_id: str) -> tuple[EvidenceRef, ...]:
         return self.platform.get_evidence(run_id=run_id)
 
     def daemon(self, socket_path: str) -> AgentOSDaemon:
@@ -208,10 +218,32 @@ class LocalOSService:
             run_id = request.get("run_id")
             if not isinstance(run_id, str):
                 raise ValueError("run_id is required")
-            return {"events": list(self.events(run_id))}
+            return {
+                "events": [
+                    {
+                        "event_id": event.event_id,
+                        "event_type": event.event_type,
+                        "occurred_at": event.occurred_at.isoformat(),
+                        "workspace_id": event.workspace_id,
+                        "session_id": event.session_id,
+                        "task_id": event.task_id,
+                        "agent_id": event.agent_id,
+                        "platform_run_id": event.platform_run_id,
+                        "correlation_id": event.correlation_id,
+                        "source": event.source,
+                        "payload": dict(event.payload),
+                    }
+                    for event in self.events(run_id)
+                ]
+            }
         if operation == "evidence":
             run_id = request.get("run_id")
             if not isinstance(run_id, str):
                 raise ValueError("run_id is required")
-            return {"evidence": list(self.evidence(run_id))}
+            return {
+                "evidence": [
+                    {"evidence_id": item.evidence_id, "source": item.source}
+                    for item in self.evidence(run_id)
+                ]
+            }
         raise ValueError("unsupported operation")
