@@ -106,10 +106,22 @@ class AgentPlatformAdapter(AgentPlatformClient):
             for item in _sequence(payload, "capabilities")
         )
 
-    def request_approval(self, *, run_id: str, action: str) -> ApprovalRef:
+    def request_approval(
+        self,
+        *,
+        run_id: str,
+        action: str,
+        resource: str | None = None,
+        reason: str | None = None,
+    ) -> ApprovalRef:
         payload = self._call(
             "approvals.request",
-            {"run_id": run_id, "action": action},
+            {
+                "run_id": run_id,
+                "action": action,
+                "resource": resource or action,
+                "reason": reason or "Agent OS requested governed approval",
+            },
             idempotent=False,
         )
         return ApprovalRef(_string(payload, "approval_id"))
