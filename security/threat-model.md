@@ -22,6 +22,7 @@ The OS treats model output, retrieved content, tool responses, external content,
 10. Remote response version and shape are validated before conversion to OS objects.
 11. Platform approval and evidence identifiers remain opaque references.
 12. OS never re-implements Platform authorization, policy, approval or execution.
+13. The API version and W3C trace context are validated at the wire boundary.
 13. Architecture tests prevent direct Platform implementation imports.
 
 ## Threats
