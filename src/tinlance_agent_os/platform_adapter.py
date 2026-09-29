@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
-from datetime import datetime
-from typing import cast
-from hashlib import sha256
 import json
+from datetime import datetime
+from hashlib import sha256
+from typing import cast
 
 from .contracts import AgentPlatformClient
 from .domain import Agent, ApprovalRef, CapabilityRef, Event, EvidenceRef, PlatformRunRef, User
