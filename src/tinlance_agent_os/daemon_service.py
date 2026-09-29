@@ -128,7 +128,7 @@ class LocalOSService:
         action: str,
         resource: str,
         reason: str,
-    ):
+    ) -> object:
         return self.platform.request_approval(
             run_id=run_id,
             action=action,
@@ -136,10 +136,10 @@ class LocalOSService:
             reason=reason,
         )
 
-    def events(self, run_id: str):
+    def events(self, run_id: str) -> tuple[object, ...]:
         return self.platform.get_events(run_id=run_id)
 
-    def evidence(self, run_id: str):
+    def evidence(self, run_id: str) -> tuple[object, ...]:
         return self.platform.get_evidence(run_id=run_id)
 
     def daemon(self, socket_path: str) -> AgentOSDaemon:
