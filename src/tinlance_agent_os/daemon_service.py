@@ -1,7 +1,9 @@
 """Application service for local Agent OS lifecycle."""
 
 import json
+import sqlite3
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -114,7 +116,7 @@ class LocalOSService:
         return task
 
     @staticmethod
-    def _task_from_row(row: object) -> Task:
+    def _task_from_row(row: sqlite3.Row) -> Task:
         dependencies = json.loads(row["dependencies"])
         platform_run_ids = json.loads(row["platform_run_ids"])
         if not isinstance(dependencies, list) or not isinstance(platform_run_ids, list):
@@ -128,7 +130,7 @@ class LocalOSService:
             TaskState(row["state"]),
             tuple(dependencies),
             tuple(platform_run_ids),
-            __import__("datetime").datetime.fromisoformat(row["created_at"]),
+            datetime.fromisoformat(row["created_at"]),
         )
 
     def dispatch(self, task: Task) -> PlatformRunRef:
