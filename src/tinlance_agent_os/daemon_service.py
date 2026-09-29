@@ -176,9 +176,10 @@ class LocalOSService:
             workspace_id = request.get("workspace_id")
             session_id = request.get("session_id")
             intent = request.get("intent")
-            if not all(isinstance(value, str) and value.strip() for value in (
-                task_id, agent_id, workspace_id, session_id, intent
-            )):
+            if not all(
+                isinstance(value, str) and value.strip()
+                for value in (task_id, agent_id, workspace_id, session_id, intent)
+            ):
                 raise ValueError(
                     "task_id, agent_id, workspace_id, session_id and intent are required"
                 )
@@ -196,9 +197,10 @@ class LocalOSService:
             action = request.get("action")
             resource = request.get("resource")
             reason = request.get("reason")
-            if not all(isinstance(value, str) and value.strip() for value in (
-                run_id, action, resource, reason
-            )):
+            if not all(
+                isinstance(value, str) and value.strip()
+                for value in (run_id, action, resource, reason)
+            ):
                 raise ValueError("run_id, action, resource and reason are required")
             approval = self.request_approval(run_id, action, resource, reason)
             return {"approval_id": approval.approval_id}
