@@ -1,6 +1,6 @@
 # M1 — Agent Platform Adapter — COMPLETE
 
-M1 provides the production-oriented integration boundary between Agent OS and the governed Tinlance Agent Platform.
+M1 provides the repository-owned, production-oriented integration contract boundary between Agent OS and the governed Tinlance Agent Platform.
 
 ## Implemented
 - immutable tenant/subject/trace request context;
