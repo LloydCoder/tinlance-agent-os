@@ -80,6 +80,10 @@ Every milestone must preserve:
 7. Ruff, format, mypy, coverage and dependency audit.
 8. No mutable third-party GitHub Action references in CI.
 
+## Integration contract
+
+The authoritative Agent Platform adapter contract is [docs/architecture/agent-platform-integration.md](architecture/agent-platform-integration.md). Changes to the wire contract must update the adapter, contract tests, Platform-side conformance tests and documentation together.
+
 ## Next evolution
 
 Future work should deepen provider integrations and production hardening rather than silently expanding the OS into a duplicate Platform authority plane.
