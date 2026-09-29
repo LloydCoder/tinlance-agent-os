@@ -48,3 +48,26 @@ def test_adapter_implements_all_boundary_operations() -> None:
     assert adapter.health()
     request_ids = [call[3] for call in transport.calls]
     assert len(request_ids) == len(set(request_ids))
+
+
+def test_consequential_requests_have_stable_replay_keys() -> None:
+    transport = FakeTransport()
+    adapter = AgentPlatformAdapter(transport, PlatformRequestContext("tenant-1", "user-1", "seed"))
+
+    adapter.create_run(task_id="t1", agent_id="a1", intent="build")
+    adapter.create_run(task_id="t1", agent_id="a1", intent="build")
+    adapter.cancel_run(run_id="r1")
+    adapter.cancel_run(run_id="r1")
+    adapter.request_approval(run_id="r1", action="deploy", resource="service:api", reason="change")
+    adapter.request_approval(run_id="r1", action="deploy", resource="service:api", reason="change")
+
+    create_calls = [call for call in transport.calls if call[0] == "runs.create"]
+    cancel_calls = [call for call in transport.calls if call[0] == "runs.cancel"]
+    approval_calls = [call for call in transport.calls if call[0] == "approvals.request"]
+
+    assert create_calls[0][2] is True
+    assert create_calls[0][3] == create_calls[1][3]
+    assert cancel_calls[0][2] is True
+    assert cancel_calls[0][3] == cancel_calls[1][3]
+    assert approval_calls[0][2] is True
+    assert approval_calls[0][3] == approval_calls[1][3]
