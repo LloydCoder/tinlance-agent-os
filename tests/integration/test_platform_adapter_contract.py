@@ -118,7 +118,7 @@ def test_adapter_round_trips_against_v11_http_contract() -> None:
         thread.join(timeout=2)
 
 
-def test_adapter_does_not_retry_non_idempotent_operations() -> None:
+def test_adapter_retries_deterministic_consequential_operations() -> None:
     class CountingHandler(ContractHandler):
         attempts = 0
 
@@ -144,7 +144,7 @@ def test_adapter_does_not_retry_non_idempotent_operations() -> None:
         )
         with contextlib.suppress(Exception):
             adapter.create_run(task_id="task-a", agent_id="agent-a", intent="inspect")
-        assert CountingHandler.attempts == 1
+        assert CountingHandler.attempts == 4
     finally:
         server.shutdown()
         server.server_close()

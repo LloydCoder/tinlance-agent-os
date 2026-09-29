@@ -41,7 +41,7 @@ Agent OS converts responses into typed OS references only after strict schema an
 
 ## Reliability
 
-Only explicitly idempotent operations are automatically retried. Run creation, cancellation and approval requests are not automatically retried.
+Only explicitly idempotent operations are automatically retried. Consequential run creation, cancellation and approval requests use deterministic request IDs so retries across transport attempts or OS restarts address the same logical request. Durable exactly-once side effects remain a Platform deployment responsibility.
 
 Request IDs may be used by the Platform for server-side idempotency, but Agent OS must not claim exactly-once side effects unless the deployed Platform provides durable idempotency and recovery.
 
