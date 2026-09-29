@@ -13,7 +13,7 @@ Required headers:
 - Authorization: Bearer credential
 - Content-Type: application/json
 - X-Tinlance-API-Version: 1.1
-- X-Request-ID: fresh non-empty identifier
+- X-Request-ID: non-empty normalized identifier (deterministic for consequential OS operations)
 
 Optional: traceparent using W3C Trace Context.
 
@@ -43,7 +43,7 @@ Agent OS converts responses into typed OS references only after strict schema an
 
 Only explicitly idempotent operations are automatically retried. Consequential run creation, cancellation and approval requests use deterministic request IDs so retries across transport attempts or OS restarts address the same logical request. Durable exactly-once side effects remain a Platform deployment responsibility.
 
-Request IDs may be used by the Platform for server-side idempotency, but Agent OS must not claim exactly-once side effects unless the deployed Platform provides durable idempotency and recovery.
+The deployed Platform remains responsible for durable server-side idempotency and recovery; Agent OS does not claim exactly-once side effects from a request ID alone.
 
 ## Authority rules
 
