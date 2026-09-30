@@ -13,6 +13,7 @@ from enum import StrEnum
 from typing import ClassVar, Protocol
 
 from .store import StateStore
+from .observability import telemetry
 
 
 def utc_now() -> datetime:
@@ -215,18 +216,27 @@ class ChannelRuntime:
 
         version = context.version + 1
         now = utc_now().isoformat()
-        self.store.bind_channel(
-            (
-                context.channel_id,
-                context.workspace_id,
-                session_id,
-                task_id,
-                agent_id,
-                bound_trace,
-                version,
-                now,
+        with telemetry().span(
+            "agentos.channel",
+            {
+                "agentos.channel.id": context.channel_id,
+                "gen_ai.conversation.id": session_id,
+                "agentos.task.id": task_id,
+                "gen_ai.agent.id": agent_id,
+            },
+        ):
+            self.store.bind_channel(
+                (
+                    context.channel_id,
+                    context.workspace_id,
+                    session_id,
+                    task_id,
+                    agent_id,
+                    bound_trace,
+                    version,
+                    now,
+                )
             )
-        )
         return ChannelContext(
             channel_id=context.channel_id,
             workspace_id=context.workspace_id,
@@ -289,20 +299,29 @@ class ChannelRuntime:
             raise WorkspaceError("channel does not exist")
         if str(context["workspace_id"]) != envelope.workspace_id:
             raise WorkspaceError("channel envelope workspace mismatch")
-        self.store.append_channel_message(
-            (
-                envelope.message_id,
-                envelope.channel_id,
-                envelope.workspace_id,
-                envelope.session_id,
-                envelope.task_id,
-                envelope.agent_id,
-                envelope.trace_id,
-                envelope.sequence,
-                json.dumps(dict(envelope.payload), sort_keys=True),
-                utc_now().isoformat(),
+        with telemetry().span(
+            "agentos.channel.message",
+            {
+                "agentos.channel.id": envelope.channel_id,
+                "gen_ai.conversation.id": envelope.session_id,
+                "agentos.task.id": envelope.task_id,
+                "gen_ai.agent.id": envelope.agent_id,
+            },
+        ):
+            self.store.append_channel_message(
+                (
+                    envelope.message_id,
+                    envelope.channel_id,
+                    envelope.workspace_id,
+                    envelope.session_id,
+                    envelope.task_id,
+                    envelope.agent_id,
+                    envelope.trace_id,
+                    envelope.sequence,
+                    json.dumps(dict(envelope.payload), sort_keys=True),
+                    utc_now().isoformat(),
+                )
             )
-        )
 
     def adapter(self, context: ChannelContext) -> ChannelAdapter:
         adapters = {

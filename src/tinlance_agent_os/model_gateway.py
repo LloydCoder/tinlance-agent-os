@@ -15,6 +15,8 @@ import re
 import time
 from typing import Protocol
 
+from .observability import extract_trace_context, telemetry
+
 
 _TRACEPARENT = re.compile(r"^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$")
 
@@ -485,16 +487,29 @@ class ModelGateway:
             provider = self.registry.provider(model.provider_id)
             started = time.perf_counter()
             try:
-                if not provider.health():
-                    raise ProviderUnavailable(f"provider is unhealthy: {provider.provider_id}")
-                if request.task in (ModelTask.CHAT, ModelTask.DECISION):
-                    response = provider.complete(request, model)
-                elif request.task == ModelTask.EMBEDDING:
-                    response = provider.embed(request, model)
-                elif request.task == ModelTask.RERANK:
-                    response = provider.rerank(request, model)
-                else:
-                    raise UnsupportedModelTask(request.task.value)
+                with telemetry().span(
+                    "gen_ai.invoke",
+                    {
+                        "gen_ai.operation.name": (
+                            "invoke_agent"
+                            if request.task in (ModelTask.CHAT, ModelTask.DECISION)
+                            else request.task.value
+                        ),
+                        "gen_ai.request.model": model.model_id,
+                        "gen_ai.provider.name": model.provider_id,
+                    },
+                    context=extract_trace_context(request.traceparent),
+                ):
+                    if not provider.health():
+                        raise ProviderUnavailable(f"provider is unhealthy: {provider.provider_id}")
+                    if request.task in (ModelTask.CHAT, ModelTask.DECISION):
+                        response = provider.complete(request, model)
+                    elif request.task == ModelTask.EMBEDDING:
+                        response = provider.embed(request, model)
+                    elif request.task == ModelTask.RERANK:
+                        response = provider.rerank(request, model)
+                    else:
+                        raise UnsupportedModelTask(request.task.value)
                 response.validate()
                 if response.model_id != model.model_id or response.provider_id != model.provider_id:
                     raise ModelContractError(
@@ -503,6 +518,18 @@ class ModelGateway:
                 if response.task != request.task:
                     raise ModelContractError("provider returned a mismatched model task")
                 elapsed_ms = int((time.perf_counter() - started) * 1000)
+                telemetry().record_model(
+                    elapsed_ms / 1000,
+                    operation=request.task.value,
+                    model=model.model_id,
+                    provider=model.provider_id,
+                    input_tokens=response.usage.input_tokens,
+                    output_tokens=response.usage.output_tokens,
+                    cost_usd=model.pricing.estimate(
+                        response.usage.input_tokens,
+                        response.usage.output_tokens,
+                    ),
+                )
                 normalized = ModelResponse(
                     task=response.task,
                     model_id=response.model_id,

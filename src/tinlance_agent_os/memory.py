@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .store import StateStore
+from .observability import telemetry
 
 
 class MemoryError(RuntimeError):
@@ -468,6 +469,7 @@ class MemoryStore:
         row = self.store.get_memory_record(memory_id)
         if row is None:
             raise MemoryError("memory write did not persist")
+        telemetry().record_memory(operation="put", scope=write.scope.value)
         return self._row_to_record(row)
 
     def get(self, memory_id: str, retrieval: MemoryRetrieval) -> MemoryRecord | None:
@@ -544,6 +546,10 @@ class MemoryStore:
                 continue
             scored.append((score, record.updated_at.isoformat(), record))
         scored.sort(key=lambda item: (-item[0], item[1], item[2].memory_id))
+        telemetry().record_memory(
+            operation="search",
+            scope=",".join(scope.value for scope in retrieval.scopes),
+        )
         return tuple(item[2] for item in scored[: retrieval.limit])
 
     def delete(
@@ -558,6 +564,7 @@ class MemoryStore:
         if record is None:
             return
         self.store.delete_memory_record(memory_id, (now or datetime.now(UTC)).isoformat())
+        telemetry().record_memory(operation="delete", scope=record.scope.value)
 
     def quarantine(
         self,
@@ -578,6 +585,7 @@ class MemoryStore:
             reason.strip(),
             (now or datetime.now(UTC)).isoformat(),
         )
+        telemetry().record_memory(operation="quarantine", scope=record.scope.value)
 
     def assemble_context(
         self,
@@ -597,6 +605,10 @@ class MemoryStore:
                 item.version,
             )
             for item in records
+        )
+        telemetry().record_memory(
+            operation="assemble_context",
+            scope=",".join(scope.value for scope in retrieval.scopes),
         )
         return AssembledContext(
             tuple(item for item in items if item.trust == MemoryTrust.TRUSTED_INSTRUCTION),

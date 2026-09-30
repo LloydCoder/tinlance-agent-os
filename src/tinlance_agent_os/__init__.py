@@ -125,6 +125,9 @@ __all__ = [
     "RemoteTask",
     "RemoteTaskState",
     "ResourceLimits",
+    "AgentOSTelemetry",
+    "configure_telemetry",
+    "telemetry",
 ]
 
 from .sdk import (
@@ -253,3 +256,5 @@ from .remote_runtime import (
     RemoteTaskState,
     ResourceLimits,
 )
+
+from .observability import AgentOSTelemetry, configure_telemetry, telemetry

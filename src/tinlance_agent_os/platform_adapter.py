@@ -13,6 +13,7 @@ from .contracts import AgentPlatformClient
 from .domain import Agent, ApprovalRef, CapabilityRef, Event, EvidenceRef, PlatformRunRef, User
 from .errors import PlatformProtocolError
 from .transport import PlatformRequestContext, PlatformTransport
+from .observability import telemetry
 
 
 def _string(payload: Mapping[str, object], key: str) -> str:
@@ -66,12 +67,23 @@ class AgentPlatformAdapter(AgentPlatformClient):
             self.context,
             request_id=self._stable_request_id(operation, payload),
         )
-        return self.transport.send(
-            operation=operation,
-            payload=payload,
-            context=request_context,
-            idempotent=idempotent,
-        )
+        with telemetry().span(
+            "agentos.platform",
+            {
+                "rpc.method": operation,
+                "agentos.platform.idempotent": idempotent,
+            },
+        ) as span:
+            response = self.transport.send(
+                operation=operation,
+                payload=payload,
+                context=request_context,
+                idempotent=idempotent,
+            )
+            run_id = response.get("run_id")
+            if isinstance(run_id, str):
+                span.set_attribute("agentos.platform.run_id", run_id)
+            return response
 
     def get_principal(self) -> User:
         payload = self._call("principal.get", {}, idempotent=True)
