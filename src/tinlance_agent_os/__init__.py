@@ -22,6 +22,21 @@ __all__ = [
     "RestartPolicy",
     "RuntimeConfig",
     "recover_orphans",
+    "AgentApplication",
+    "AgentSDK",
+    "AgentScaffold",
+    "ApprovalWorkflow",
+    "CapabilityDeclaration",
+    "ContractValidationError",
+    "ExecutionContext",
+    "ExecutionResult",
+    "IdempotencyKey",
+    "SDKError",
+    "SDKPlatformError",
+    "SessionHandle",
+    "TaskHandle",
+    "TraceContext",
+    "WorkflowHandle",
 ]
 
 from .sdk import (
