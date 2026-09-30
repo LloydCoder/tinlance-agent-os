@@ -154,6 +154,67 @@ class StateStore:
                 );
                 CREATE INDEX IF NOT EXISTS idx_sdk_idempotency_subject
                     ON sdk_idempotency(operation, subject_id);
+                CREATE TABLE IF NOT EXISTS workflow_instances (
+                    instance_id TEXT PRIMARY KEY,
+                    workflow_id TEXT NOT NULL,
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    state TEXT NOT NULL,
+                    version INTEGER NOT NULL,
+                    trigger_type TEXT NOT NULL,
+                    trigger_id TEXT,
+                    context TEXT NOT NULL,
+                    checkpoint TEXT,
+                    deadline_at TEXT,
+                    cancel_requested INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS workflow_step_runs (
+                    instance_id TEXT NOT NULL REFERENCES workflow_instances(instance_id),
+                    step_id TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    attempt INTEGER NOT NULL,
+                    next_attempt_at TEXT,
+                    idempotency_key TEXT NOT NULL,
+                    platform_run_id TEXT,
+                    approval_id TEXT,
+                    input_data TEXT NOT NULL,
+                    output_data TEXT,
+                    error TEXT,
+                    started_at TEXT,
+                    completed_at TEXT,
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY(instance_id, step_id)
+                );
+                CREATE TABLE IF NOT EXISTS workflow_events (
+                    event_id TEXT PRIMARY KEY,
+                    instance_id TEXT NOT NULL REFERENCES workflow_instances(instance_id),
+                    sequence INTEGER NOT NULL,
+                    event_type TEXT NOT NULL,
+                    step_id TEXT,
+                    occurred_at TEXT NOT NULL,
+                    payload TEXT NOT NULL,
+                    UNIQUE(instance_id, sequence)
+                );
+                CREATE TABLE IF NOT EXISTS workflow_schedules (
+                    schedule_id TEXT PRIMARY KEY,
+                    workflow_id TEXT NOT NULL,
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    cron TEXT NOT NULL,
+                    enabled INTEGER NOT NULL,
+                    next_run_at TEXT NOT NULL,
+                    last_run_at TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_workflow_instances_workspace
+                    ON workflow_instances(workspace_id, state, updated_at);
+                CREATE INDEX IF NOT EXISTS idx_workflow_steps_retry
+                    ON workflow_step_runs(state, next_attempt_at);
+                CREATE INDEX IF NOT EXISTS idx_workflow_events_instance
+                    ON workflow_events(instance_id, sequence);
+                CREATE INDEX IF NOT EXISTS idx_workflow_schedules_due
+                    ON workflow_schedules(enabled, next_run_at);
                 """
             )
 
@@ -312,6 +373,204 @@ class StateStore:
         with sqlite3.connect(self.path) as db:
             db.execute("PRAGMA foreign_keys=ON")
             db.execute("INSERT INTO workflows VALUES (?,?,?,?,?)", row)
+
+    def create_workflow_instance(
+        self,
+        *,
+        instance_id: str,
+        workflow_id: str,
+        workspace_id: str,
+        state: str,
+        trigger_type: str,
+        trigger_id: str | None,
+        context: str,
+        checkpoint: str | None,
+        deadline_at: str | None,
+        created_at: str,
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO workflow_instances VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (
+                    instance_id,
+                    workflow_id,
+                    workspace_id,
+                    state,
+                    1,
+                    trigger_type,
+                    trigger_id,
+                    context,
+                    checkpoint,
+                    deadline_at,
+                    0,
+                    created_at,
+                    created_at,
+                ),
+            )
+            db.commit()
+
+    def get_workflow_instance(self, instance_id: str) -> sqlite3.Row | None:
+        rows = self.query("SELECT * FROM workflow_instances WHERE instance_id=?", (instance_id,))
+        return rows[0] if rows else None
+
+    def update_workflow_instance(
+        self,
+        *,
+        instance_id: str,
+        expected_version: int,
+        state: str,
+        checkpoint: str | None,
+        context: str,
+        cancel_requested: bool,
+        updated_at: str,
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute("BEGIN IMMEDIATE")
+            cur = db.execute(
+                "UPDATE workflow_instances SET state=?,version=version+1,checkpoint=?,"
+                "context=?,cancel_requested=?,updated_at=? "
+                "WHERE instance_id=? AND version=?",
+                (
+                    state,
+                    checkpoint,
+                    context,
+                    int(cancel_requested),
+                    updated_at,
+                    instance_id,
+                    expected_version,
+                ),
+            )
+            if cur.rowcount != 1:
+                raise RuntimeError("workflow instance version conflict")
+            db.commit()
+
+    def upsert_workflow_step(
+        self,
+        *,
+        instance_id: str,
+        step_id: str,
+        state: str,
+        attempt: int,
+        next_attempt_at: str | None,
+        idempotency_key: str,
+        platform_run_id: str | None,
+        approval_id: str | None,
+        input_data: str,
+        output_data: str | None,
+        error: str | None,
+        started_at: str | None,
+        completed_at: str | None,
+        updated_at: str,
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute(
+                "INSERT INTO workflow_step_runs VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(instance_id,step_id) DO UPDATE SET "
+                "state=excluded.state,attempt=excluded.attempt,next_attempt_at=excluded.next_attempt_at,"
+                "idempotency_key=excluded.idempotency_key,platform_run_id=excluded.platform_run_id,"
+                "approval_id=excluded.approval_id,input_data=excluded.input_data,"
+                "output_data=excluded.output_data,error=excluded.error,started_at=excluded.started_at,"
+                "completed_at=excluded.completed_at,updated_at=excluded.updated_at",
+                (
+                    instance_id,
+                    step_id,
+                    state,
+                    attempt,
+                    next_attempt_at,
+                    idempotency_key,
+                    platform_run_id,
+                    approval_id,
+                    input_data,
+                    output_data,
+                    error,
+                    started_at,
+                    completed_at,
+                    updated_at,
+                ),
+            )
+            db.commit()
+
+    def get_workflow_steps(self, instance_id: str) -> list[sqlite3.Row]:
+        return self.query(
+            "SELECT * FROM workflow_step_runs WHERE instance_id=? ORDER BY step_id",
+            (instance_id,),
+        )
+
+    def append_workflow_event(
+        self,
+        *,
+        event_id: str,
+        instance_id: str,
+        event_type: str,
+        step_id: str | None,
+        occurred_at: str,
+        payload: str,
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute(
+                "SELECT COALESCE(MAX(sequence),0) FROM workflow_events WHERE instance_id=?",
+                (instance_id,),
+            ).fetchone()
+            sequence = int(row[0]) + 1
+            db.execute(
+                "INSERT INTO workflow_events VALUES (?,?,?,?,?,?,?)",
+                (event_id, instance_id, sequence, event_type, step_id, occurred_at, payload),
+            )
+            db.commit()
+
+    def workflow_events(self, instance_id: str) -> list[sqlite3.Row]:
+        return self.query(
+            "SELECT * FROM workflow_events WHERE instance_id=? ORDER BY sequence",
+            (instance_id,),
+        )
+
+    def due_workflow_schedules(self, now: str) -> list[sqlite3.Row]:
+        return self.query(
+            "SELECT * FROM workflow_schedules WHERE enabled=1 AND next_run_at<=? "
+            "ORDER BY next_run_at,schedule_id",
+            (now,),
+        )
+
+    def put_workflow_schedule(
+        self,
+        schedule_id: str,
+        workflow_id: str,
+        workspace_id: str,
+        cron: str,
+        next_run_at: str,
+        created_at: str,
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute(
+                "INSERT INTO workflow_schedules VALUES (?,?,?,?,?,?,?,?,?)",
+                (
+                    schedule_id,
+                    workflow_id,
+                    workspace_id,
+                    cron,
+                    1,
+                    next_run_at,
+                    None,
+                    created_at,
+                    created_at,
+                ),
+            )
+            db.commit()
+
+    def advance_workflow_schedule(
+        self, schedule_id: str, next_run_at: str, last_run_at: str
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute(
+                "UPDATE workflow_schedules SET next_run_at=?,last_run_at=?,updated_at=? "
+                "WHERE schedule_id=?",
+                (next_run_at, last_run_at, last_run_at, schedule_id),
+            )
+            db.commit()
 
     def get_task(self, task_id: str) -> sqlite3.Row | None:
         rows = self.query(

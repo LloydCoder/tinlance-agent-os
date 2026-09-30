@@ -22,6 +22,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M13 | Agent SDK / Application SDK | COMPLETE |
 | M14 | Model Gateway + Model Router | COMPLETE |
 | M15 | Context + Trusted Memory | COMPLETE |
+| M16 | Real Workflow Runtime | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -286,3 +287,36 @@ MemoryStore.assemble_context() produces four separate channels: trusted instruct
 ### Acceptance
 
 A reference agent can write memory, close its process, reopen the SQLite store, and retrieve the memory in a later session while retaining provenance and version metadata. Cross-workspace, cross-agent, cross-session and over-classification reads fail closed; suspicious memory is quarantined; explicit deletion and expiry remove records from active retrieval.
+
+
+## M16 — Real Workflow Runtime
+
+M16 upgrades the deterministic workflow DAG into a durable, recovery-oriented runtime.
+
+### Runtime semantics
+
+- sequential dependency execution;
+- parallel execution of independently ready branches;
+- deterministic conditions;
+- bounded retries with exponential backoff;
+- workflow and step deadline/timeout propagation;
+- cancellation and Platform-run cancellation propagation;
+- durable approval gates;
+- durable human-input gates;
+- compensation after failed consequential work;
+- per-step checkpoints and append-only workflow events;
+- crash recovery and resume;
+- event-triggered workflow instances;
+- persisted schedules and due-schedule firing;
+- stable per-instance/per-step idempotency keys;
+- explicit Platform Run mapping through the Agent Platform adapter.
+
+### Durability invariant
+
+A consequential step has one stable idempotency key for its entire lifetime. A process crash can therefore leave the step in RUNNING; recovery moves the durable state back to PENDING without generating a new key. The next Platform call reuses the same key. The OS does not claim exactly-once side effects; the Platform remains authoritative for execution idempotency.
+
+### Acceptance
+
+The M16 suite verifies sequential and parallel branches, conditions, retry behavior, approval/input pauses, cancellation, compensation, scheduling/event triggers, crash recovery, idempotency continuity and Platform-run mapping across Python 3.12–3.14.
+
+SQLite remains a local durable store. WAL improves reader/writer concurrency but still permits only one writer at a time, so the runtime uses short explicit transactions and optimistic workflow-instance versions rather than treating SQLite as a distributed workflow coordinator.
