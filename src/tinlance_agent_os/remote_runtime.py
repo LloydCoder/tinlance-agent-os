@@ -23,6 +23,7 @@ from urllib.parse import urlparse
 from .contracts import AgentPlatformClient
 from .store import StateStore
 from .system import LocalSystemBackend
+from .observability import telemetry
 
 
 def utc_now() -> datetime:
@@ -465,12 +466,21 @@ class RemoteRuntime:
         if not intent.strip():
             raise ValueError("task intent is required")
         idempotency_key = f"remote:{task_id}"
-        run = self.platform.create_run(
-            task_id=task_id,
-            agent_id=agent_id,
-            intent=intent,
-            idempotency_key=idempotency_key,
-        )
+        with telemetry().span(
+            "agentos.remote.assign",
+            {
+                "agentos.task.id": task_id,
+                "gen_ai.agent.id": agent_id,
+                "agentos.remote.endpoint_id": endpoint_id,
+            },
+        ) as span:
+            run = self.platform.create_run(
+                task_id=task_id,
+                agent_id=agent_id,
+                intent=intent,
+                idempotency_key=idempotency_key,
+            )
+            span.set_attribute("agentos.platform.run_id", run.run_id)
         self.transport.assign(
             endpoint=endpoint.identity,
             task_id=task_id,
@@ -514,7 +524,15 @@ class RemoteRuntime:
             trace_id=str(row["trace_id"]),
         )
         del result
-        self.platform.cancel_run(run_id=str(row["platform_task_id"]))
+        with telemetry().span(
+            "agentos.remote.cancel",
+            {
+                "agentos.task.id": task_id,
+                "agentos.remote.endpoint_id": str(row["endpoint_id"]),
+                "agentos.platform.run_id": str(row["platform_task_id"]),
+            },
+        ):
+            self.platform.cancel_run(run_id=str(row["platform_task_id"]))
         now = utc_now().isoformat()
         self.store.upsert_remote_task(
             (
