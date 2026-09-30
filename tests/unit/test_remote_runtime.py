@@ -205,6 +205,17 @@ def test_local_process_supervisor_applies_bounds_and_reaps(tmp_path: Path):
         assert supervisor.poll("p1") == 0
 
 
+def test_supervised_process_rejects_environment_escape(tmp_path: Path):
+    supervisor = LocalProcessSupervisor(ResourceLimits())
+    with pytest.raises(PermissionError, match="allowlisted"):
+        supervisor.start(
+            "p1",
+            [sys.executable, "-c", "print('ok')"],
+            cwd=tmp_path,
+            environment={"PYTHONPATH": "/tmp/attacker"},
+        )
+
+
 def test_mcp_transport_uses_mcp_method_surface(tmp_path: Path):
     client = MCPClient()
     transport = MCPRemoteTransport(client)
