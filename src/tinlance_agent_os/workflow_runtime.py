@@ -465,13 +465,16 @@ class DurableWorkflowRuntime:
                 context=instance.context,
                 idempotency_key=row["idempotency_key"],
             )
+        timeout = step.timeout_seconds
+        if step.deadline_seconds is not None:
+            timeout = min(timeout, step.deadline_seconds) if timeout is not None else step.deadline_seconds
         result = self.executor.execute(
             workspace_id=instance.workspace_id,
             workflow_instance_id=instance_id,
             step=step,
             context=instance.context,
             idempotency_key=row["idempotency_key"],
-            timeout_seconds=step.timeout_seconds,
+            timeout_seconds=timeout,
         )
         return result
 
