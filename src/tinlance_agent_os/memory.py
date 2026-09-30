@@ -250,6 +250,7 @@ def _digest(
     version: int,
     content: str,
     provenance: MemoryProvenance,
+    collected_at: datetime,
 ) -> str:
     canonical = json.dumps(
         {
@@ -265,7 +266,7 @@ def _digest(
                 "source_id": provenance.source_id,
                 "actor_id": provenance.actor_id,
                 "origin": provenance.origin,
-                "collected_at": (provenance.collected_at or datetime.now(UTC)).isoformat(),
+                "collected_at": (provenance.collected_at or collected_at).isoformat(),
                 "parent_digest": provenance.parent_digest,
             },
         },
@@ -426,6 +427,7 @@ class MemoryStore:
             version=version,
             content=write.content,
             provenance=provenance,
+            collected_at=current_time,
         )
         memory_id = hashlib.sha256(
             f"{write.workspace_id}:{write.scope.value}:{write.scope_id}:{memory_key}:{version}".encode()
@@ -475,10 +477,8 @@ class MemoryStore:
             return None
         record = self._row_to_record(row)
         self._assert_access(record, retrieval)
-        if (
-            record.state == MemoryState.ACTIVE
-            and record.expires_at is not None
-            and record.expires_at <= datetime.now(UTC)
+        if record.state == MemoryState.ACTIVE and (
+            record.expires_at is not None and record.expires_at <= datetime.now(UTC)
         ):
             self.store.expire_memory_record(memory_id, datetime.now(UTC).isoformat())
             return None
