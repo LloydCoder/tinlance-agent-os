@@ -1010,7 +1010,6 @@ class StateStore:
                 )
             )
 
-
     def upsert_channel(
         self,
         row: tuple[str, str, str, str, str, str, str],
@@ -1051,7 +1050,6 @@ class StateStore:
                 "state=excluded.state, metadata=excluded.metadata, updated_at=excluded.updated_at",
                 row,
             )
-
 
     def append_channel_message(
         self,
