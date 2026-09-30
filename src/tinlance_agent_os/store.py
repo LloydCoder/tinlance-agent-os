@@ -6,7 +6,7 @@ import json
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 
 @dataclass(frozen=True, slots=True)
@@ -271,7 +271,8 @@ class StateStore:
     def get_agent(self, agent_id: str) -> sqlite3.Row | None:
         with sqlite3.connect(self.path) as db:
             db.row_factory = sqlite3.Row
-            return db.execute("SELECT * FROM agents WHERE agent_id=?", (agent_id,)).fetchone()
+            row = db.execute("SELECT * FROM agents WHERE agent_id=?", (agent_id,)).fetchone()
+            return cast(sqlite3.Row | None, row)
 
     def transition_agent(
         self,
