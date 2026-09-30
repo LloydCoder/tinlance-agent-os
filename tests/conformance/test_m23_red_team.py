@@ -189,10 +189,14 @@ def test_approval_replay_uses_stable_idempotency_identity():
 
     client = ReferenceAgentPlatformClient()
     first = client.request_approval(
-        run_id="run-1", action="delete", idempotency_key="approval-1"
+        run_id="run-1",
+        action="delete",
+        idempotency_key="approval-1",
     )
     second = client.request_approval(
-        run_id="run-1", action="delete", idempotency_key="approval-1"
+        run_id="run-1",
+        action="delete",
+        idempotency_key="approval-1",
     )
     assert first == second
 
