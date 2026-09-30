@@ -111,19 +111,49 @@ class AgentSnapshot:
 
 _TRANSITIONS: dict[AgentLifecycleState, frozenset[AgentLifecycleState]] = {
     AgentLifecycleState.REGISTERED: frozenset({AgentLifecycleState.VALIDATING}),
-    AgentLifecycleState.VALIDATING: frozenset({AgentLifecycleState.READY, AgentLifecycleState.FAILED}),
-    AgentLifecycleState.READY: frozenset({AgentLifecycleState.STARTING, AgentLifecycleState.STOPPED}),
-    AgentLifecycleState.STARTING: frozenset({AgentLifecycleState.RUNNING, AgentLifecycleState.CRASHED}),
+    AgentLifecycleState.VALIDATING: frozenset({
+        AgentLifecycleState.READY,
+        AgentLifecycleState.FAILED,
+    }),
+    AgentLifecycleState.READY: frozenset({
+        AgentLifecycleState.STARTING,
+        AgentLifecycleState.STOPPED,
+    }),
+    AgentLifecycleState.STARTING: frozenset({
+        AgentLifecycleState.RUNNING,
+        AgentLifecycleState.CRASHED,
+    }),
     AgentLifecycleState.RUNNING: frozenset({
         AgentLifecycleState.PAUSING, AgentLifecycleState.STOPPING, AgentLifecycleState.CRASHED,
     }),
-    AgentLifecycleState.PAUSING: frozenset({AgentLifecycleState.PAUSED, AgentLifecycleState.CRASHED}),
-    AgentLifecycleState.PAUSED: frozenset({AgentLifecycleState.RESUMING, AgentLifecycleState.STOPPING}),
-    AgentLifecycleState.RESUMING: frozenset({AgentLifecycleState.RUNNING, AgentLifecycleState.CRASHED}),
-    AgentLifecycleState.STOPPING: frozenset({AgentLifecycleState.STOPPED, AgentLifecycleState.CRASHED}),
-    AgentLifecycleState.STOPPED: frozenset({AgentLifecycleState.STARTING, AgentLifecycleState.RECOVERING}),
-    AgentLifecycleState.CRASHED: frozenset({AgentLifecycleState.RECOVERING, AgentLifecycleState.FAILED}),
-    AgentLifecycleState.RECOVERING: frozenset({AgentLifecycleState.STARTING, AgentLifecycleState.FAILED}),
+    AgentLifecycleState.PAUSING: frozenset({
+        AgentLifecycleState.PAUSED,
+        AgentLifecycleState.CRASHED,
+    }),
+    AgentLifecycleState.PAUSED: frozenset({
+        AgentLifecycleState.RESUMING,
+        AgentLifecycleState.STOPPING,
+    }),
+    AgentLifecycleState.RESUMING: frozenset({
+        AgentLifecycleState.RUNNING,
+        AgentLifecycleState.CRASHED,
+    }),
+    AgentLifecycleState.STOPPING: frozenset({
+        AgentLifecycleState.STOPPED,
+        AgentLifecycleState.CRASHED,
+    }),
+    AgentLifecycleState.STOPPED: frozenset({
+        AgentLifecycleState.STARTING,
+        AgentLifecycleState.RECOVERING,
+    }),
+    AgentLifecycleState.CRASHED: frozenset({
+        AgentLifecycleState.RECOVERING,
+        AgentLifecycleState.FAILED,
+    }),
+    AgentLifecycleState.RECOVERING: frozenset({
+        AgentLifecycleState.STARTING,
+        AgentLifecycleState.FAILED,
+    }),
     AgentLifecycleState.FAILED: frozenset(),
 }
 
@@ -267,9 +297,12 @@ class AgentRuntime:
         if row is None:
             raise ValueError("agent is not registered")
         lease = row["lease_expires_at"]
-        if row["state"] == AgentLifecycleState.RUNNING.value and isinstance(lease, str):
-            if datetime.fromisoformat(lease) < _now():
-                return HealthState.UNHEALTHY
+        if (
+            row["state"] == AgentLifecycleState.RUNNING.value
+            and isinstance(lease, str)
+            and datetime.fromisoformat(lease) < _now()
+        ):
+            return HealthState.UNHEALTHY
         return HealthState(row["health_state"])
 
     def snapshot(self) -> AgentSnapshot:
