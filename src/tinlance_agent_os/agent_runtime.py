@@ -224,34 +224,34 @@ class AgentRuntime:
     def start(self) -> AgentSnapshot:
         with telemetry().span("agentos.agent.start", {"gen_ai.agent.id": self.definition.agent_id}):
             with self._lock:
-            self._require_state(AgentLifecycleState.READY, AgentLifecycleState.STOPPED)
-            self._transition(AgentLifecycleState.STARTING, "agent.starting")
-            try:
-                self._transition(AgentLifecycleState.RUNNING, "agent.started")
-                self._start_heartbeat()
-            except Exception:
-                self._stop_heartbeat()
-                self._transition(AgentLifecycleState.CRASHED, "agent.start.failed")
-                raise
-            return self.snapshot()
+                self._require_state(AgentLifecycleState.READY, AgentLifecycleState.STOPPED)
+                self._transition(AgentLifecycleState.STARTING, "agent.starting")
+                try:
+                    self._transition(AgentLifecycleState.RUNNING, "agent.started")
+                    self._start_heartbeat()
+                except Exception:
+                    self._stop_heartbeat()
+                    self._transition(AgentLifecycleState.CRASHED, "agent.start.failed")
+                    raise
+                return self.snapshot()
 
     def run(self) -> object:
         with telemetry().span("gen_ai.invoke_agent", {"gen_ai.agent.id": self.definition.agent_id}):
             with self._lock:
-            self._require_state(AgentLifecycleState.RUNNING)
-        try:
-            return self.worker(dict(self.definition.configuration))
-        except Exception as exc:
+                self._require_state(AgentLifecycleState.RUNNING)
+            try:
+                return self.worker(dict(self.definition.configuration))
+            except Exception as exc:
             with self._lock:
-                self._transition(
-                    AgentLifecycleState.CRASHED,
-                    "agent.crashed",
-                    payload={"error": type(exc).__name__},
-                )
-                self._stop_heartbeat()
-            if self.definition.restart_policy.enabled:
-                self.recover()
-            raise
+                    self._transition(
+                        AgentLifecycleState.CRASHED,
+                        "agent.crashed",
+                        payload={"error": type(exc).__name__},
+                    )
+                    self._stop_heartbeat()
+                if self.definition.restart_policy.enabled:
+                    self.recover()
+                raise
 
     def pause(self) -> AgentSnapshot:
         with self._lock:
