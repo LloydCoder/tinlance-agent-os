@@ -124,8 +124,6 @@ class NotificationChannel(DurableChannelAdapter):
 
 
 class ChannelRuntime:
-
-class ChannelRuntime:
     """Maps presentation channels onto one durable OS lifecycle identity."""
 
     def __init__(self, store: StateStore) -> None:
