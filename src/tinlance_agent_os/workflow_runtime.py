@@ -395,10 +395,34 @@ class DurableWorkflowRuntime:
     def schedule(
         self, schedule_id: str, definition: WorkflowDefinition, cron: str, next_run_at: datetime
     ) -> None:
+        definition.validate()
         self.store.put_workflow_schedule(
             schedule_id, definition.workflow_id, definition.workspace_id, cron,
             next_run_at.isoformat(), _now().isoformat()
         )
+
+    def fire_due_schedules(
+        self, definitions: dict[str, WorkflowDefinition], *, now: datetime | None = None
+    ) -> tuple[WorkflowInstance, ...]:
+        current = (now or _now()).astimezone(UTC)
+        started: list[WorkflowInstance] = []
+        for row in self.store.due_workflow_schedules(current.isoformat()):
+            definition = definitions.get(row["workflow_id"])
+            if definition is None:
+                continue
+            instance = self.start(
+                definition,
+                trigger=WorkflowTrigger("schedule", row["schedule_id"]),
+                context={"schedule_id": row["schedule_id"], "scheduled_at": row["next_run_at"]},
+            )
+            started.append(instance)
+            # The scheduler owns cadence; the runtime owns durable execution.
+            self.store.advance_workflow_schedule(
+                row["schedule_id"],
+                current.isoformat(),
+                current.isoformat(),
+            )
+        return tuple(started)
 
     def _run_step(
         self, instance_id: str, step: WorkflowStep, instance: WorkflowInstance
@@ -419,8 +443,12 @@ class DurableWorkflowRuntime:
         )
         if step.kind == WorkflowStepKind.CONDITION:
             return self._condition(step, instance.context)
+        if step.condition is not None and step.kind == WorkflowStepKind.ACTION:
+            condition_result = self._condition(step, instance.context)
+            if condition_result.output is False:
+                return WorkflowStepResult(WorkflowStepState.COMPLETED, {"skipped": True})
         if step.kind == WorkflowStepKind.HUMAN_INPUT:
-            raise WorkflowInputRequired()
+            return WorkflowStepResult(WorkflowStepState.WAITING_INPUT)
         if step.kind == WorkflowStepKind.APPROVAL:
             approval_id = self.executor.request_approval(
                 workspace_id=instance.workspace_id,
