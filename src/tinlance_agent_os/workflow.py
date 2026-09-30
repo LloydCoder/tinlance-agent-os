@@ -168,19 +168,25 @@ class WorkflowEngine:
         if not completed <= known:
             raise ValueError("completed set contains an unknown step")
         return tuple(
-            step for step in definition.steps
+            step
+            for step in definition.steps
             if step.step_id not in completed and set(step.depends_on) <= completed
         )
 
     def complete_step(
-        self, definition: WorkflowDefinition, execution: WorkflowExecution, step_id: str,
+        self,
+        definition: WorkflowDefinition,
+        execution: WorkflowExecution,
+        step_id: str,
     ) -> WorkflowExecution:
         self.validate(definition)
         if execution.workflow_id != definition.workflow_id:
             raise ValueError("execution does not belong to workflow")
         if execution.state not in {
-            WorkflowState.RUNNING, WorkflowState.WAITING_INPUT,
-            WorkflowState.WAITING_APPROVAL, WorkflowState.CHECKPOINTED,
+            WorkflowState.RUNNING,
+            WorkflowState.WAITING_INPUT,
+            WorkflowState.WAITING_APPROVAL,
+            WorkflowState.CHECKPOINTED,
         }:
             raise ValueError("workflow is not executable")
         ready = self.ready_steps(definition, set(execution.completed))
@@ -197,7 +203,10 @@ class WorkflowEngine:
         )
 
     def fail_step(
-        self, definition: WorkflowDefinition, execution: WorkflowExecution, step_id: str,
+        self,
+        definition: WorkflowDefinition,
+        execution: WorkflowExecution,
+        step_id: str,
     ) -> WorkflowExecution:
         self.validate(definition)
         if execution.workflow_id != definition.workflow_id:
@@ -205,8 +214,12 @@ class WorkflowEngine:
         if step_id not in {step.step_id for step in definition.steps}:
             raise ValueError("unknown workflow step")
         return WorkflowExecution(
-            definition.workflow_id, WorkflowState.FAILED, execution.completed,
-            failed_step=step_id, checkpoint=execution.checkpoint, outputs=execution.outputs
+            definition.workflow_id,
+            WorkflowState.FAILED,
+            execution.completed,
+            failed_step=step_id,
+            checkpoint=execution.checkpoint,
+            outputs=execution.outputs,
         )
 
     def cancel(
@@ -216,6 +229,10 @@ class WorkflowEngine:
         if execution.workflow_id != definition.workflow_id:
             raise ValueError("execution does not belong to workflow")
         return WorkflowExecution(
-            definition.workflow_id, WorkflowState.CANCELLED, execution.completed,
-            execution.failed_step, execution.checkpoint, execution.outputs
+            definition.workflow_id,
+            WorkflowState.CANCELLED,
+            execution.completed,
+            execution.failed_step,
+            execution.checkpoint,
+            execution.outputs,
         )

@@ -32,8 +32,9 @@ class FakeExecutor:
         self.cancelled: list[str] = []
         self.approvals: list[str] = []
 
-    def execute(self, *, workspace_id, workflow_instance_id, step, context, idempotency_key,
-        timeout_seconds):
+    def execute(
+        self, *, workspace_id, workflow_instance_id, step, context, idempotency_key, timeout_seconds
+    ):
         if idempotency_key in self.crash_once:
             self.crash_once.remove(idempotency_key)
             self.calls.append(idempotency_key)
@@ -43,7 +44,7 @@ class FakeExecutor:
             raise RetryableWorkflowError("transient")
         if idempotency_key not in self.run_ids:
             self.calls.append(idempotency_key)
-            self.run_ids[idempotency_key] = f"run-{len(self.run_ids)+1}"
+            self.run_ids[idempotency_key] = f"run-{len(self.run_ids) + 1}"
         return WorkflowStepResult(
             WorkflowStepState.COMPLETED,
             output={"step": step.step_id},
@@ -129,8 +130,9 @@ def test_human_input_pause_and_resume(tmp_path):
         "wf",
         "ws",
         (
-            WorkflowStep("input", "input", kind=WorkflowStepKind.HUMAN_INPUT,
-                human_input_key="answer"),
+            WorkflowStep(
+                "input", "input", kind=WorkflowStepKind.HUMAN_INPUT, human_input_key="answer"
+            ),
             WorkflowStep("after", "after", depends_on=("input",)),
         ),
     )
@@ -148,8 +150,10 @@ def test_condition_skips_action_without_executing_it(tmp_path):
     definition = WorkflowDefinition(
         "wf",
         "ws",
-        (WorkflowStep("guard", "guard", kind=WorkflowStepKind.CONDITION, condition="enabled"),
-         WorkflowStep("action", "action", depends_on=("guard",), condition="enabled")),
+        (
+            WorkflowStep("guard", "guard", kind=WorkflowStepKind.CONDITION, condition="enabled"),
+            WorkflowStep("action", "action", depends_on=("guard",), condition="enabled"),
+        ),
     )
     instance = runtime.start(definition, context={"enabled": False})
     result = runtime.run(instance.instance_id, definition)
@@ -184,7 +188,8 @@ def test_cancellation_propagates_to_platform_run(tmp_path):
     runtime.run(instance.instance_id, definition)
     # Completed runs are not cancellable; a waiting approval provides a durable pause to cancel.
     waiting_def = WorkflowDefinition(
-        "wf2", "ws",
+        "wf2",
+        "ws",
         (WorkflowStep("approve", "approve", kind=WorkflowStepKind.APPROVAL),),
     )
     waiting = runtime.start(waiting_def)
@@ -209,12 +214,15 @@ def test_deadline_fails_closed(tmp_path):
         cancel_requested=False,
         updated_at=datetime.now(UTC).isoformat(),
     )
-    runtime.store.query("SELECT instance_id FROM workflow_instances WHERE instance_id=?",
-        (instance.instance_id,))
+    runtime.store.query(
+        "SELECT instance_id FROM workflow_instances WHERE instance_id=?", (instance.instance_id,)
+    )
     # Move the durable deadline into the past for deterministic testing.
     with sqlite3.connect(runtime.store.path) as db:
-        db.execute("UPDATE workflow_instances SET deadline_at=? WHERE instance_id=?",
-                   ((datetime.now(UTC) - timedelta(seconds=1)).isoformat(), instance.instance_id))
+        db.execute(
+            "UPDATE workflow_instances SET deadline_at=? WHERE instance_id=?",
+            ((datetime.now(UTC) - timedelta(seconds=1)).isoformat(), instance.instance_id),
+        )
         db.commit()
     result = runtime.run(instance.instance_id, definition)
     assert result.state == WorkflowState.FAILED

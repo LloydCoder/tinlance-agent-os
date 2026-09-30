@@ -393,16 +393,25 @@ class StateStore:
             db.execute(
                 "INSERT INTO workflow_instances VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (
-                    instance_id, workflow_id, workspace_id, state, 1, trigger_type,
-                    trigger_id, context, checkpoint, deadline_at, 0, created_at, created_at,
+                    instance_id,
+                    workflow_id,
+                    workspace_id,
+                    state,
+                    1,
+                    trigger_type,
+                    trigger_id,
+                    context,
+                    checkpoint,
+                    deadline_at,
+                    0,
+                    created_at,
+                    created_at,
                 ),
             )
             db.commit()
 
     def get_workflow_instance(self, instance_id: str) -> sqlite3.Row | None:
-        rows = self.query(
-            "SELECT * FROM workflow_instances WHERE instance_id=?", (instance_id,)
-        )
+        rows = self.query("SELECT * FROM workflow_instances WHERE instance_id=?", (instance_id,))
         return rows[0] if rows else None
 
     def update_workflow_instance(
@@ -424,8 +433,13 @@ class StateStore:
                 "context=?,cancel_requested=?,updated_at=? "
                 "WHERE instance_id=? AND version=?",
                 (
-                    state, checkpoint, context, int(cancel_requested), updated_at,
-                    instance_id, expected_version,
+                    state,
+                    checkpoint,
+                    context,
+                    int(cancel_requested),
+                    updated_at,
+                    instance_id,
+                    expected_version,
                 ),
             )
             if cur.rowcount != 1:
@@ -460,9 +474,20 @@ class StateStore:
                 "output_data=excluded.output_data,error=excluded.error,started_at=excluded.started_at,"
                 "completed_at=excluded.completed_at,updated_at=excluded.updated_at",
                 (
-                    instance_id, step_id, state, attempt, next_attempt_at, idempotency_key,
-                    platform_run_id, approval_id, input_data, output_data, error,
-                    started_at, completed_at, updated_at,
+                    instance_id,
+                    step_id,
+                    state,
+                    attempt,
+                    next_attempt_at,
+                    idempotency_key,
+                    platform_run_id,
+                    approval_id,
+                    input_data,
+                    output_data,
+                    error,
+                    started_at,
+                    completed_at,
+                    updated_at,
                 ),
             )
             db.commit()
@@ -511,15 +536,27 @@ class StateStore:
         )
 
     def put_workflow_schedule(
-        self, schedule_id: str, workflow_id: str, workspace_id: str, cron: str,
-        next_run_at: str, created_at: str,
+        self,
+        schedule_id: str,
+        workflow_id: str,
+        workspace_id: str,
+        cron: str,
+        next_run_at: str,
+        created_at: str,
     ) -> None:
         with sqlite3.connect(self.path) as db:
             db.execute(
                 "INSERT INTO workflow_schedules VALUES (?,?,?,?,?,?,?,?,?)",
                 (
-                    schedule_id, workflow_id, workspace_id, cron, 1,
-                    next_run_at, None, created_at, created_at,
+                    schedule_id,
+                    workflow_id,
+                    workspace_id,
+                    cron,
+                    1,
+                    next_run_at,
+                    None,
+                    created_at,
+                    created_at,
                 ),
             )
             db.commit()
