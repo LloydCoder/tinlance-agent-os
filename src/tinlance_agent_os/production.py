@@ -159,9 +159,7 @@ class ProductionReleaseController:
         self.policy.validate()
         if _version_key(self.updates.active_version) < _version_key(manifest.minimum_version):
             self.state = ReleaseState.FAILED
-            raise ProductionReleaseError(
-                "active version does not satisfy release minimum_version"
-            )
+            raise ProductionReleaseError("active version does not satisfy release minimum_version")
         if not self.verifier.verify_signature(manifest, data):
             self.state = ReleaseState.FAILED
             raise ProductionReleaseError("release signature verification failed")
