@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import sqlite3
+
 import pytest
 
 from tinlance_agent_os.store import StateStore
@@ -30,7 +32,8 @@ class FakeExecutor:
         self.cancelled: list[str] = []
         self.approvals: list[str] = []
 
-    def execute(self, *, workspace_id, workflow_instance_id, step, context, idempotency_key, timeout_seconds):
+    def execute(self, *, workspace_id, workflow_instance_id, step, context, idempotency_key,
+        timeout_seconds):
         if idempotency_key in self.crash_once:
             self.crash_once.remove(idempotency_key)
             self.calls.append(idempotency_key)
@@ -126,7 +129,8 @@ def test_human_input_pause_and_resume(tmp_path):
         "wf",
         "ws",
         (
-            WorkflowStep("input", "input", kind=WorkflowStepKind.HUMAN_INPUT, human_input_key="answer"),
+            WorkflowStep("input", "input", kind=WorkflowStepKind.HUMAN_INPUT,
+                human_input_key="answer"),
             WorkflowStep("after", "after", depends_on=("input",)),
         ),
     )
@@ -202,9 +206,10 @@ def test_deadline_fails_closed(tmp_path):
         cancel_requested=False,
         updated_at=datetime.now(UTC).isoformat(),
     )
-    runtime.store.query("SELECT instance_id FROM workflow_instances WHERE instance_id=?", (instance.instance_id,))
+    runtime.store.query("SELECT instance_id FROM workflow_instances WHERE instance_id=?",
+        (instance.instance_id,))
     # The deadline is computed at start; move it to the past through the durable row for deterministic testing.
-    with __import__("sqlite3").connect(runtime.store.path) as db:
+    with sqlite3.connect(runtime.store.path) as db:
         db.execute("UPDATE workflow_instances SET deadline_at=? WHERE instance_id=?",
                    ((datetime.now(UTC) - timedelta(seconds=1)).isoformat(), instance.instance_id))
         db.commit()
