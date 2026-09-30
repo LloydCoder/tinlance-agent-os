@@ -172,14 +172,19 @@ class ProductionReleaseController:
             self.state = ReleaseState.FAILED
             raise ProductionReleaseError("release SBOM verification failed")
 
+        self.state = ReleaseState.STAGED
         try:
-            self.state = ReleaseState.STAGED
             self.updates.stage(manifest.artifact, data)
+        except Exception:
+            self.updates.discard_staged()
+            self.state = ReleaseState.FAILED
+            raise
+        try:
             self.backup_id = self.backups.create(version=self.updates.active_version)
         except Exception as exc:
             self.updates.discard_staged()
             self.state = ReleaseState.FAILED
-            raise ProductionReleaseError("release staging or backup failed") from exc
+            raise ProductionReleaseError("release backup preparation failed") from exc
 
         try:
             if manifest.migration_id is not None:
