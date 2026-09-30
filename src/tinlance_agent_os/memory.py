@@ -482,8 +482,8 @@ class MemoryStore:
             and record.expires_at is not None
             and record.expires_at <= datetime.now(UTC)
         ):
-                self.store.expire_memory_record(memory_id, datetime.now(UTC).isoformat())
-                return None
+            self.store.expire_memory_record(memory_id, datetime.now(UTC).isoformat())
+            return None
         return record if self._visible(record, retrieval) else None
 
     def search(

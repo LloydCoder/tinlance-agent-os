@@ -108,9 +108,9 @@ def test_classification_prevents_confidential_leakage(tmp_path):
         )
     )
     assert store.search(retrieval(max_classification=MemoryClassification.INTERNAL)) == ()
-    assert len(
-        store.search(retrieval(max_classification=MemoryClassification.CONFIDENTIAL))
-    ) == 1
+    assert (
+        len(store.search(retrieval(max_classification=MemoryClassification.CONFIDENTIAL))) == 1
+    )
 
 
 def test_session_and_task_memory_cannot_cross_context(tmp_path):
@@ -281,13 +281,14 @@ def test_retention_and_explicit_deletion(tmp_path):
         ),
         now=now,
     )
-    assert store.search(
-        retrieval(session="session-1", scopes=(MemoryScope.WORKING,))
-    ) == ()
-    assert store.get(
-        expired.memory_id,
-        retrieval(session="session-1", scopes=(MemoryScope.WORKING,)),
-    ) is None
+    assert store.search(retrieval(session="session-1", scopes=(MemoryScope.WORKING,))) == ()
+    assert (
+        store.get(
+            expired.memory_id,
+            retrieval(session="session-1", scopes=(MemoryScope.WORKING,)),
+        )
+        is None
+    )
 
     live = store.put(
         MemoryWrite(

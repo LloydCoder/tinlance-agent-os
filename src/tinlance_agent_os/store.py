@@ -210,7 +210,6 @@ class StateStore:
             db.execute("PRAGMA foreign_keys=ON")
             db.execute("INSERT INTO memory VALUES (?,?,?,?,?,?)", row)
 
-
     def insert_memory_record(self, row: tuple[object, ...]) -> None:
         with sqlite3.connect(self.path) as db:
             db.execute("PRAGMA foreign_keys=ON")
