@@ -92,7 +92,8 @@ class PackageRecord:
 class AgentEcosystemRuntime:
     def __init__(self, verifier: PackageSignatureVerifier) -> None:
         self.verifier = verifier
-        self.packages: dict[str, PackageRecord] = {}
+        self.packages: dict[tuple[str, str], PackageRecord] = {}
+        self.active: dict[str, str] = {}
 
     def install(self, manifest: PackageManifest, artifact: bytes) -> None:
         manifest.validate()
@@ -103,14 +104,11 @@ class AgentEcosystemRuntime:
             digest=digest, signature=manifest.signature, signer=manifest.signer
         ):
             raise PackageError("package signature verification failed")
-        current = self.packages.get(manifest.package_id)
-        if current is not None and current.state is PackageState.ENABLED:
-            if current.manifest.version == manifest.version:
-                return
-            previous = current.manifest.version
-        else:
-            previous = None
-        self.packages[manifest.package_id] = PackageRecord(
+        current_version = self.active.get(manifest.package_id)
+        if current_version == manifest.version:
+            return
+        previous = current_version
+        self.packages[(manifest.package_id, manifest.version)] = PackageRecord(
             manifest=manifest,
             state=PackageState.VERIFIED,
             artifact=artifact,
@@ -118,7 +116,8 @@ class AgentEcosystemRuntime:
         )
 
     def resolve(self, package_id: str) -> tuple[PackageManifest, ...]:
-        if package_id not in self.packages:
+        active_version = self.active.get(package_id)
+        if active_version is None or (package_id, active_version) not in self.packages:
             raise PackageError("package not installed")
         ordered: list[PackageManifest] = []
         visiting: set[str] = set()
@@ -129,13 +128,14 @@ class AgentEcosystemRuntime:
                 raise PackageError("package dependency cycle")
             if current_id in visited:
                 return
-            record = self.packages.get(current_id)
+            active_version = self.active.get(current_id)
+            record = self.packages.get((current_id, active_version)) if active_version else None
             if record is None:
                 raise PackageError("package dependency is not installed")
             visiting.add(current_id)
             for dependency in record.manifest.dependencies:
-                dependency_record = self.packages.get(dependency.package_id)
-                if dependency_record is None or dependency_record.manifest.version != dependency.version:
+                dependency_record = self.packages.get((dependency.package_id, dependency.version))
+                if dependency_record is None:
                     raise PackageError("package dependency version mismatch")
                 visit(dependency.package_id)
             visiting.remove(current_id)
@@ -146,30 +146,37 @@ class AgentEcosystemRuntime:
         return tuple(ordered)
 
     def enable(self, package_id: str) -> None:
-        record = self.packages[package_id]
+        active_version = self.active.get(package_id)
+        record = self.packages[(package_id, active_version)] if active_version else None
+        if record is None:
+            raise PackageError("package is not installed")
         self.resolve(package_id)
         if record.state is PackageState.QUARANTINED:
             raise PackageError("quarantined package cannot be enabled")
         record.state = PackageState.ENABLED
+        self.active[package_id] = record.manifest.version
 
     def quarantine(self, package_id: str) -> None:
-        self.packages[package_id].state = PackageState.QUARANTINED
+        active_version = self.active.get(package_id)
+        if active_version is None:
+            raise PackageError("package is not installed")
+        self.packages[(package_id, active_version)].state = PackageState.QUARANTINED
 
     def rollback(self, package_id: str) -> None:
-        record = self.packages[package_id]
-        if record.previous_version is None:
+        active_version = self.active.get(package_id)
+        record = self.packages.get((package_id, active_version)) if active_version else None
+        if record is None or record.previous_version is None:
             raise PackageError("no previous package version")
-        candidates = [
-            other for other in self.packages.values()
-            if other.manifest.package_id == package_id
-            and other.manifest.version == record.previous_version
-        ]
-        if not candidates:
+        previous = self.packages.get((package_id, record.previous_version))
+        if previous is None:
             raise PackageError("previous package artifact is unavailable")
         record.state = PackageState.ROLLED_BACK
+        previous.state = PackageState.ENABLED
+        self.active[package_id] = previous.manifest.version
 
     def apply_platform_grant(self, grant: CapabilityGrant) -> None:
-        record = self.packages.get(grant.package_id)
+        active_version = self.active.get(grant.package_id)
+        record = self.packages.get((grant.package_id, active_version)) if active_version else None
         if record is None:
             raise PackageError("package is not installed")
         if grant.capability_id not in record.manifest.capabilities:
