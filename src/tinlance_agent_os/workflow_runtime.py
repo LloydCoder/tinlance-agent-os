@@ -294,7 +294,10 @@ class DurableWorkflowRuntime:
     ) -> WorkflowInstance:
         definition.validate()
         instance = self.get(instance_id)
-        if instance.workflow_id != definition.workflow_id or instance.workspace_id != definition.workspace_id:
+        if (
+            instance.workflow_id != definition.workflow_id
+            or instance.workspace_id != definition.workspace_id
+        ):
             raise WorkflowRuntimeError("workflow definition does not match instance")
         while True:
             instance = self.get(instance_id)
@@ -316,7 +319,10 @@ class DurableWorkflowRuntime:
             ready = tuple(
                 step for step in definition.steps
                 if step.step_id not in completed
-                and all(rows[dep]["state"] == WorkflowStepState.COMPLETED.value for dep in step.depends_on)
+                and all(
+                    rows[dep]["state"] == WorkflowStepState.COMPLETED.value
+                    for dep in step.depends_on
+                )
                 and self._due(rows[step.step_id])
             )
             if not ready:
@@ -337,8 +343,11 @@ class DurableWorkflowRuntime:
                 ) and wait_for_retry:
                         delays = [
                             max(0.0,
-                                (datetime.fromisoformat(row["next_attempt_at"]) - _now()).total_seconds())
-                            for row in rows.values() if row["state"] == WorkflowStepState.RETRY_WAIT.value
+                                (
+                                    datetime.fromisoformat(row["next_attempt_at"]) - _now()
+                                ).total_seconds()
+                            for row in rows.values()
+                            if row["state"] == WorkflowStepState.RETRY_WAIT.value
                         ]
                         time.sleep(min(delays, default=0.0))
                         continue
@@ -408,17 +417,24 @@ class DurableWorkflowRuntime:
         step = next((s for s in definition.steps if s.step_id == step_id), None)
         if step is None or step.kind != WorkflowStepKind.HUMAN_INPUT:
             raise WorkflowRuntimeError("step is not a human-input gate")
-        row = next((r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step_id), None)
+        row = next(
+            (r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step_id),
+            None,
+        )
         if row is None or row["state"] != WorkflowStepState.WAITING_INPUT.value:
             raise WorkflowRuntimeError("workflow is not waiting for this input")
         context = dict(instance.context)
         context[step.human_input_key or step_id] = value
         self.store.upsert_workflow_step(
             instance_id=instance_id, step_id=step_id, state=WorkflowStepState.COMPLETED.value,
-            attempt=int(row["attempt"]), next_attempt_at=None, idempotency_key=row["idempotency_key"],
+            attempt=int(row["attempt"]),
+            next_attempt_at=None,
+            idempotency_key=row["idempotency_key"],
             platform_run_id=row["platform_run_id"], approval_id=row["approval_id"],
             input_data=_json(value), output_data=_json(value), error=None,
-            started_at=row["started_at"], completed_at=_now().isoformat(), updated_at=_now().isoformat()
+            started_at=row["started_at"],
+            completed_at=_now().isoformat(),
+            updated_at=_now().isoformat(),
         )
         self.store.update_workflow_instance(
             instance_id=instance_id, expected_version=instance.version,
@@ -432,17 +448,24 @@ class DurableWorkflowRuntime:
         self, instance_id: str, definition: WorkflowDefinition, step_id: str, approved: bool
     ) -> WorkflowInstance:
         instance = self.get(instance_id)
-        row = next((r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step_id), None)
+        row = next(
+            (r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step_id),
+            None,
+        )
         if row is None or row["state"] != WorkflowStepState.WAITING_APPROVAL.value:
             raise WorkflowRuntimeError("workflow is not waiting for this approval")
         if not approved:
             return self._fail(instance, step_id, "approval rejected")
         self.store.upsert_workflow_step(
             instance_id=instance_id, step_id=step_id, state=WorkflowStepState.COMPLETED.value,
-            attempt=int(row["attempt"]), next_attempt_at=None, idempotency_key=row["idempotency_key"],
+            attempt=int(row["attempt"]),
+            next_attempt_at=None,
+            idempotency_key=row["idempotency_key"],
             platform_run_id=row["platform_run_id"], approval_id=row["approval_id"],
             input_data=row["input_data"], output_data=_json({"approved": True}), error=None,
-            started_at=row["started_at"], completed_at=_now().isoformat(), updated_at=_now().isoformat()
+            started_at=row["started_at"],
+            completed_at=_now().isoformat(),
+            updated_at=_now().isoformat(),
         )
         self.store.update_workflow_instance(
             instance_id=instance_id, expected_version=instance.version,
@@ -533,7 +556,9 @@ class DurableWorkflowRuntime:
             raise WorkflowCancelled()
         if instance.deadline_at is not None and _now() >= instance.deadline_at:
             raise WorkflowDeadlineExceeded("workflow deadline exceeded")
-        row = next(r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id)
+        row = next(
+            r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id
+        )
         attempt = int(row["attempt"]) + 1
         now = _now().isoformat()
         self.store.upsert_workflow_step(
@@ -601,10 +626,14 @@ class DurableWorkflowRuntime:
     def _complete_step(self, instance_id: str, step: WorkflowStep,
         result: WorkflowStepResult) -> None:
         now = _now().isoformat()
-        row = next(r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id)
+        row = next(
+            r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id
+        )
         self.store.upsert_workflow_step(
             instance_id=instance_id, step_id=step.step_id, state=WorkflowStepState.COMPLETED.value,
-            attempt=int(row["attempt"]), next_attempt_at=None, idempotency_key=row["idempotency_key"],
+            attempt=int(row["attempt"]),
+            next_attempt_at=None,
+            idempotency_key=row["idempotency_key"],
             platform_run_id=result.platform_run_id, approval_id=result.approval_id,
             input_data=row["input_data"], output_data=_json(result.output),
             error=None, started_at=row["started_at"], completed_at=now, updated_at=now
@@ -621,7 +650,9 @@ class DurableWorkflowRuntime:
         })
 
     def _retry(self, instance_id: str, step: WorkflowStep, error: str) -> None:
-        row = next(r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id)
+        row = next(
+            r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id
+        )
         attempt = int(row["attempt"])
         if attempt >= step.retry.max_attempts:
             self._handle_failure(instance_id, None, step, error)
@@ -629,7 +660,9 @@ class DurableWorkflowRuntime:
         due = _now() + timedelta(seconds=step.retry.delay(attempt))
         self.store.upsert_workflow_step(
             instance_id=instance_id, step_id=step.step_id, state=WorkflowStepState.RETRY_WAIT.value,
-            attempt=attempt, next_attempt_at=due.isoformat(), idempotency_key=row["idempotency_key"],
+            attempt=attempt,
+            next_attempt_at=due.isoformat(),
+            idempotency_key=row["idempotency_key"],
             platform_run_id=row["platform_run_id"], approval_id=row["approval_id"],
             input_data=row["input_data"], output_data=row["output_data"], error=error,
             started_at=row["started_at"], completed_at=None, updated_at=_now().isoformat()
@@ -641,13 +674,19 @@ class DurableWorkflowRuntime:
         self, instance_id: str, definition: WorkflowDefinition | None,
         step: WorkflowStep, error: str
     ) -> None:
-        row = next(r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id)
+        row = next(
+            r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id
+        )
         self.store.upsert_workflow_step(
             instance_id=instance_id, step_id=step.step_id, state=WorkflowStepState.FAILED.value,
-            attempt=int(row["attempt"]), next_attempt_at=None, idempotency_key=row["idempotency_key"],
+            attempt=int(row["attempt"]),
+            next_attempt_at=None,
+            idempotency_key=row["idempotency_key"],
             platform_run_id=row["platform_run_id"], approval_id=row["approval_id"],
             input_data=row["input_data"], output_data=row["output_data"], error=error,
-            started_at=row["started_at"], completed_at=_now().isoformat(), updated_at=_now().isoformat()
+            started_at=row["started_at"],
+            completed_at=_now().isoformat(),
+            updated_at=_now().isoformat(),
         )
         self._event(instance_id, "workflow.step.failed", step.step_id, {"error": error})
         instance = self.get(instance_id)
@@ -669,25 +708,40 @@ class DurableWorkflowRuntime:
         }
         for step in reversed(definition.steps):
             if step.step_id in completed and step.compensate_with:
-                compensation = next(s for s in definition.steps if s.step_id == step.compensate_with)
+                compensation = next(
+                    s for s in definition.steps if s.step_id == step.compensate_with
+                )
                 self._run_step(instance_id, compensation, self.get(instance_id))
-                row = next(r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == compensation.step_id)
+                row = next(
+                    r
+                    for r in self.store.get_workflow_steps(instance_id)
+                    if r["step_id"] == compensation.step_id
+                )
                 self.store.upsert_workflow_step(
                     instance_id=instance_id, step_id=compensation.step_id,
                     state=WorkflowStepState.COMPENSATED.value, attempt=int(row["attempt"]),
                     next_attempt_at=None, idempotency_key=row["idempotency_key"],
                     platform_run_id=row["platform_run_id"], approval_id=row["approval_id"],
                     input_data=row["input_data"], output_data=row["output_data"], error=None,
-                    started_at=row["started_at"], completed_at=_now().isoformat(), updated_at=_now().isoformat()
+                    started_at=row["started_at"],
+            completed_at=_now().isoformat(),
+            updated_at=_now().isoformat(),
                 )
         self._fail(self.get(instance_id), None, "workflow failed after compensation")
 
-    def _wait_approval(self, instance_id: str, step: WorkflowStep,
+    def _wait_approval(
+        self, instance_id: str, step: WorkflowStep,
         result: WorkflowStepResult) -> None:
-        row = next(r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id)
+        row = next(
+            r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id
+        )
         self.store.upsert_workflow_step(
-            instance_id=instance_id, step_id=step.step_id, state=WorkflowStepState.WAITING_APPROVAL.value,
-            attempt=int(row["attempt"]), next_attempt_at=None, idempotency_key=row["idempotency_key"],
+            instance_id=instance_id,
+            step_id=step.step_id,
+            state=WorkflowStepState.WAITING_APPROVAL.value,
+            attempt=int(row["attempt"]),
+            next_attempt_at=None,
+            idempotency_key=row["idempotency_key"],
             platform_run_id=result.platform_run_id, approval_id=result.approval_id,
             input_data=row["input_data"], output_data=None, error=None,
             started_at=row["started_at"], completed_at=None, updated_at=_now().isoformat()
@@ -701,11 +755,19 @@ class DurableWorkflowRuntime:
         self._event(instance_id, "workflow.approval.requested", step.step_id,
             {"approval_id": result.approval_id})
 
-    def _wait_input(self, instance_id: str, step: WorkflowStep, result: WorkflowStepResult) -> None:
-        row = next(r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id)
+    def _wait_input(
+        self, instance_id: str, step: WorkflowStep, result: WorkflowStepResult
+    ) -> None:
+        row = next(
+            r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id
+        )
         self.store.upsert_workflow_step(
-            instance_id=instance_id, step_id=step.step_id, state=WorkflowStepState.WAITING_INPUT.value,
-            attempt=int(row["attempt"]), next_attempt_at=None, idempotency_key=row["idempotency_key"],
+            instance_id=instance_id,
+            step_id=step.step_id,
+            state=WorkflowStepState.WAITING_INPUT.value,
+            attempt=int(row["attempt"]),
+            next_attempt_at=None,
+            idempotency_key=row["idempotency_key"],
             platform_run_id=result.platform_run_id, approval_id=result.approval_id,
             input_data=row["input_data"], output_data=None, error=None,
             started_at=row["started_at"], completed_at=None, updated_at=_now().isoformat()
@@ -754,7 +816,10 @@ class DurableWorkflowRuntime:
 
     def _due(self, row: Any) -> bool:
         if row["state"] == WorkflowStepState.RETRY_WAIT.value:
-            return row["next_attempt_at"] is not None and datetime.fromisoformat(row["next_attempt_at"]) <= _now()
+            return (
+                row["next_attempt_at"] is not None
+                and datetime.fromisoformat(row["next_attempt_at"]) <= _now()
+            )
         return row["state"] in {WorkflowStepState.PENDING.value, WorkflowStepState.READY.value}
 
     def _event(self, instance_id: str, event_type: str, step_id: str | None, payload: Any) -> None:
