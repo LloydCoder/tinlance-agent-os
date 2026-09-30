@@ -167,6 +167,10 @@ class StateStore:
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS agent_message_sequences (
+                    parent_task_id TEXT PRIMARY KEY REFERENCES agent_tasks(task_id),
+                    next_sequence INTEGER NOT NULL
+                );
                 CREATE TABLE IF NOT EXISTS agent_messages (
                     message_id TEXT PRIMARY KEY,
                     workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
@@ -640,12 +644,23 @@ class StateStore:
 
     def next_agent_message_sequence(self, task_id: str) -> int:
         with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
             db.execute("BEGIN IMMEDIATE")
+            db.execute(
+                "INSERT OR IGNORE INTO agent_message_sequences VALUES (?,1)",
+                (task_id,),
+            )
             row = db.execute(
-                "SELECT COALESCE(MAX(sequence),0) FROM agent_messages WHERE parent_task_id=?",
+                "SELECT next_sequence FROM agent_message_sequences WHERE parent_task_id=?",
                 (task_id,),
             ).fetchone()
-            return int(row[0]) + 1
+            sequence = int(row[0])
+            db.execute(
+                "UPDATE agent_message_sequences SET next_sequence=? WHERE parent_task_id=?",
+                (sequence + 1, task_id),
+            )
+            db.commit()
+            return sequence
 
     def append_agent_message(self, message: Any) -> None:
         from datetime import UTC, datetime
