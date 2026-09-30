@@ -123,6 +123,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M12 | Agent Lifecycle Runtime | Complete |
 | M13 | Agent SDK / Application SDK | Complete |
 | M14 | Model Gateway + Model Router | Complete |
+| M15 | Context + Trusted Memory | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -186,10 +187,17 @@ See docs/ROADMAP.md, docs/ARCHITECTURE.md, and docs/M2-M11-STATUS.md.
 - workspace and scope isolation;
 - explicit data classification;
 - public/internal local persistence;
-- confidential/restricted data fail-closed until a governed external provider is integrated;
-- bounded search.
+- versioned working/session/task/agent/long-term memory;
+- provenance and integrity digests with version chains;
+- public/internal/confidential/restricted classification;
+- trust separation between trusted instructions, verified facts, untrusted content and quarantined content;
+- workspace/agent/session/task retrieval isolation;
+- retention and expiry with explicit deletion;
+- compare-and-swap versioning and conflict rejection;
+- deterministic poisoning detection and quarantine;
+- trust-separated context assembly.
 
-Sensitive agent memory is treated as a security boundary, not as an unrestricted key-value store.
+Sensitive agent memory is a security boundary, not an unrestricted key-value store. Confidential and restricted memory can persist locally, but retrieval is fail-closed unless the caller's classification ceiling explicitly permits it.
 
 ### M6 — Agent Application Model
 
@@ -349,7 +357,7 @@ src/tinlance_agent_os/
 ├── daemon_service.py     # OS lifecycle service
 ├── store.py              # Durable SQLite state
 ├── workflow.py           # Workflow definition/execution
-├── memory.py             # Classified memory
+├── memory.py             # M15 trusted memory/context subsystem
 ├── applications.py       # Application manifests/lifecycle
 ├── system.py             # Filesystem/process/notification abstraction
 ├── shell.py              # Toolkit-neutral shell model
@@ -475,6 +483,12 @@ result = sdk.execute(task)
 
 The SDK provides typed scaffolding, lifecycle/session/task/workflow helpers, capability declarations, Platform-backed approval requests, execution/evidence results, structured errors, durable idempotency and execution-context propagation. It is deliberately not an authorization layer; the Agent Platform remains authoritative.
 
+## Context + Trusted Memory
+
+M15 replaces the original memory primitive with a durable security-aware subsystem. Memory records carry workspace/scope identity, provenance, classification, trust state, version, retention metadata and an integrity digest.
+
+The subsystem separates working, session, task, agent and long-term memory, detects common persistent prompt-injection and exfiltration patterns before persistence, quarantines suspicious records, and assembles retrieval into separate trust channels. Untrusted retrieved content is never silently promoted to trusted instructions.
+
 ## Model Gateway + Router
 
 M14 adds a provider-neutral model surface so agent logic does not depend on a vendor API:
@@ -489,7 +503,7 @@ A reference agent calls `sdk.model(ModelRequest(...))`; switching the registered
 
 ## Status
 
-**M0–M14 repository implementation: complete.**
+**M0–M15 repository implementation: complete.**
 
 "Complete" means the repository-owned contracts, implementation, tests, architecture constraints and documentation are implemented and verified by CI. External infrastructure is explicitly represented as an integration seam rather than being simulated or overstated.
 

@@ -17,8 +17,14 @@ This document is the implementation-level security companion to security/threat-
 | Local state | Durable SQLite | WAL + synchronous FULL |
 | Task/run integrity | Dispatch only from durable OS task state | Task identity and Platform run lifecycle reconciliation |
 | Database integrity | Referential integrity | SQLite foreign keys |
-| Memory | Workspace/scope isolation | Query predicates + classified storage |
-| Sensitive memory | Fail closed | Confidential/restricted rejection |
+| Memory | Workspace/scope isolation | Durable record identity + retrieval predicates |
+| Memory provenance | Source attribution + integrity chain | Provenance JSON + parent/content digests |
+| Memory classification | Monotonic confidentiality ceiling | Retrieval admission |
+| Memory trust | Instructions/facts/content/quarantine remain distinct | Trust-separated context assembly |
+| Memory versioning | Stale writers fail closed | Expected-version + conflict policy |
+| Memory retention | Automatic expiry plus explicit deletion | TTL/expiry + tombstone state |
+| Memory poisoning | Suspicious persistent content is quarantined | Deterministic pre-persistence detector |
+| Sensitive memory | Fail closed above caller clearance | Classification ceiling |
 | Filesystem | Root confinement | Resolved-path containment check |
 | Process execution | Explicit allowlist | Fixed trusted executable directories |
 | Process abuse | Timeout + process-group kill | Popen + start_new_session |
@@ -128,3 +134,27 @@ The developer surface is intentionally designed around current agent-security co
 | Vision/speech | Unsupported future tasks fail explicitly | `UnsupportedModelTask` |
 
 M14 therefore treats the model provider as an untrusted dependency from the perspective of consequential authority: a model can suggest an action, but only Agent Platform can authorize and execute that action.
+
+
+## M15 context and trusted-memory controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Workspace isolation | Every memory record carries a workspace ID | Storage schema + retrieval predicate |
+| Agent isolation | Records are bound to an agent | Retrieval predicate + access check |
+| Session isolation | Working/session memory requires the active session ID | Scope contract + retrieval check |
+| Task isolation | Task memory requires the active task ID | Scope contract + retrieval check |
+| Long-term isolation | Long-term memory is workspace-scoped | Scope contract |
+| Provenance | Source type/ID, actor, origin and collection time are persisted | MemoryProvenance |
+| Integrity | Content/provenance/version chain is SHA-256 addressed | Memory digest + parent digest |
+| Classification | Caller declares a maximum classification | Fail-closed retrieval ceiling |
+| Trust | Trusted instructions are separated from verified facts and untrusted content | AssembledContext channels |
+| Poisoning | Common persistent injection/exfiltration/security-bypass/key patterns trigger quarantine | Deterministic detector |
+| Quarantine | Quarantined memory is excluded from ordinary retrieval | Explicit include_quarantined required |
+| Versioning | Updates use compare-and-swap semantics | Expected version + conflict policy |
+| Retention | Scope-specific defaults plus explicit TTL/expiry | Durable expiry timestamps |
+| Deletion | Deleted records are tombstoned and excluded from active retrieval | State transition |
+| Context assembly | Retrieval does not collapse trust classes into one prompt | Four-channel AssembledContext |
+| Authority | Memory never creates Platform authority | Architecture boundary + no Platform grants |
+
+OWASP's 2026 Agentic Applications material identifies memory/context poisoning as a distinct persistent attack surface and recommends origin tracking, access segmentation, retention limits, anomaly detection and rollback-oriented controls. M15 implements the repository-local portions of that boundary; semantic validation, external truth verification and enterprise retention policy remain deployment/application responsibilities.

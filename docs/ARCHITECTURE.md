@@ -273,3 +273,44 @@ Fallback is restricted to transient provider failures: unavailable, timeout and 
 ### Current tasks
 
 M14 implements chat, decision, embedding and reranking. Vision and speech are explicit future task types and are rejected until their contracts, provider semantics, privacy handling and tests are defined.
+
+
+## M15 Context + Trusted Memory
+
+M15 makes context and persistent memory an explicit OS control-plane subsystem rather than an untyped text store.
+
+Memory flow:
+
+Agent / SDK -> MemoryStore -> workspace and scope checks -> classification ceiling -> provenance/version validation -> poisoning detector -> retrieval -> trust-separated context assembly.
+
+### Memory scope model
+
+| Scope | Scope identity | Intended lifetime |
+|---|---|---|
+| Working | active session | short-lived working state |
+| Session | session ID | one interaction session |
+| Task | task ID | one task lifecycle |
+| Agent | agent ID | agent-specific persistent knowledge |
+| Long-term | workspace ID | workspace-scoped durable knowledge |
+
+All records additionally carry the workspace and agent identity. Session/task scopes cannot be retrieved from another active session/task, even when the caller knows the memory ID.
+
+### Provenance and versioning
+
+Every write records source type, source ID, optional actor/origin, collection time and a parent digest when updating an existing memory key. The content digest covers identity, version, content and provenance. Updates require an explicit expected version and REPLACE conflict policy; stale writers fail rather than silently overwrite newer memory.
+
+### Trust and classification
+
+Classification controls confidentiality; trust controls how retrieved content may be interpreted. They are intentionally separate. TRUSTED_INSTRUCTION is reserved for system/platform/user-sourced instruction records; external and agent-originated content defaults to untrusted. Classification ceilings prevent a caller from retrieving content above its declared clearance.
+
+Trust metadata is never an authorization grant. Memory cannot authorize a Platform run or capability.
+
+### Poisoning and quarantine
+
+M15 performs deterministic screening of candidate writes for common persistent-prompt-injection, exfiltration, security-bypass and credential/key patterns. A match changes the record to QUARANTINED and MemoryTrust.QUARANTINED. Quarantined records are excluded from normal retrieval and are exposed only through an explicit quarantine-inclusive path.
+
+The detector is deliberately conservative and deterministic; it is a security signal, not a semantic truth oracle. Later classifiers can augment it without changing the storage contract.
+
+### Context assembly
+
+The assembler preserves trust distinctions instead of concatenating all retrieved text. Downstream model prompting must explicitly choose how to render each channel. No retrieved memory is automatically converted into an instruction, Platform authorization, approval, secret or evidence reference.
