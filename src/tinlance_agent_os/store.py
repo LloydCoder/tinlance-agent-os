@@ -6,7 +6,7 @@ import json
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,6 +73,38 @@ class StateStore:
                     state TEXT NOT NULL,
                     created_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS agents (
+                    agent_id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    version TEXT NOT NULL,
+                    entrypoint TEXT NOT NULL,
+                    capabilities TEXT NOT NULL,
+                    configuration TEXT NOT NULL,
+                    restart_policy TEXT NOT NULL,
+                    runtime_config TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    health_state TEXT NOT NULL,
+                    state_version INTEGER NOT NULL,
+                    restart_count INTEGER NOT NULL,
+                    last_heartbeat_at TEXT,
+                    lease_expires_at TEXT,
+                    registered_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS agent_lifecycle_events (
+                    event_id TEXT PRIMARY KEY,
+                    agent_id TEXT NOT NULL REFERENCES agents(agent_id),
+                    workspace_id TEXT NOT NULL,
+                    sequence INTEGER NOT NULL,
+                    event_type TEXT NOT NULL,
+                    from_state TEXT,
+                    to_state TEXT NOT NULL,
+                    occurred_at TEXT NOT NULL,
+                    correlation_id TEXT NOT NULL,
+                    payload TEXT NOT NULL,
+                    UNIQUE(agent_id, sequence)
+                );
                 CREATE INDEX IF NOT EXISTS idx_sessions_workspace ON sessions(workspace_id);
                 CREATE INDEX IF NOT EXISTS idx_tasks_workspace ON tasks(workspace_id);
                 CREATE INDEX IF NOT EXISTS idx_tasks_session ON tasks(session_id);
@@ -81,6 +113,11 @@ class StateStore:
                 CREATE INDEX IF NOT EXISTS idx_memory_workspace_scope_time
                     ON memory(workspace_id, scope, created_at);
                 CREATE INDEX IF NOT EXISTS idx_workflows_workspace ON workflows(workspace_id);
+                CREATE INDEX IF NOT EXISTS idx_agents_workspace ON agents(workspace_id);
+                CREATE INDEX IF NOT EXISTS idx_agents_state_lease
+                    ON agents(state, lease_expires_at);
+                CREATE INDEX IF NOT EXISTS idx_agent_events_agent_sequence
+                    ON agent_lifecycle_events(agent_id, sequence);
                 """
             )
 
@@ -163,3 +200,185 @@ class StateStore:
             if isinstance(run_ids, list) and run_id in run_ids:
                 return row
         return None
+
+    def register_agent(self, definition: Any, registered_at: str) -> None:
+        values = (
+            definition.agent_id,
+            definition.workspace_id,
+            definition.name,
+            definition.version,
+            definition.entrypoint,
+            json.dumps(tuple(definition.capabilities), sort_keys=True),
+            json.dumps(dict(definition.configuration), sort_keys=True),
+            json.dumps(
+                {
+                    "enabled": definition.restart_policy.enabled,
+                    "max_restarts": definition.restart_policy.max_restarts,
+                    "backoff_seconds": definition.restart_policy.backoff_seconds,
+                },
+                sort_keys=True,
+            ),
+            json.dumps(
+                {
+                    "heartbeat_interval_seconds": definition.runtime.heartbeat_interval_seconds,
+                    "heartbeat_timeout_seconds": definition.runtime.heartbeat_timeout_seconds,
+                    "shutdown_timeout_seconds": definition.runtime.shutdown_timeout_seconds,
+                },
+                sort_keys=True,
+            ),
+            "registered",
+            "unknown",
+            0,
+            0,
+            None,
+            None,
+            registered_at,
+            registered_at,
+        )
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            existing = db.execute(
+                "SELECT version FROM agents WHERE agent_id=?", (definition.agent_id,)
+            ).fetchone()
+            if existing is not None and existing[0] != definition.version:
+                raise ValueError("agent version is already bound to a different registered version")
+            db.execute(
+                "INSERT OR IGNORE INTO agents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                values,
+            )
+            if existing is None:
+                import hashlib
+
+                event_id = hashlib.sha256(
+                    f"agent:{definition.agent_id}:1:agent.registered".encode()
+                ).hexdigest()
+                db.execute(
+                    "INSERT INTO agent_lifecycle_events VALUES (?,?,?,?,?,?,?,?,?,?)",
+                    (
+                        event_id,
+                        definition.agent_id,
+                        definition.workspace_id,
+                        1,
+                        "agent.registered",
+                        None,
+                        "registered",
+                        registered_at,
+                        event_id,
+                        "{}",
+                    ),
+                )
+
+    def get_agent(self, agent_id: str) -> sqlite3.Row | None:
+        with sqlite3.connect(self.path) as db:
+            db.row_factory = sqlite3.Row
+            row = db.execute("SELECT * FROM agents WHERE agent_id=?", (agent_id,)).fetchone()
+            return cast(sqlite3.Row | None, row)
+
+    def transition_agent(
+        self,
+        agent_id: str,
+        expected_state: str,
+        new_state: str,
+        occurred_at: str,
+        event_type: str,
+        payload: dict[str, object],
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT * FROM agents WHERE agent_id=?", (agent_id,)).fetchone()
+            if row is None:
+                raise ValueError("agent is not registered")
+            if row[9] != expected_state:
+                raise RuntimeError(
+                    f"agent state changed concurrently: expected {expected_state}, found {row[9]}"
+                )
+            sequence_row = db.execute(
+                "SELECT COALESCE(MAX(sequence), 0) FROM agent_lifecycle_events WHERE agent_id=?",
+                (agent_id,),
+            ).fetchone()
+            sequence = int(sequence_row[0]) + 1
+            state_version = int(row[11]) + 1
+            event_id = (
+                __import__("hashlib")
+                .sha256(f"agent:{agent_id}:{sequence}:{event_type}".encode())
+                .hexdigest()
+            )
+            health = (
+                "healthy"
+                if new_state == "running"
+                else "crashed"
+                if new_state == "crashed"
+                else "stopped"
+                if new_state == "stopped"
+                else row[10]
+            )
+            cursor = db.execute(
+                "UPDATE agents SET state=?,health_state=?,state_version=?,updated_at=? "
+                "WHERE agent_id=? AND state=? AND state_version=?",
+                (
+                    new_state,
+                    health,
+                    state_version,
+                    occurred_at,
+                    agent_id,
+                    expected_state,
+                    int(row[11]),
+                ),
+            )
+            if cursor.rowcount != 1:
+                raise RuntimeError("agent transition lost optimistic-concurrency race")
+            db.execute(
+                "INSERT INTO agent_lifecycle_events VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (
+                    event_id,
+                    agent_id,
+                    row[1],
+                    sequence,
+                    event_type,
+                    expected_state,
+                    new_state,
+                    occurred_at,
+                    event_id,
+                    json.dumps(payload, sort_keys=True),
+                ),
+            )
+            db.commit()
+
+    def record_agent_heartbeat(
+        self, agent_id: str, heartbeat_at: str, lease_expires_at: str
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            cursor = db.execute(
+                "UPDATE agents SET health_state='healthy',last_heartbeat_at=?,"
+                "lease_expires_at=?,updated_at=? WHERE agent_id=? AND state='running'",
+                (heartbeat_at, lease_expires_at, heartbeat_at, agent_id),
+            )
+            if cursor.rowcount != 1:
+                raise ValueError("agent is not running")
+
+    def increment_agent_restart(self, agent_id: str) -> None:
+        from datetime import UTC, datetime
+
+        with sqlite3.connect(self.path) as db:
+            cursor = db.execute(
+                "UPDATE agents SET restart_count=restart_count+1,updated_at=? WHERE agent_id=?",
+                (datetime.now(UTC).isoformat(), agent_id),
+            )
+            if cursor.rowcount != 1:
+                raise ValueError("agent is not registered")
+
+    def running_agents(self) -> list[sqlite3.Row]:
+        with sqlite3.connect(self.path) as db:
+            db.row_factory = sqlite3.Row
+            return list(db.execute("SELECT * FROM agents WHERE state='running'"))
+
+    def agent_events(self, agent_id: str) -> list[sqlite3.Row]:
+        with sqlite3.connect(self.path) as db:
+            db.row_factory = sqlite3.Row
+            return list(
+                db.execute(
+                    "SELECT * FROM agent_lifecycle_events WHERE agent_id=? ORDER BY sequence",
+                    (agent_id,),
+                )
+            )

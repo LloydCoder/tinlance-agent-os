@@ -105,3 +105,51 @@ The historical M0 non-goals below are retained only as historical scope notes; t
 - direct model-provider integration
 - replacement authorization engine
 - replacement evidence/audit store
+
+
+## M12 Agent Lifecycle Runtime
+
+The lifecycle kernel is an OS control-plane responsibility. It does not create authority.
+
+### Agent definition
+
+`AgentDefinition` binds:
+
+- stable agent ID;
+- workspace;
+- name and immutable registered version;
+- entrypoint identity;
+- declared capability references;
+- runtime configuration;
+- restart policy.
+
+The declaration is descriptive. Capability authority is still evaluated by Agent Platform.
+
+### State machine
+
+The runtime enforces an explicit transition graph:
+
+```text
+REGISTERED -> VALIDATING -> READY -> STARTING -> RUNNING
+RUNNING -> PAUSING -> PAUSED -> RESUMING -> RUNNING
+RUNNING -> STOPPING -> STOPPED
+RUNNING/STARTING/PAUSING/RESUMING/STOPPING -> CRASHED
+CRASHED -> RECOVERING -> STARTING
+CRASHED -> FAILED
+```
+
+Every transition is persisted with an optimistic state-version check in the same SQLite transaction as its lifecycle event.
+
+### Health and recovery
+
+A running agent owns a durable heartbeat lease. The runtime refreshes the lease at the configured interval. A new process can call `recover_orphans` to identify expired running leases and transition those agents to `CRASHED` before applying restart policy.
+
+Restart counts are durable. Exceeding the configured restart budget transitions the agent to `FAILED` rather than creating an unbounded restart loop.
+
+### Event determinism
+
+Lifecycle events use a deterministic SHA-256 identifier derived from agent ID, per-agent sequence and event type. Sequence numbers are allocated transactionally, so lifecycle state and its event cannot commit independently.
+
+### Version binding
+
+An agent ID cannot be re-registered against a different version. This prevents a runtime restart from silently replacing the implementation associated with an existing durable identity.
