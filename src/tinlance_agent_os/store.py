@@ -517,11 +517,16 @@ class StateStore:
         with sqlite3.connect(self.path) as db:
             db.execute(
                 "INSERT INTO workflow_schedules VALUES (?,?,?,?,?,?,?,?,?)",
-                (schedule_id, workflow_id, workspace_id, cron, 1, next_run_at, None, created_at, created_at),
+                (
+                    schedule_id, workflow_id, workspace_id, cron, 1,
+                    next_run_at, None, created_at, created_at,
+                ),
             )
             db.commit()
 
-    def advance_workflow_schedule(self, schedule_id: str, next_run_at: str, last_run_at: str) -> None:
+    def advance_workflow_schedule(
+        self, schedule_id: str, next_run_at: str, last_run_at: str
+    ) -> None:
         with sqlite3.connect(self.path) as db:
             db.execute(
                 "UPDATE workflow_schedules SET next_run_at=?,last_run_at=?,updated_at=? "
