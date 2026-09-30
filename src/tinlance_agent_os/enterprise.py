@@ -25,8 +25,12 @@ class FleetRegistry:
 
     def register(self, agent: RemoteAgent) -> None:
         parsed = urlparse(agent.endpoint)
-        if parsed.scheme not in {"https", "unix"} or not parsed.netloc:
-            raise ValueError("remote endpoint must use https or unix with a non-empty authority")
+        if parsed.scheme == "https" and not parsed.netloc:
+            raise ValueError("https remote endpoint requires an authority")
+        if parsed.scheme == "unix" and (parsed.netloc or not parsed.path.startswith("/")):
+            raise ValueError("unix remote endpoint must use an absolute socket path")
+        if parsed.scheme not in {"https", "unix"}:
+            raise ValueError("remote endpoint must use https or unix")
         if parsed.username is not None or parsed.password is not None or parsed.fragment:
             raise ValueError("remote endpoint must not contain credentials or fragments")
         if not agent.agent_id.strip():
