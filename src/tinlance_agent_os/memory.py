@@ -546,7 +546,10 @@ class MemoryStore:
                 continue
             scored.append((score, record.updated_at.isoformat(), record))
         scored.sort(key=lambda item: (-item[0], item[1], item[2].memory_id))
-        telemetry().record_memory(operation="search", scope=','.join(scope.value for scope in retrieval.scopes))
+        telemetry().record_memory(
+            operation="search",
+            scope=",".join(scope.value for scope in retrieval.scopes),
+        )
         return tuple(item[2] for item in scored[: retrieval.limit])
 
     def delete(
@@ -603,7 +606,10 @@ class MemoryStore:
             )
             for item in records
         )
-        telemetry().record_memory(operation="assemble_context", scope=','.join(scope.value for scope in retrieval.scopes))
+        telemetry().record_memory(
+            operation="assemble_context",
+            scope=",".join(scope.value for scope in retrieval.scopes),
+        )
         return AssembledContext(
             tuple(item for item in items if item.trust == MemoryTrust.TRUSTED_INSTRUCTION),
             tuple(item for item in items if item.trust == MemoryTrust.VERIFIED_FACT),
