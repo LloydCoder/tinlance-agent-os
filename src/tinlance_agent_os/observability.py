@@ -6,12 +6,13 @@ from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 import os
 from time import monotonic
-from opentelemetry import metrics, trace
+from opentelemetry import metrics, propagate, trace
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.context import Context
 from opentelemetry.trace import Span, Status, StatusCode
 
 
@@ -98,9 +99,11 @@ class AgentOSTelemetry:
         self,
         name: str,
         attributes: Mapping[str, object] | None = None,
+        *,
+        context: Context | None = None,
     ) -> Iterator[Span]:
         start = monotonic()
-        with self.tracer.start_as_current_span(name) as span:
+        with self.tracer.start_as_current_span(name, context=context) as span:
             if attributes:
                 self.set_attributes(span, attributes)
             try:
@@ -211,3 +214,10 @@ def configure_telemetry(
     trace.set_tracer_provider(tracer_provider)
     metrics.set_meter_provider(meter_provider)
     return AgentOSTelemetry(service_name)
+
+
+def extract_trace_context(traceparent: str | None) -> Context | None:
+    """Extract a W3C trace context from an untrusted inbound traceparent."""
+    if not traceparent:
+        return None
+    return propagate.extract({"traceparent": traceparent})
