@@ -6,6 +6,8 @@ from tinlance_agent_os import (
     ModelGateway,
     ModelRegistry,
     ModelRequest,
+    ModelPricing,
+    ModelRouter,
     ModelResponse,
     ModelTask,
     ModelUsage,
@@ -88,7 +90,7 @@ def descriptor(
             structured_output=True,
         ),
         privacy=privacy,
-        pricing=__import__("tinlance_agent_os").ModelPricing(
+        pricing=ModelPricing(
             input_usd_per_million=input_price,
             output_usd_per_million=output_price,
         ),
@@ -120,8 +122,7 @@ def test_router_matches_capability_cost_latency_context_and_privacy() -> None:
         max_latency_ms=100,
         required_privacy=PrivacyLevel.PRIVATE,
     )
-    candidates = ModelGateway(registry).registry
-    selected = __import__("tinlance_agent_os").ModelRouter(candidates).route(request)
+    selected = ModelRouter(registry).route(request)
     assert [item.model_id for item in selected] == ["private"]
 
 
