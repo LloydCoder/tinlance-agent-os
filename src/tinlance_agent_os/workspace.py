@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import secrets
+import sqlite3
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -88,6 +89,7 @@ class ChannelAdapter(Protocol):
 
 @dataclass(slots=True)
 class DurableChannelAdapter:
+    kind: ChannelKind
     runtime: ChannelRuntime
     context: ChannelContext
 
@@ -386,15 +388,15 @@ class ChannelRuntime:
             )
         )
 
-    def _channel(self, channel_id: str):
+    def _channel(self, channel_id: str) -> sqlite3.Row | None:
         rows = self.store.query("SELECT * FROM channels WHERE channel_id=?", (channel_id,))
         return rows[0] if rows else None
 
-    def _session(self, session_id: str):
+    def _session(self, session_id: str) -> sqlite3.Row | None:
         rows = self.store.query("SELECT * FROM sessions WHERE session_id=?", (session_id,))
         return rows[0] if rows else None
 
-    def _task(self, task_id: str):
+    def _task(self, task_id: str) -> sqlite3.Row | None:
         rows = self.store.query("SELECT * FROM tasks WHERE task_id=?", (task_id,))
         return rows[0] if rows else None
 
