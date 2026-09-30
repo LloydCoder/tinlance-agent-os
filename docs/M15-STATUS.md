@@ -38,7 +38,7 @@ Suspicious content is quarantined before it becomes active memory. Quarantine is
 
 ## Persistence acceptance
 
-The M15 test suite now verifies that a record written through one StateStore instance can be reopened and retrieved through another instance while preserving provenance, version and integrity metadata.
+The M15 test suite verifies that a record written through one StateStore instance can be reopened and retrieved through another instance while preserving provenance, version and integrity metadata.
 
 ## Adversarial acceptance
 
