@@ -370,6 +370,7 @@ def test_crash_recovery_reuses_workflow_idempotency_key(tmp_path):
     assert recovered[0].state is WorkflowState.COMPLETED
     assert executor.calls == [key, key]
 
+
 def test_supply_chain_artifact_tampering_is_rejected(tmp_path):
     runtime = AgentEcosystemRuntime(Verifier())
     manifest, _ = package(tmp_path)
