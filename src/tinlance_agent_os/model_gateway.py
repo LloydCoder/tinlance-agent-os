@@ -80,6 +80,7 @@ class ModelCapabilities:
 
     tasks: frozenset[ModelTask]
     context_window: int
+    features: frozenset[str] = frozenset()
     structured_output: bool = False
     tool_calling: bool = False
     streaming: bool = False
@@ -91,6 +92,8 @@ class ModelCapabilities:
             raise ModelContractError("model must advertise at least one task")
         if self.context_window <= 0:
             raise ModelContractError("context_window must be positive")
+        if any(not feature.strip() for feature in self.features):
+            raise ModelContractError("model capability features cannot be blank")
         if ModelTask.VISION in self.tasks and not self.vision_input:
             raise ModelContractError("vision task requires vision_input")
         if ModelTask.SPEECH in self.tasks and not self.speech_input:
@@ -341,6 +344,27 @@ class ModelRegistry:
 
 
 @dataclass(frozen=True, slots=True)
+def _strictest_upper_bound(
+    request_value: float | int | None,
+    policy_value: float | int | None,
+) -> float | int | None:
+    if request_value is None:
+        return policy_value
+    if policy_value is None:
+        return request_value
+    return min(request_value, policy_value)
+
+
+def _intersect_allowlists(
+    request_values: frozenset[str],
+    policy_values: frozenset[str],
+) -> frozenset[str]:
+    if request_values and policy_values:
+        return request_values & policy_values
+    return request_values or policy_values
+
+
+@dataclass(frozen=True, slots=True)
 class ModelRouter:
     """Selects candidates without invoking providers or evaluating authority."""
 
@@ -355,24 +379,30 @@ class ModelRouter:
         effective = policy or RoutingPolicy()
         effective.validate()
 
-        max_cost = (
-            request.max_cost_usd
-            if request.max_cost_usd is not None
-            else effective.max_cost_usd
+        max_cost = _strictest_upper_bound(
+            request.max_cost_usd,
+            effective.max_cost_usd,
         )
-        max_latency = (
-            request.max_latency_ms
-            if request.max_latency_ms is not None
-            else effective.max_latency_ms
+        max_latency = _strictest_upper_bound(
+            request.max_latency_ms,
+            effective.max_latency_ms,
         )
-        context_window = max(request.required_context_window, effective.required_context_window)
-        required_privacy = (
-            request.required_privacy
-            if request.required_privacy.rank >= effective.required_privacy.rank
-            else effective.required_privacy
+        context_window = max(
+            request.required_context_window,
+            effective.required_context_window,
+            request.estimated_input_tokens + request.max_output_tokens,
         )
-        allowed_models = request.allowed_models or effective.allowed_models
-        allowed_providers = request.allowed_providers or effective.allowed_providers
+        required_privacy = PrivacyLevel(
+            max(request.required_privacy.rank, effective.required_privacy.rank)
+        )
+        allowed_models = _intersect_allowlists(
+            request.allowed_models,
+            effective.allowed_models,
+        )
+        allowed_providers = _intersect_allowlists(
+            request.allowed_providers,
+            effective.allowed_providers,
+        )
 
         candidates: list[ModelDescriptor] = []
         for model in self.registry.models():
@@ -387,6 +417,8 @@ class ModelRouter:
             if allowed_providers and model.provider_id not in allowed_providers:
                 continue
             if model.privacy.rank < required_privacy.rank:
+                continue
+            if not request.required_capabilities.issubset(model.capabilities.features):
                 continue
             if model.capabilities.context_window < context_window:
                 continue
