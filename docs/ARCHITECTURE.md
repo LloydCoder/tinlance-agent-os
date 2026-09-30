@@ -535,3 +535,10 @@ OpenTelemetry is the telemetry substrate; Tinlance-specific identifiers are atta
 ## M24 Production Distribution Boundary
 
 The production distribution layer verifies external supply-chain evidence before activation. Sigstore/Cosign provides artifact signatures; GitHub artifact attestations provide signed SLSA/in-toto provenance and SBOM attestations; the runtime consumes those proofs through explicit verifier interfaces. Rollout, migration, backup, health and rollback state are durable operational controls and do not create a second execution authority.
+
+
+## M25 forensic hardening
+
+The post-M24 hardening pass closes concrete residual integrity gaps without creating a new authority plane. Release compatibility is enforced against manifest minimum versions; failed staging cannot strand a staged artifact; rollback is only attempted after activation; memory trust promotion is constrained by provenance; supervised process environments are allowlisted; Unix fleet endpoints are validated as local socket paths; and CI enforces immutable action references.
+
+These controls strengthen local composition and supply-chain boundaries while Agent Platform remains the sole authority for consequential execution.

@@ -246,7 +246,14 @@ class LocalProcessSupervisor:
             raise ValueError("process working directory must exist")
         env = {"PATH": "/usr/bin:/bin"}
         if environment:
-            env.update(environment)
+            for key, value in environment.items():
+                if key == "PATH" or key.startswith("LD_") or key.startswith("PYTHON"):
+                    raise PermissionError("unsafe process environment variable")
+                if not key or "\x00" in key or "\x00" in value:
+                    raise ValueError("invalid process environment")
+                if key not in {"LANG", "LC_ALL", "LC_CTYPE", "LC_MESSAGES", "TZ"}:
+                    raise PermissionError("process environment variable is not allowlisted")
+                env[key] = value
         preexec = self._resource_limiter()
         process = subprocess.Popen(
             list(argv),

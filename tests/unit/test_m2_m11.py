@@ -390,6 +390,12 @@ def test_workflow_failure_and_cancel_paths() -> None:
     assert cancelled.state is WorkflowState.CANCELLED
 
 
+def test_unix_fleet_endpoint_validation() -> None:
+    registry = FleetRegistry({})
+    registry.register(RemoteAgent("local", "unix:///run/tinlance-agent.sock", FleetState.ONLINE))
+    assert registry.available()[0].endpoint.startswith("unix:///")
+
+
 def test_memory_and_remote_validation_paths() -> None:
     with TemporaryDirectory() as directory:
         memory = MemoryStore(StateStore(Path(directory) / "state.db"))

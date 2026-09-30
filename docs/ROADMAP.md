@@ -31,6 +31,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M22 | Reference Agents | COMPLETE |
 | M23 | Agent OS Conformance & Red Team Suite | COMPLETE |
 | M24 | Production Agent OS | COMPLETE |
+| M25 | Enterprise Forensic Hardening | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -426,3 +427,29 @@ M23 is the adversarial acceptance layer. It actively attempts identity spoofing,
 ## M24 — Production Agent OS
 
 Production distribution is enforced through signed release artifacts, SBOM generation, SLSA/in-toto provenance attestations, staged release channels, health-gated rollout, automatic rollback, downgrade prevention, migration/backup boundaries, disaster-recovery procedures, security response, and release evidence. The production release workflow uses GitHub artifact attestations and Sigstore/Cosign rather than inventing a private signing protocol.
+
+
+## M25 — Enterprise Forensic Hardening
+
+M25 is the post-M24 forensic hardening pass. It addresses concrete residual gaps found by adversarial review rather than introducing another authority plane.
+
+### Scope
+
+- release manifest minimum-version validation and enforcement;
+- strict signature/SBOM/provenance evidence shape validation;
+- safe cancellation of staged releases when backup preparation fails;
+- rollback only after the new version is actually active;
+- trusted/verified memory promotion restricted to system/platform/user provenance;
+- supervised-process environment allowlisting against loader/interpreter injection;
+- correct validation of Unix-domain fleet endpoints;
+- immutable SHA-pinned GitHub Actions enforced by CI.
+
+### Acceptance
+
+- production release tests cover invalid evidence, minimum-version rejection, backup failure and pre-activation migration failure;
+- memory conformance rejects agent/external self-promotion to verified facts;
+- remote runtime tests reject dangerous process environment variables;
+- fleet tests accept absolute Unix socket endpoints;
+- CI fails if any workflow action is referenced by a mutable tag or branch.
+
+M25 does not claim that external signing services, telemetry collectors, enterprise identity, fleet control planes, operating-system sandboxing or disaster-recovery environments are implemented inside this repository.

@@ -173,6 +173,64 @@ def test_migration_failure_restores_backup():
     assert ctl.backups.restored == ["backup-1.0.0"]
 
 
+def test_manifest_validates_supply_chain_evidence_and_minimum_version():
+    release, data = artifact()
+    bad_sbom = manifest()
+    bad_sbom = ReleaseManifest(
+        artifact=release,
+        channel=bad_sbom.channel,
+        signature=bad_sbom.signature,
+        provenance=bad_sbom.provenance,
+        sbom=SBOMEvidence("cyclonedx", "not-a-digest", bad_sbom.sbom.uri),
+    )
+    with pytest.raises(ProductionReleaseError, match="SBOM digest"):
+        controller().deploy(bad_sbom, data)
+
+    incompatible = manifest()
+    incompatible = ReleaseManifest(
+        artifact=incompatible.artifact,
+        channel=incompatible.channel,
+        signature=incompatible.signature,
+        provenance=incompatible.provenance,
+        sbom=incompatible.sbom,
+        minimum_version="1.5.0",
+    )
+    with pytest.raises(ProductionReleaseError, match="minimum_version"):
+        controller().deploy(incompatible, data)
+
+
+def test_backup_failure_clears_staged_release():
+    class FailingBackups(Backups):
+        def create(self, *, version):
+            raise RuntimeError("backup unavailable")
+
+    ctl = ProductionReleaseController(
+        updates=UpdateManager(active_version="1.0.0"),
+        verifier=Verifier(),
+        health=Health(),
+        backups=FailingBackups(),
+        migrations=Migrations(),
+        security=Security(),
+    )
+    _, data = artifact()
+    with pytest.raises(ProductionReleaseError, match="backup"):
+        ctl.deploy(manifest(), data)
+    assert ctl.state is ReleaseState.FAILED
+    assert ctl.updates.state.value == "idle"
+    assert ctl.updates.staged_version is None
+
+
+def test_migration_failure_does_not_attempt_unapplied_update_rollback():
+    migrations = Migrations(fail=True)
+    ctl = controller(migrations=migrations)
+    _, data = artifact()
+    with pytest.raises(RuntimeError, match="migration failure"):
+        ctl.deploy(manifest(), data)
+    assert ctl.updates.active_version == "1.0.0"
+    assert ctl.updates.previous_version is None
+    assert ctl.state is ReleaseState.ROLLED_BACK
+
+
 def test_downgrade_is_rejected_before_deployment():
     ctl = controller()
     ctl.updates.active_version = "2.0.0"
