@@ -210,18 +210,18 @@ def test_versioning_requires_explicit_compare_and_swap(tmp_path):
 
 def test_untrusted_source_cannot_self_promote_to_verified_fact(tmp_path):
     store = memory_store(tmp_path)
-    with pytest.raises(MemoryValidationError, match="trusted memory classes"):
-        store.put(
-            MemoryWrite(
-                "ws-1",
-                MemoryScope.AGENT,
-                "agent-1",
-                "agent-1",
-                "agent supplied fact",
-                provenance("agent", MemorySourceType.AGENT),
-                trust=MemoryTrust.VERIFIED_FACT,
-            )
+    record = store.put(
+        MemoryWrite(
+            "ws-1",
+            MemoryScope.AGENT,
+            "agent-1",
+            "agent-1",
+            "agent supplied fact",
+            provenance("agent", MemorySourceType.AGENT),
+            trust=MemoryTrust.VERIFIED_FACT,
         )
+    )
+    assert record.trust == MemoryTrust.UNTRUSTED_CONTENT
 
 
 def test_poisoning_is_quarantined_and_not_context_trusted(tmp_path):
