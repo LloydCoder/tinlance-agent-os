@@ -1,6 +1,6 @@
-import pytest
-
 from __future__ import annotations
+
+import pytest
 
 from tinlance_agent_os import (
     ModelCapabilities,
