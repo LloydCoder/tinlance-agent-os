@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
@@ -640,7 +641,7 @@ class MemoryStore:
             raise MemoryAccessError("memory scope is outside the retrieval context")
 
     @staticmethod
-    def _row_to_record(row: object) -> MemoryRecord:
+    def _row_to_record(row: sqlite3.Row) -> MemoryRecord:
         provenance_data = json.loads(row["provenance"])
         provenance = MemoryProvenance(
             MemorySourceType(provenance_data["source_type"]),
