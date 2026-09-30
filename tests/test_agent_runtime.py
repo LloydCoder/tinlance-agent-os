@@ -91,9 +91,7 @@ def test_version_binding_rejects_substitution(tmp_path: Path) -> None:
 def test_invalid_definition_and_lifecycle_operations_fail_closed(tmp_path: Path) -> None:
     store, agent = make_runtime(tmp_path)
     with pytest.raises(ValueError, match="heartbeat_timeout"):
-        AgentDefinition(
-            "a", "w", "A", "1", "x", runtime=RuntimeConfig(2, 1)
-        ).validate()
+        AgentDefinition("a", "w", "A", "1", "x", runtime=RuntimeConfig(2, 1)).validate()
     with pytest.raises(ValueError, match="max_restarts"):
         RestartPolicy(max_restarts=-1).validate()
 
