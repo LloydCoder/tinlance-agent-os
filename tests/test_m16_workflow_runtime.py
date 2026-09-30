@@ -228,6 +228,7 @@ def test_deadline_fails_closed(tmp_path):
     result = runtime.run(instance.instance_id, definition)
     assert result.state == WorkflowState.FAILED
 
+
 def test_event_trigger_and_schedule_fire(tmp_path):
     executor = FakeExecutor()
     store, runtime = setup(tmp_path, executor)
@@ -314,7 +315,16 @@ def test_cancel_propagates_to_running_platform_run(tmp_path):
 
 def test_compensation_runs_after_failure(tmp_path):
     class FailingExecutor(FakeExecutor):
-        def execute(self, *, workspace_id, workflow_instance_id, step, context, idempotency_key, timeout_seconds):
+        def execute(
+            self,
+            *,
+            workspace_id,
+            workflow_instance_id,
+            step,
+            context,
+            idempotency_key,
+            timeout_seconds,
+        ):
             if step.step_id == "fail":
                 raise RuntimeError("boom")
             return super().execute(
@@ -378,12 +388,15 @@ def test_platform_executor_maps_runs():
         timeout_seconds=5,
     )
     assert result.platform_run_id == "run-1"
-    assert adapter.request_approval(
-        workspace_id="ws",
-        workflow_instance_id="wf-1",
-        step=WorkflowStep("approve", "approve", kind=WorkflowStepKind.APPROVAL),
-        idempotency_key="approval-key",
-    ) == "approval-1"
+    assert (
+        adapter.request_approval(
+            workspace_id="ws",
+            workflow_instance_id="wf-1",
+            step=WorkflowStep("approve", "approve", kind=WorkflowStepKind.APPROVAL),
+            idempotency_key="approval-key",
+        )
+        == "approval-1"
+    )
     adapter.cancel(platform_run_id="run-1")
     assert [kind for kind, _ in platform.calls] == ["create", "create", "approval", "cancel"]
 
