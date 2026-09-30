@@ -26,7 +26,7 @@ M15 replaces the original six-column memory primitive with a durable security-aw
 
 ## Backward compatibility
 
-The historical M0-M11 MemoryStore call shape remains available as a compatibility façade. New calls use the typed M15 contracts and security boundary.
+The historical M0-M11 MemoryStore call shape remains available as a compatibility façade, with restricted legacy writes still failing closed. New calls use the typed M15 contracts and security boundary.
 
 ## Security boundary
 
