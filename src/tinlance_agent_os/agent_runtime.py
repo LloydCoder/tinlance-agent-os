@@ -223,24 +223,26 @@ class AgentRuntime:
             return self.snapshot()
 
     def start(self) -> AgentSnapshot:
-        with telemetry().span(
-            "agentos.agent.start",
-            {"gen_ai.agent.id": self.definition.agent_id},
+        with (
+            telemetry().span(
+                "agentos.agent.start",
+                {"gen_ai.agent.id": self.definition.agent_id},
+            ),
+            self._lock,
         ):
-            with self._lock:
-                self._require_state(
-                    AgentLifecycleState.READY,
-                    AgentLifecycleState.STOPPED,
-                )
-                self._transition(AgentLifecycleState.STARTING, "agent.starting")
-                try:
-                    self._transition(AgentLifecycleState.RUNNING, "agent.started")
-                    self._start_heartbeat()
-                except Exception:
-                    self._stop_heartbeat()
-                    self._transition(AgentLifecycleState.CRASHED, "agent.start.failed")
-                    raise
-                return self.snapshot()
+            self._require_state(
+                AgentLifecycleState.READY,
+                AgentLifecycleState.STOPPED,
+            )
+            self._transition(AgentLifecycleState.STARTING, "agent.starting")
+            try:
+                self._transition(AgentLifecycleState.RUNNING, "agent.started")
+                self._start_heartbeat()
+            except Exception:
+                self._stop_heartbeat()
+                self._transition(AgentLifecycleState.CRASHED, "agent.start.failed")
+                raise
+            return self.snapshot()
 
     def run(self) -> object:
         with telemetry().span(
