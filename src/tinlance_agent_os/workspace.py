@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import secrets
 import sqlite3
@@ -204,7 +205,11 @@ class ChannelRuntime:
             agent_id = str(task["agent_id"])
             session_id = str(task["session_id"])
 
-        bound_trace = trace_id or context.trace_id
+        bound_trace = trace_id or self._lifecycle_trace(
+            session_id=session_id,
+            task_id=task_id,
+            fallback=context.trace_id,
+        )
         if not bound_trace.strip():
             raise WorkspaceError("trace identity is required")
 
@@ -241,7 +246,10 @@ class ChannelRuntime:
     ) -> ChannelContext:
         if source.workspace_id != target.workspace_id:
             raise WorkspaceError("cross-workspace channel handoff denied")
-        if target.version > 0:
+        if any(
+            value is not None
+            for value in (target.session_id, target.task_id, target.agent_id)
+        ):
             if source.session_id != target.session_id or source.task_id != target.task_id:
                 raise WorkspaceError("handoff must preserve session and task identity")
             if source.agent_id != target.agent_id:
@@ -309,6 +317,19 @@ class ChannelRuntime:
             ChannelKind.NOTIFICATIONS: NotificationChannel,
         }
         return adapters[context.kind](self, context)
+
+    @staticmethod
+    def _lifecycle_trace(
+        *,
+        session_id: str | None,
+        task_id: str | None,
+        fallback: str,
+    ) -> str:
+        lifecycle_id = session_id or task_id
+        if lifecycle_id is None:
+            return fallback
+        digest = hashlib.sha256(lifecycle_id.encode("utf-8")).hexdigest()[:24]
+        return f"tr_lifecycle_{digest}"
 
     def workspace_snapshot(self, workspace_id: str) -> WorkspaceSnapshot:
         if not self._workspace_exists(workspace_id):
