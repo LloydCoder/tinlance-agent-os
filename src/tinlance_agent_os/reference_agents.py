@@ -107,7 +107,13 @@ class ReferenceAgent:
         )
 
     @staticmethod
-    def _memory_write(task: TaskHandle, *, intent: str, model_response: ModelResponse | None, skill_output: object | None):
+    def _memory_write(
+        task: TaskHandle,
+        *,
+        intent: str,
+        model_response: ModelResponse | None,
+        skill_output: object | None,
+    ):
         from .memory import MemoryProvenance, MemoryScope, MemorySourceType, MemoryWrite
 
         return MemoryWrite(
