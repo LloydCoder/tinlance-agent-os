@@ -246,10 +246,7 @@ class ChannelRuntime:
     ) -> ChannelContext:
         if source.workspace_id != target.workspace_id:
             raise WorkspaceError("cross-workspace channel handoff denied")
-        if any(
-            value is not None
-            for value in (target.session_id, target.task_id, target.agent_id)
-        ):
+        if any(value is not None for value in (target.session_id, target.task_id, target.agent_id)):
             if source.session_id != target.session_id or source.task_id != target.task_id:
                 raise WorkspaceError("handoff must preserve session and task identity")
             if source.agent_id != target.agent_id:
