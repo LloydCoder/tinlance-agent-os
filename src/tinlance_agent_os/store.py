@@ -285,7 +285,7 @@ class StateStore:
             sequence = int(sequence_row[0]) + 1
             state_version = int(row[11]) + 1
             event_id = __import__("hashlib").sha256(
-                f"agent:{agent_id}:{sequence}:{event_type}".encode("utf-8")
+                f"agent:{agent_id}:{sequence}:{event_type}".encode()
             ).hexdigest()
             health = (
                 "healthy" if new_state == "running"
