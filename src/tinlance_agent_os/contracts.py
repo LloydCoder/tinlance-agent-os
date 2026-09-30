@@ -28,7 +28,14 @@ class AgentPlatformClient(Protocol):
 
     def list_agents(self) -> Sequence[Agent]: ...
 
-    def create_run(self, *, task_id: str, agent_id: str, intent: str) -> PlatformRunRef: ...
+    def create_run(
+        self,
+        *,
+        task_id: str,
+        agent_id: str,
+        intent: str,
+        idempotency_key: str | None = None,
+    ) -> PlatformRunRef: ...
 
     def cancel_run(self, *, run_id: str) -> PlatformRunRef: ...
 
@@ -41,6 +48,7 @@ class AgentPlatformClient(Protocol):
         action: str,
         resource: str | None = None,
         reason: str | None = None,
+        idempotency_key: str | None = None,
     ) -> ApprovalRef: ...
 
     def get_events(self, *, run_id: str) -> Sequence[Event]: ...
