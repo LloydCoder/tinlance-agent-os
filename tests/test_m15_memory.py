@@ -108,9 +108,7 @@ def test_classification_prevents_confidential_leakage(tmp_path):
         )
     )
     assert store.search(retrieval(max_classification=MemoryClassification.INTERNAL)) == ()
-    assert (
-        len(store.search(retrieval(max_classification=MemoryClassification.CONFIDENTIAL))) == 1
-    )
+    assert len(store.search(retrieval(max_classification=MemoryClassification.CONFIDENTIAL))) == 1
 
 
 def test_session_and_task_memory_cannot_cross_context(tmp_path):

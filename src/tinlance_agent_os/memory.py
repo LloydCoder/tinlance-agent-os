@@ -349,9 +349,7 @@ class MemoryStore:
                 classification=classification,
                 memory_key=hashlib.sha256(f"{scope}:{content}".encode()).hexdigest(),
                 session_id=(
-                    scope_id
-                    if scope_value in {MemoryScope.WORKING, MemoryScope.SESSION}
-                    else None
+                    scope_id if scope_value in {MemoryScope.WORKING, MemoryScope.SESSION} else None
                 ),
                 task_id=scope_id if scope_value == MemoryScope.TASK else None,
                 conflict_policy=MemoryConflictPolicy.REPLACE,
@@ -376,9 +374,12 @@ class MemoryStore:
         }:
             trust = MemoryTrust.UNTRUSTED_CONTENT
 
-        memory_key = write.memory_key or hashlib.sha256(
-            f"{write.scope.value}:{write.scope_id}:{write.content}".encode()
-        ).hexdigest()
+        memory_key = (
+            write.memory_key
+            or hashlib.sha256(
+                f"{write.scope.value}:{write.scope_id}:{write.content}".encode()
+            ).hexdigest()
+        )
         current = self.store.memory_current(
             workspace_id=write.workspace_id,
             scope=write.scope.value,
@@ -450,9 +451,7 @@ class MemoryStore:
                         "source_id": provenance.source_id,
                         "actor_id": provenance.actor_id,
                         "origin": provenance.origin,
-                        "collected_at": (
-                            provenance.collected_at or current_time
-                        ).isoformat(),
+                        "collected_at": (provenance.collected_at or current_time).isoformat(),
                         "parent_digest": provenance.parent_digest,
                     },
                     sort_keys=True,
@@ -512,9 +511,7 @@ class MemoryStore:
                 workspace_id,
                 "legacy-api",
                 session_id=(
-                    scope
-                    if scope_value in {MemoryScope.WORKING, MemoryScope.SESSION}
-                    else None
+                    scope if scope_value in {MemoryScope.WORKING, MemoryScope.SESSION} else None
                 ),
                 task_id=scope if scope_value == MemoryScope.TASK else None,
                 scopes=(scope_value,),
@@ -561,9 +558,7 @@ class MemoryStore:
         record = self.get(memory_id, retrieval)
         if record is None:
             return
-        self.store.delete_memory_record(
-            memory_id, (now or datetime.now(UTC)).isoformat()
-        )
+        self.store.delete_memory_record(memory_id, (now or datetime.now(UTC)).isoformat())
 
     def quarantine(
         self,
