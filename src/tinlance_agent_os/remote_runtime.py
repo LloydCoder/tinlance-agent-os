@@ -11,7 +11,8 @@ import ipaddress
 import os
 import signal
 import subprocess
-from collections.abc import Mapping, Sequence
+import sqlite3
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -282,7 +283,7 @@ class LocalProcessSupervisor:
             with contextlib.suppress(subprocess.TimeoutExpired):
                 process.wait(timeout=1)
 
-    def _resource_limiter(self):
+    def _resource_limiter(self) -> Callable[[], None] | None:
         try:
             import resource
         except ImportError:
@@ -553,7 +554,7 @@ class RemoteRuntime:
     def _endpoint(self, endpoint_id: str) -> RemoteEndpoint:
         return self._endpoint_from_row(self._endpoint_row(endpoint_id))
 
-    def _endpoint_row(self, endpoint_id: str):
+    def _endpoint_row(self, endpoint_id: str) -> sqlite3.Row:
         rows = self.store.query(
             "SELECT * FROM remote_endpoints WHERE endpoint_id=?",
             (endpoint_id,),
@@ -562,20 +563,20 @@ class RemoteRuntime:
             raise RemoteRuntimeError("remote endpoint is not enrolled")
         return rows[0]
 
-    def _remote_task_row(self, task_id: str):
+    def _remote_task_row(self, task_id: str) -> sqlite3.Row:
         rows = self.store.query("SELECT * FROM remote_tasks WHERE task_id=?", (task_id,))
         if not rows:
             raise RemoteRuntimeError("remote task is not assigned")
         return rows[0]
 
-    def _verify_endpoint(self, row, identity: EndpointIdentity) -> None:
+    def _verify_endpoint(self, row: sqlite3.Row, identity: EndpointIdentity) -> None:
         if str(row["endpoint_fingerprint"]) != identity.fingerprint:
             raise PermissionError("remote endpoint fingerprint mismatch")
         if not self.authenticator.verify(identity, str(row["workspace_id"])):
             raise PermissionError("remote endpoint authentication failed")
 
     @staticmethod
-    def _endpoint_from_row(row) -> RemoteEndpoint:
+    def _endpoint_from_row(row: sqlite3.Row) -> RemoteEndpoint:
         return RemoteEndpoint(
             identity=EndpointIdentity(
                 str(row["endpoint_id"]),
