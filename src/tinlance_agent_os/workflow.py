@@ -59,7 +59,7 @@ class RetryPolicy:
         self.max_backoff_seconds = max_backoff_seconds
 
     def delay(self, attempt: int) -> float:
-        return min(self.max_backoff_seconds, self.backoff_seconds * (2 ** max(0, attempt - 1)))
+        return float(min(self.max_backoff_seconds, self.backoff_seconds * (2 ** max(0, attempt - 1))))
 
 
 @dataclass(frozen=True, slots=True)
