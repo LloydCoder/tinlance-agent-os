@@ -38,16 +38,16 @@ def test_opentelemetry_spans_and_metrics_are_emitted() -> None:
         },
     ):
         telemetry.record_model(
-                0.25,
-                operation="chat",
-                model="model-1",
-                provider="provider-1",
-                input_tokens=10,
-                output_tokens=20,
-            )
-            telemetry.record_tool(name="search", tool_type="function")
-            telemetry.record_memory(operation="search", scope="session")
-            telemetry.record_retry(operation="workflow.step")
+            0.25,
+            operation="chat",
+            model="model-1",
+            provider="provider-1",
+            input_tokens=10,
+            output_tokens=20,
+        )
+        telemetry.record_tool(name="search", tool_type="function")
+        telemetry.record_memory(operation="search", scope="session")
+        telemetry.record_retry(operation="workflow.step")
 
     spans = span_exporter.get_finished_spans()
     assert [span.name for span in spans] == ["gen_ai.invoke", "agentos.task"]
