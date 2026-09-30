@@ -362,6 +362,16 @@ class MemoryStore:
         current_time = (now or datetime.now(UTC)).astimezone(UTC)
         reasons = _poison_reasons(write.content)
         trust = write.trust
+        trusted_sources = {
+            MemorySourceType.SYSTEM,
+            MemorySourceType.PLATFORM,
+            MemorySourceType.USER,
+        }
+        if trust in {MemoryTrust.TRUSTED_INSTRUCTION, MemoryTrust.VERIFIED_FACT}:
+            if write.provenance.source_type not in trusted_sources:
+                raise MemoryValidationError(
+                    "trusted memory classes require system, platform, or user provenance"
+                )
         state = MemoryState.ACTIVE
         quarantine_reason: str | None = None
         if reasons:
