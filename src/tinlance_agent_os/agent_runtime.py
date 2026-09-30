@@ -226,8 +226,12 @@ class AgentRuntime:
         with telemetry().span(
             "agentos.agent.start",
             {"gen_ai.agent.id": self.definition.agent_id},
-        ), self._lock:
-                self._require_state(AgentLifecycleState.READY, AgentLifecycleState.STOPPED)
+        ):
+            with self._lock:
+                self._require_state(
+                    AgentLifecycleState.READY,
+                    AgentLifecycleState.STOPPED,
+                )
                 self._transition(AgentLifecycleState.STARTING, "agent.starting")
                 try:
                     self._transition(AgentLifecycleState.RUNNING, "agent.started")
