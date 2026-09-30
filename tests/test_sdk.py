@@ -36,9 +36,7 @@ def test_reference_agent_golden_path_has_no_low_level_platform_calls(tmp_path: P
         name="Research Agent",
         version="1.0.0",
         entrypoint="research.main",
-        capabilities=(
-            CapabilityDeclaration("research.read", "Read approved research sources"),
-        ),
+        capabilities=(CapabilityDeclaration("research.read", "Read approved research sources"),),
     )
     runtime = app.runtime(store, lambda config: {"answer": "ok", "model": config["model"]})
     runtime.register()
