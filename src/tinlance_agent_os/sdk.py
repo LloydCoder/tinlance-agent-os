@@ -15,7 +15,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any, Callable, Iterator, Mapping, cast
+from typing import Callable, Iterator, Mapping, cast
 
 from .agent_runtime import AgentDefinition, AgentRuntime, RestartPolicy, RuntimeConfig
 from .applications import AgentManifest, CapabilityRequest
@@ -27,7 +27,7 @@ from .workflow import WorkflowDefinition, WorkflowEngine, WorkflowExecution
 
 _HEX32 = re.compile(r"^[0-9a-f]{32}$")
 _TRACEPARENT = re.compile(r"^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$")
-_current_context: ContextVar["ExecutionContext | None"] = ContextVar(
+_current_context: ContextVar[ExecutionContext | None] = ContextVar(
     "tinlance_agent_os_execution_context", default=None
 )
 
@@ -89,7 +89,7 @@ class ExecutionContext:
         session_id: str | None = None,
         task_id: str | None = None,
         workflow_id: str | None = None,
-    ) -> "ExecutionContext":
+    ) -> ExecutionContext:
         return replace(
             self,
             session_id=session_id if session_id is not None else self.session_id,
@@ -122,7 +122,7 @@ class IdempotencyKey:
             raise IdempotencyError("idempotency key must be 1-255 normalized characters")
 
     @classmethod
-    def deterministic(cls, *, agent_id: str, operation: str, subject: str) -> "IdempotencyKey":
+    def deterministic(cls, *, agent_id: str, operation: str, subject: str) -> IdempotencyKey:
         canonical = json.dumps(
             {"agent_id": agent_id, "operation": operation, "subject": subject},
             sort_keys=True,
@@ -276,7 +276,7 @@ class AgentSDK:
         try:
             runtime.register()
         except Exception as exc:
-            raise self._wrap("agent.register", exc)
+            raise self._wrap("agent.register", exc) from exc
         return runtime
 
     def session(self, workspace_id: str, user_id: str, agent_id: str) -> SessionHandle:
@@ -286,7 +286,7 @@ class AgentSDK:
             service = LocalOSService(self.store, self.platform)
             session = service.create_session(workspace_id, user_id, agent_id)
         except Exception as exc:
-            raise self._wrap("session.create", exc)
+            raise self._wrap("session.create", exc) from exc
         return SessionHandle(session, self._context().child(session_id=session.session_id))
 
     def task(
@@ -308,7 +308,7 @@ class AgentSDK:
                 dependencies,
             )
         except Exception as exc:
-            raise self._wrap("task.create", exc)
+            raise self._wrap("task.create", exc) from exc
         return TaskHandle(task, session.context.child(task_id=task.task_id))
 
     def execute(
@@ -367,7 +367,7 @@ class AgentSDK:
         except SDKError:
             raise
         except Exception as exc:
-            raise self._wrap(f"task.execute:{key.value}", exc)
+            raise self._wrap(f"task.execute:{key.value}", exc) from exc
 
     def approve(
         self,
@@ -419,7 +419,7 @@ class AgentSDK:
                 execution.run.run_id,
             )
         except Exception as exc:
-            raise self._wrap(f"approval.request:{key.value}", exc)
+            raise self._wrap(f"approval.request:{key.value}", exc) from exc
 
     def result(
         self,
@@ -433,7 +433,7 @@ class AgentSDK:
                 tuple(platform.get_evidence(run_id=run.run_id)),
             )
         except Exception as exc:
-            raise self._wrap("execution.result", exc)
+            raise self._wrap("execution.result", exc) from exc
 
     def workflow(
         self,
@@ -444,7 +444,7 @@ class AgentSDK:
         try:
             execution = self.workflow_engine.start(definition)
         except Exception as exc:
-            raise self._wrap("workflow.start", exc)
+            raise self._wrap("workflow.start", exc) from exc
         return WorkflowHandle(
             definition,
             execution,
@@ -463,7 +463,7 @@ class AgentSDK:
                 step_id,
             )
         except Exception as exc:
-            raise self._wrap("workflow.complete_step", exc)
+            raise self._wrap("workflow.complete_step", exc) from exc
         return replace(workflow, execution=execution)
 
     def workflow_fail_step(self, workflow: WorkflowHandle, step_id: str) -> WorkflowHandle:
@@ -474,7 +474,7 @@ class AgentSDK:
                 step_id,
             )
         except Exception as exc:
-            raise self._wrap("workflow.fail_step", exc)
+            raise self._wrap("workflow.fail_step", exc) from exc
         return replace(workflow, execution=execution)
 
     def workflow_cancel(self, workflow: WorkflowHandle) -> WorkflowHandle:
@@ -484,7 +484,7 @@ class AgentSDK:
                 workflow.execution,
             )
         except Exception as exc:
-            raise self._wrap("workflow.cancel", exc)
+            raise self._wrap("workflow.cancel", exc) from exc
         return replace(workflow, execution=execution)
 
     @contextmanager
