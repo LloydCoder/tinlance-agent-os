@@ -10,8 +10,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Protocol
+from urllib.parse import urlparse
 
-from .distribution import ReleaseArtifact, UpdateManager
+from .distribution import ReleaseArtifact, UpdateManager, _version_key
 
 
 class ReleaseChannel(StrEnum):
@@ -67,13 +68,34 @@ class ReleaseManifest:
     migration_id: str | None = None
 
     def validate(self) -> None:
+        try:
+            artifact_version = _version_key(self.artifact.version)
+            minimum_version = _version_key(self.minimum_version)
+        except ValueError as exc:
+            raise ProductionReleaseError("release versions must use numeric dot notation") from exc
+        if artifact_version <= minimum_version:
+            raise ProductionReleaseError(
+                "release artifact version must exceed minimum supported version"
+            )
         if self.sbom.format.lower() not in {"cyclonedx", "spdx"}:
             raise ProductionReleaseError("unsupported SBOM format")
+        digest = self.sbom.digest.lower()
+        if len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+            raise ProductionReleaseError("SBOM digest must be a 64-character SHA-256 digest")
+        bundle = urlparse(self.signature.bundle_uri)
+        if bundle.scheme not in {"https", "file"} or (
+            bundle.scheme == "https" and not bundle.netloc
+        ):
+            raise ProductionReleaseError("signature bundle URI must be https or file")
         if not self.signature.signer_identity.strip() or not self.signature.issuer.strip():
             raise ProductionReleaseError("release signature identity is required")
+        issuer = urlparse(self.signature.issuer)
+        if issuer.scheme != "https" or not issuer.netloc:
+            raise ProductionReleaseError("release signature issuer must be an HTTPS URI")
         if (
             not self.provenance.source_repository.strip()
             or not self.provenance.source_revision.strip()
+            or not self.provenance.build_workflow.strip()
         ):
             raise ProductionReleaseError("release provenance is incomplete")
         if not self.provenance.predicate_type.startswith("https://"):
@@ -135,6 +157,11 @@ class ProductionReleaseController:
     def deploy(self, manifest: ReleaseManifest, data: bytes) -> None:
         manifest.validate()
         self.policy.validate()
+        if _version_key(self.updates.active_version) < _version_key(manifest.minimum_version):
+            self.state = ReleaseState.FAILED
+            raise ProductionReleaseError(
+                "active version does not satisfy release minimum_version"
+            )
         if not self.verifier.verify_signature(manifest, data):
             self.state = ReleaseState.FAILED
             raise ProductionReleaseError("release signature verification failed")
@@ -145,9 +172,14 @@ class ProductionReleaseController:
             self.state = ReleaseState.FAILED
             raise ProductionReleaseError("release SBOM verification failed")
 
-        self.state = ReleaseState.STAGED
-        self.updates.stage(manifest.artifact, data)
-        self.backup_id = self.backups.create(version=self.updates.active_version)
+        try:
+            self.state = ReleaseState.STAGED
+            self.updates.stage(manifest.artifact, data)
+            self.backup_id = self.backups.create(version=self.updates.active_version)
+        except Exception as exc:
+            self.updates.discard_staged()
+            self.state = ReleaseState.FAILED
+            raise ProductionReleaseError("release staging or backup failed") from exc
 
         try:
             if manifest.migration_id is not None:
@@ -172,11 +204,17 @@ class ProductionReleaseController:
             raise
 
     def _rollback(self, version: str, reason: str) -> None:
-        self.security.quarantine(version=version, reason=reason)
+        self.state = ReleaseState.QUARANTINED
         try:
-            if self.updates.previous_version is not None:
-                self.updates.rollback()
-            if self.backup_id is not None:
-                self.backups.restore(self.backup_id)
+            self.security.quarantine(version=version, reason=reason)
         finally:
-            self.state = ReleaseState.ROLLED_BACK
+            try:
+                if (
+                    self.updates.active_version == version
+                    and self.updates.previous_version is not None
+                ):
+                    self.updates.rollback()
+            finally:
+                if self.backup_id is not None:
+                    self.backups.restore(self.backup_id)
+                self.state = ReleaseState.ROLLED_BACK
