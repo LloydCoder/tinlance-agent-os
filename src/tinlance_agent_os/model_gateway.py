@@ -8,7 +8,7 @@ evidence, secrets, or policy decisions.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 import re
@@ -213,6 +213,8 @@ class ModelRequest:
             raise ModelContractError("max_cost_usd cannot be negative")
         if self.max_latency_ms is not None and self.max_latency_ms < 0:
             raise ModelContractError("max_latency_ms cannot be negative")
+        if any(not capability.strip() for capability in self.required_capabilities):
+            raise ModelContractError("required capability names cannot be blank")
         if self.model_id is not None and not self.model_id.strip():
             raise ModelContractError("model_id cannot be blank")
         if self.provider_id is not None and not self.provider_id.strip():
@@ -343,7 +345,6 @@ class ModelRegistry:
         return tuple(self._providers)
 
 
-@dataclass(frozen=True, slots=True)
 def _strictest_upper_bound(
     request_value: float | int | None,
     policy_value: float | int | None,
@@ -437,7 +438,9 @@ class ModelRouter:
                 continue
             candidates.append(model)
 
-        preferred_models = {model_id: index for index, model_id in enumerate(effective.preferred_models)}
+        preferred_models = {
+            model_id: index for index, model_id in enumerate(effective.preferred_models)
+        }
         preferred_providers = {
             provider_id: index for index, provider_id in enumerate(effective.preferred_providers)
         }
@@ -455,8 +458,7 @@ class ModelRouter:
                 if item.pricing.estimate(
                     request.estimated_input_tokens,
                     request.max_output_tokens,
-                )
-                is not None
+                ) is not None
                 else float("inf"),
                 item.estimated_latency_ms
                 if item.estimated_latency_ms is not None
@@ -484,8 +486,8 @@ class ModelGateway:
         if not candidates:
             raise ModelRoutingError("no registered model satisfies the request and routing policy")
 
-        effective_allow_fallback = (
-            request.allow_fallback if policy is None else request.allow_fallback and policy.allow_fallback
+        effective_allow_fallback = request.allow_fallback and (
+            policy.allow_fallback if policy is not None else True
         )
         attempts: list[RouteAttempt] = []
         for index, model in enumerate(candidates):
@@ -493,7 +495,9 @@ class ModelGateway:
             started = time.perf_counter()
             try:
                 if not provider.health():
-                    raise ProviderUnavailable(f"provider is unhealthy: {provider.provider_id}")
+                    raise ProviderUnavailable(
+                        f"provider is unhealthy: {provider.provider_id}"
+                    )
                 if request.task in (ModelTask.CHAT, ModelTask.DECISION):
                     response = provider.complete(request, model)
                 elif request.task == ModelTask.EMBEDDING:
@@ -503,7 +507,10 @@ class ModelGateway:
                 else:
                     raise UnsupportedModelTask(request.task.value)
                 response.validate()
-                if response.model_id != model.model_id or response.provider_id != model.provider_id:
+                if (
+                    response.model_id != model.model_id
+                    or response.provider_id != model.provider_id
+                ):
                     raise ModelContractError("provider returned a mismatched model/provider identity")
                 if response.task != request.task:
                     raise ModelContractError("provider returned a mismatched model task")
@@ -524,7 +531,12 @@ class ModelGateway:
                 )
                 normalized.validate()
                 attempts.append(
-                    RouteAttempt(model.model_id, model.provider_id, "success", latency_ms=normalized.latency_ms)
+                    RouteAttempt(
+                        model.model_id,
+                        model.provider_id,
+                        "success",
+                        latency_ms=normalized.latency_ms,
+                    )
                 )
                 return normalized
             except (ProviderUnavailable, ProviderTimeout, ProviderRateLimited) as exc:
