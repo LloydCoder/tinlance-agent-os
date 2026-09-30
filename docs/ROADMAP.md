@@ -27,6 +27,8 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M18 | Agent Ecosystem Runtime | COMPLETE |
 | M19 | Agent Workspace & Channels | COMPLETE |
 | M20 | Local/Remote Agent Runtime | COMPLETE |
+| M21 | Agent OS Observability | COMPLETE |
+| M22 | Reference Agents | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -404,3 +406,12 @@ A remote agent can:
       -> disconnect
 
 without becoming a second authority plane. Platform identity, authorization, capability grants, approvals, policy, consequential execution and evidence remain authoritative in Agent Platform.
+
+
+## M21 — Agent OS Observability
+
+M21 uses OpenTelemetry Python tracing and metrics with OTLP export configuration. Trace context can cross SDK/model/Platform boundaries using W3C propagation. GenAI model telemetry uses current GenAI semantic attribute names and does not record prompt/completion content by default. Operational measurements cover agent uptime, task/workflow/model/approval latency, token usage, model cost, tool calls, retries, failures, memory operations, queue depth and recovery.
+
+## M22 — Reference Agents
+
+M22 defines four canonical Tinlance reference agents: Research, Cybersecurity, FDE/Engineering and World Intelligence. Each uses the same governed Agent SDK execution path, Context/Memory, Model Gateway, Skill surface, Platform-backed execution, approvals, evidence/results, trace context and structured SDK error boundary. Reference agents do not implement a second authorization or execution plane.

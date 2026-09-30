@@ -129,6 +129,8 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M18 | Agent Ecosystem Runtime | Complete |
 | M19 | Agent Workspace & Channels | Complete |
 | M20 | Local/Remote Agent Runtime | Complete |
+| M21 | Agent OS Observability | Complete |
+| M22 | Reference Agents | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -587,3 +589,8 @@ M20 adds a supervised local/remote runtime layer:
 The remote runtime is a worker plane, not an authority plane. Consequential work still enters through the Agent Platform, where identity, tenancy, capabilities, authorization, policy, approvals, execution and evidence remain authoritative.
 
 MCP is used as an interoperability transport rather than replaced by a Tinlance-specific remote protocol. The current MCP direction uses a stateless core with explicit mechanisms/extensions for stateful and long-running work, so Agent OS keeps its durable lifecycle state in its own store. citeturn1search10turn1search12
+
+
+## Observability and Reference Agents
+
+M21 provides OpenTelemetry traces/metrics with OTLP configuration and W3C context propagation. M22 provides the canonical Research, Cybersecurity, FDE/Engineering and World Intelligence agents, all routed through the same Agent OS + SDK + Platform governed execution path.

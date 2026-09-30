@@ -525,3 +525,8 @@ A remote agent is a worker/runtime endpoint, not an authority issuer:
        -> Platform evidence
 
 The remote endpoint cannot mint capabilities, substitute an identity, approve itself, or create authoritative evidence.
+
+
+## M21/M22 Operational and Reference-Agent Boundary
+
+OpenTelemetry is the telemetry substrate; Tinlance-specific identifiers are attached only as low-cardinality attributes where needed for lifecycle correlation. W3C trace context is propagated across lifecycle boundaries without recording sensitive payload content by default. Reference agents compose the existing SDK, memory/context, model gateway, skills and Platform adapter; they cannot turn model or skill output into authorization.

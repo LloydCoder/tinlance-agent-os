@@ -128,6 +128,12 @@ __all__ = [
     "AgentOSTelemetry",
     "configure_telemetry",
     "telemetry",
+    "ReferenceAgent",
+    "ReferenceAgentResult",
+    "ResearchAgent",
+    "CybersecurityAgent",
+    "FDEEngineeringAgent",
+    "WorldIntelligenceAgent",
 ]
 
 from .sdk import (
@@ -258,3 +264,12 @@ from .remote_runtime import (
 )
 
 from .observability import AgentOSTelemetry, configure_telemetry, telemetry
+
+from .reference_agents import (
+    CybersecurityAgent,
+    FDEEngineeringAgent,
+    ReferenceAgent,
+    ReferenceAgentResult,
+    ResearchAgent,
+    WorldIntelligenceAgent,
+)
