@@ -107,3 +107,24 @@ The repository must not imply that these controls exist merely because an integr
 | Authority | SDK cannot grant capabilities or approve itself | Platform remains authority |
 
 The developer surface is intentionally designed around current agent-security concerns: identity and authorization, excessive agency, tool misuse, memory/context poisoning, supply-chain risk, and auditable agent actions. OWASP's 2026 Agentic Applications guidance identifies these as material risks, while NIST's agent identity work emphasizes explicit identity, authorization, delegation, human binding, auditability and non-repudiation.
+
+## M14 model gateway controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Provider isolation | Provider adapters implement a typed provider protocol | `ModelProvider` |
+| Model registry | Model descriptors are validated before registration | `ModelDescriptor.validate()` |
+| Capability matching | Required features must be advertised by the selected model | Router admission |
+| Task matching | Provider/model must advertise the requested task | Router admission |
+| Cost policy | Application and request ceilings use the stricter bound | Router admission |
+| Latency policy | Unknown latency is rejected when a latency ceiling is enforced | Router admission |
+| Context policy | Input estimate + maximum output must fit the selected context window | Router admission |
+| Privacy | Public/private/local levels are monotonic and the stricter requirement wins | Router admission |
+| Allowlisting | Model/provider allowlists are intersected | Router admission |
+| Fallback | Only transient provider failures may fall through to another candidate | Gateway failure model |
+| Output trust | Model output is always untrusted data | `ModelResponse` boundary |
+| Authority | No Platform authority contracts are imported by the gateway | Architecture test |
+| Tracing | Validated W3C traceparent is propagated from immutable SDK context | SDK + gateway |
+| Vision/speech | Unsupported future tasks fail explicitly | `UnsupportedModelTask` |
+
+M14 therefore treats the model provider as an untrusted dependency from the perspective of consequential authority: a model can suggest an action, but only Agent Platform can authorize and execute that action.
