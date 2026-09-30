@@ -144,7 +144,3 @@ def test_workspace_snapshot_includes_core_and_registered_resources(tmp_path: Pat
     assert "skill-1" in snapshot.skills
     assert "connector-1" in snapshot.integrations
     assert context.channel_id in snapshot.channels
-
-
-
-# M19 acceptance: channel identity and trace continuity are durable invariants.
