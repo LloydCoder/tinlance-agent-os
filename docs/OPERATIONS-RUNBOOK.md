@@ -42,3 +42,11 @@ The runtime rejects same-version and lower-version artifacts. Emergency rollback
 ## Release verification
 
 Consumers should verify the published checksum, Sigstore bundle, and GitHub artifact attestation before installing.
+
+## Forensic-hardening release gates
+
+Before promotion, the deployment system must verify that the active version satisfies the release manifest's minimum supported version and that signature, provenance and SBOM evidence pass the configured external verifier. If backup preparation fails, the staged release is discarded and promotion stops.
+
+The repository CI also rejects mutable GitHub Action references. The release workflow uses commit-pinned checkout, Python setup, attestation and Cosign installer actions.
+
+These repository controls do not substitute for production environment controls such as protected GitHub environments, trusted OIDC identity constraints, artifact retention, telemetry backends, secret management, OS isolation or a rehearsed clean-room disaster-recovery exercise.
