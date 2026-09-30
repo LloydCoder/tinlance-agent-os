@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -66,12 +67,9 @@ def test_message_signature_and_payload_provenance_are_verified(tmp_path):
         payload={"result": "ok"},
     )
     assert runtime.receive(message, expected_recipient=recipient) == message
-    tampered = message.__class__(
-        **{**message.__dict__, "payload": {"result": "forged"}}
-    ) if hasattr(message, "__dict__") else None
-    if tampered is not None:
-        with pytest.raises(CoordinationError, match="digest"):
-            runtime.receive(tampered, expected_recipient=recipient)
+    tampered = replace(message, payload={"result": "forged"})
+    with pytest.raises(CoordinationError, match="digest"):
+        runtime.receive(tampered, expected_recipient=recipient)
 
 
 def test_spoofed_signature_is_rejected(tmp_path):
