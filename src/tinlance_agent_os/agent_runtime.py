@@ -236,13 +236,16 @@ class AgentRuntime:
                 return self.snapshot()
 
     def run(self) -> object:
-        with telemetry().span("gen_ai.invoke_agent", {"gen_ai.agent.id": self.definition.agent_id}):
+        with telemetry().span(
+            "gen_ai.invoke_agent",
+            {"gen_ai.agent.id": self.definition.agent_id},
+        ):
             with self._lock:
                 self._require_state(AgentLifecycleState.RUNNING)
             try:
                 return self.worker(dict(self.definition.configuration))
             except Exception as exc:
-            with self._lock:
+                with self._lock:
                     self._transition(
                         AgentLifecycleState.CRASHED,
                         "agent.crashed",
