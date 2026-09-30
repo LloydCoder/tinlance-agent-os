@@ -17,7 +17,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M8 | Desktop/Shell foundation | COMPLETE |
 | M9 | Extensions | COMPLETE |
 | M10 | Enterprise / Remote OS foundation | COMPLETE |
-| M11 | Production / Distribution foundation | COMPLETE |
+| M11 | Production / Distribution foundation | COMPLETE |\n| M12 | Agent Lifecycle Runtime | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -87,3 +87,58 @@ The authoritative Agent Platform adapter contract is [docs/architecture/agent-pl
 ## Next evolution
 
 Future work should deepen provider integrations and production hardening rather than silently expanding the OS into a duplicate Platform authority plane.
+
+
+## M12 — Agent Lifecycle Runtime
+
+M12 adds the first real agent lifecycle kernel above the M0-M11 OS foundation.
+
+### Scope
+
+- typed `AgentDefinition`, runtime configuration and restart policy;
+- durable agent registration and immutable version binding;
+- explicit lifecycle state machine;
+- start, run, pause, resume, stop and recovery operations;
+- durable health/heartbeat leases;
+- crash detection after process restart;
+- bounded restart policy with restart counters and fail-closed exhaustion;
+- optimistic-concurrency protected lifecycle transitions;
+- deterministic, append-only lifecycle events.
+
+### Lifecycle
+
+```text
+REGISTERED
+    -> VALIDATING -> READY
+    -> STARTING -> RUNNING
+    -> PAUSING -> PAUSED
+    -> RESUMING -> RUNNING
+    -> STOPPING -> STOPPED
+    -> RECOVERING -> STARTING
+    -> CRASHED -> RECOVERING | FAILED
+```
+
+Agent OS owns lifecycle state and runtime intent. Agent Platform remains authoritative for identity, capabilities, authorization, policy, approvals, budgets, execution, secrets, sandboxing and evidence.
+
+### Acceptance
+
+An agent can durably execute:
+
+```text
+register -> validate -> start -> run -> pause -> resume -> stop
+                                  |
+                                  +-> crash -> recover
+```
+
+Lifecycle events have deterministic IDs and monotonically increasing per-agent sequence numbers. Heartbeat leases allow a subsequent process to identify abandoned running agents and reconcile them to `CRASHED` before recovery.
+
+### Cross-cutting gates
+
+M12 preserves all existing M0-M11 gates and adds:
+
+- version binding cannot silently substitute an agent implementation;
+- state transitions use an expected-state/version check;
+- lifecycle event and state changes commit atomically;
+- heartbeat leases are durable;
+- restart exhaustion fails closed;
+- lifecycle telemetry contains no model/tool/secret authority;
