@@ -80,7 +80,7 @@ def test_all_channel_classes_share_one_runtime(tmp_path: Path) -> None:
         adapter.send(envelope)
     rows = store.query(
         "SELECT kind, session_id, task_id, trace_id FROM channels "
-        "JOIN channel_bindings USING(channel_id) WHERE workspace_id=?",
+        "JOIN channel_bindings USING(channel_id) WHERE channels.workspace_id=?",
         ("ws-1",),
     )
     assert len(rows) == 6
