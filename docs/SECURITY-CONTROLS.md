@@ -72,3 +72,17 @@ The following are intentionally deployment/provider responsibilities:
 - desktop security controls.
 
 The repository must not imply that these controls exist merely because an integration interface exists.
+
+
+## M12 lifecycle controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Agent identity | Version binding | Durable `agents` row rejects version substitution |
+| Lifecycle | Explicit transition graph | `AgentRuntime` state machine |
+| State integrity | Optimistic concurrency | Expected state + state-version transaction |
+| Event integrity | Atomic lifecycle event ledger | SQLite transaction + deterministic event ID |
+| Heartbeat | Durable lease | Periodic heartbeat + persisted expiry |
+| Crash recovery | Expired lease reconciliation | `recover_orphans` |
+| Restart safety | Bounded restart count | Restart policy + fail-closed exhaustion |
+| Authority | No local capability grants | Agent Platform remains authority plane |
