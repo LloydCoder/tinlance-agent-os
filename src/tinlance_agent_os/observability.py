@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from time import monotonic
-from typing import Iterator
-
 from opentelemetry import metrics, trace
 from opentelemetry.trace import Span, Status, StatusCode
 
