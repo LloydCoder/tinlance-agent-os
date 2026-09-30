@@ -192,6 +192,41 @@ class StateStore:
                     ON agent_tasks(parent_task_id, state);
                 CREATE INDEX IF NOT EXISTS idx_agent_messages_recipient
                     ON agent_messages(recipient_agent_id, created_at);
+                CREATE TABLE IF NOT EXISTS channels (
+                    channel_id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    kind TEXT NOT NULL,
+                    endpoint_id TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    UNIQUE(workspace_id, kind, endpoint_id)
+                );
+                CREATE TABLE IF NOT EXISTS channel_bindings (
+                    channel_id TEXT PRIMARY KEY REFERENCES channels(channel_id),
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    session_id TEXT REFERENCES sessions(session_id),
+                    task_id TEXT REFERENCES tasks(task_id),
+                    agent_id TEXT,
+                    trace_id TEXT NOT NULL,
+                    version INTEGER NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS workspace_resources (
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    resource_type TEXT NOT NULL,
+                    resource_id TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    metadata TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY(workspace_id, resource_type, resource_id)
+                );
+                CREATE INDEX IF NOT EXISTS idx_channels_workspace
+                    ON channels(workspace_id, state);
+                CREATE INDEX IF NOT EXISTS idx_channel_bindings_workspace
+                    ON channel_bindings(workspace_id, session_id, task_id);
+                CREATE INDEX IF NOT EXISTS idx_workspace_resources
+                    ON workspace_resources(workspace_id, resource_type, state);
                 CREATE TABLE IF NOT EXISTS workflow_instances (
                     instance_id TEXT PRIMARY KEY,
                     workflow_id TEXT NOT NULL,
@@ -958,4 +993,46 @@ class StateStore:
                     "SELECT * FROM agent_lifecycle_events WHERE agent_id=? ORDER BY sequence",
                     (agent_id,),
                 )
+            )
+
+
+    def upsert_channel(
+        self,
+        row: tuple[str, str, str, str, str, str, str],
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO channels VALUES (?,?,?,?,?,?,?) "
+                "ON CONFLICT(channel_id) DO UPDATE SET "
+                "state=excluded.state, updated_at=excluded.updated_at",
+                row,
+            )
+
+    def bind_channel(
+        self,
+        row: tuple[str, str, str | None, str | None, str | None, str, int, str],
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO channel_bindings VALUES (?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(channel_id) DO UPDATE SET "
+                "session_id=excluded.session_id, task_id=excluded.task_id, "
+                "agent_id=excluded.agent_id, trace_id=excluded.trace_id, "
+                "version=excluded.version, updated_at=excluded.updated_at",
+                row,
+            )
+
+    def upsert_workspace_resource(
+        self,
+        row: tuple[str, str, str, str, str, str],
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO workspace_resources VALUES (?,?,?,?,?,?) "
+                "ON CONFLICT(workspace_id,resource_type,resource_id) DO UPDATE SET "
+                "state=excluded.state, metadata=excluded.metadata, updated_at=excluded.updated_at",
+                row,
             )
