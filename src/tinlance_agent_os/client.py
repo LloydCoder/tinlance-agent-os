@@ -38,10 +38,18 @@ class ReferenceAgentPlatformClient(AgentPlatformClient):
     def list_agents(self) -> Sequence[Agent]:
         return tuple(self.agents)
 
-    def create_run(self, *, task_id: str, agent_id: str, intent: str) -> PlatformRunRef:
+    def create_run(
+        self,
+        *,
+        task_id: str,
+        agent_id: str,
+        intent: str,
+        idempotency_key: str | None = None,
+    ) -> PlatformRunRef:
         if not task_id or not agent_id or not intent:
             raise ValueError("task_id, agent_id and intent are required")
-        run = PlatformRunRef(str(uuid4()), task_id, TaskState.RUNNING.value)
+        run_id = idempotency_key or str(uuid4())
+        run = PlatformRunRef(run_id, task_id, TaskState.RUNNING.value)
         self.runs[run.run_id] = run
         return run
 
@@ -61,10 +69,11 @@ class ReferenceAgentPlatformClient(AgentPlatformClient):
         action: str,
         resource: str | None = None,
         reason: str | None = None,
+        idempotency_key: str | None = None,
     ) -> ApprovalRef:
         if not run_id or not action:
             raise ValueError("run_id and action are required")
-        return ApprovalRef(f"approval:{run_id}:{action}")
+        return ApprovalRef(f"approval:{idempotency_key or run_id}:{action}")
 
     def get_events(self, *, run_id: str) -> Sequence[Event]:
         return tuple(self.events.get(run_id, ()))
