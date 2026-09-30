@@ -447,12 +447,8 @@ class ModelRouter:
                 preferred_models.get(item.model_id, len(preferred_models)),
                 0 if item.provider_id in preferred_providers else 1,
                 preferred_providers.get(item.provider_id, len(preferred_providers)),
-                item.pricing.estimate(
-                    request.estimated_input_tokens, request.max_output_tokens
-                )
-                if item.pricing.estimate(
-                    request.estimated_input_tokens, request.max_output_tokens
-                )
+                item.pricing.estimate(request.estimated_input_tokens, request.max_output_tokens)
+                if item.pricing.estimate(request.estimated_input_tokens, request.max_output_tokens)
                 is not None
                 else float("inf"),
                 item.estimated_latency_ms
