@@ -52,15 +52,11 @@ def seed(tmp_path: Path) -> tuple[StateStore, Session, Task]:
 def test_channel_handoff_preserves_lifecycle_identity_and_trace(tmp_path: Path) -> None:
     store, session, task = seed(tmp_path)
     runtime = ChannelRuntime(store)
-    web = runtime.register(
-        workspace_id="ws-1", kind=ChannelKind.WEB, endpoint_id="browser"
-    )
+    web = runtime.register(workspace_id="ws-1", kind=ChannelKind.WEB, endpoint_id="browser")
     web = runtime.bind(
         web, session_id=session.session_id, task_id=task.task_id, agent_id=task.agent_id
     )
-    cli = runtime.register(
-        workspace_id="ws-1", kind=ChannelKind.CLI, endpoint_id="terminal"
-    )
+    cli = runtime.register(workspace_id="ws-1", kind=ChannelKind.CLI, endpoint_id="terminal")
     cli = runtime.handoff(web, runtime.bind(cli))
     assert cli.session_id == web.session_id
     assert cli.task_id == web.task_id
@@ -72,9 +68,7 @@ def test_all_channel_classes_share_one_runtime(tmp_path: Path) -> None:
     store, session, task = seed(tmp_path)
     runtime = ChannelRuntime(store)
     for kind in ChannelKind:
-        context = runtime.register(
-            workspace_id="ws-1", kind=kind, endpoint_id=kind.value
-        )
+        context = runtime.register(workspace_id="ws-1", kind=kind, endpoint_id=kind.value)
         context = runtime.bind(
             context,
             session_id=session.session_id,
@@ -99,15 +93,11 @@ def test_cross_workspace_handoff_is_denied(tmp_path: Path) -> None:
     store, session, task = seed(tmp_path)
     store.upsert_workspace("ws-2", "user-2", "2026-09-30T00:00:00+00:00")
     runtime = ChannelRuntime(store)
-    first = runtime.register(
-        workspace_id="ws-1", kind=ChannelKind.API, endpoint_id="api"
-    )
+    first = runtime.register(workspace_id="ws-1", kind=ChannelKind.API, endpoint_id="api")
     first = runtime.bind(
         first, session_id=session.session_id, task_id=task.task_id, agent_id=task.agent_id
     )
-    second = runtime.register(
-        workspace_id="ws-2", kind=ChannelKind.API, endpoint_id="api"
-    )
+    second = runtime.register(workspace_id="ws-2", kind=ChannelKind.API, endpoint_id="api")
     with pytest.raises(WorkspaceError, match="workspace"):
         runtime.handoff(first, second)
 
@@ -115,9 +105,7 @@ def test_cross_workspace_handoff_is_denied(tmp_path: Path) -> None:
 def test_wrong_task_agent_identity_is_denied(tmp_path: Path) -> None:
     store, session, task = seed(tmp_path)
     runtime = ChannelRuntime(store)
-    context = runtime.register(
-        workspace_id="ws-1", kind=ChannelKind.WEB, endpoint_id="browser"
-    )
+    context = runtime.register(workspace_id="ws-1", kind=ChannelKind.WEB, endpoint_id="browser")
     with pytest.raises(WorkspaceError, match="agent"):
         runtime.bind(
             context,
@@ -156,5 +144,7 @@ def test_workspace_snapshot_includes_core_and_registered_resources(tmp_path: Pat
     assert "skill-1" in snapshot.skills
     assert "connector-1" in snapshot.integrations
     assert context.channel_id in snapshot.channels
+
+
 
 # M19 acceptance: channel identity and trace continuity are durable invariants.
