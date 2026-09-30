@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import secrets
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -78,6 +78,7 @@ class WorkspaceSnapshot:
     channels: tuple[str, ...]
 
 
+
 class ChannelAdapter(Protocol):
     kind: ChannelKind
 
@@ -85,6 +86,44 @@ class ChannelAdapter(Protocol):
 
     def send(self, envelope: ChannelEnvelope) -> None: ...
 
+
+@dataclass(slots=True)
+class DurableChannelAdapter:
+    runtime: "ChannelRuntime"
+    context: ChannelContext
+
+    def endpoint_id(self) -> str:
+        return self.context.endpoint_id
+
+    def send(self, envelope: ChannelEnvelope) -> None:
+        self.runtime.emit(envelope)
+
+
+class WebChannel(DurableChannelAdapter):
+    kind = ChannelKind.WEB
+
+
+class CLIChannel(DurableChannelAdapter):
+    kind = ChannelKind.CLI
+
+
+class DesktopChannel(DurableChannelAdapter):
+    kind = ChannelKind.DESKTOP
+
+
+class APIChannel(DurableChannelAdapter):
+    kind = ChannelKind.API
+
+
+class MessagingChannel(DurableChannelAdapter):
+    kind = ChannelKind.MESSAGING
+
+
+class NotificationChannel(DurableChannelAdapter):
+    kind = ChannelKind.NOTIFICATIONS
+
+
+class ChannelRuntime:
 
 class ChannelRuntime:
     """Maps presentation channels onto one durable OS lifecycle identity."""
@@ -238,6 +277,38 @@ class ChannelRuntime:
             payload=dict(payload),
             sequence=sequence,
         )
+
+    def emit(self, envelope: ChannelEnvelope) -> None:
+        context = self._channel(envelope.channel_id)
+        if context is None:
+            raise WorkspaceError("channel does not exist")
+        if str(context["workspace_id"]) != envelope.workspace_id:
+            raise WorkspaceError("channel envelope workspace mismatch")
+        self.store.append_channel_message(
+            (
+                envelope.message_id,
+                envelope.channel_id,
+                envelope.workspace_id,
+                envelope.session_id,
+                envelope.task_id,
+                envelope.agent_id,
+                envelope.trace_id,
+                envelope.sequence,
+                json.dumps(dict(envelope.payload), sort_keys=True),
+                utc_now().isoformat(),
+            )
+        )
+
+    def adapter(self, context: ChannelContext) -> ChannelAdapter:
+        adapters = {
+            ChannelKind.WEB: WebChannel,
+            ChannelKind.CLI: CLIChannel,
+            ChannelKind.DESKTOP: DesktopChannel,
+            ChannelKind.API: APIChannel,
+            ChannelKind.MESSAGING: MessagingChannel,
+            ChannelKind.NOTIFICATIONS: NotificationChannel,
+        }
+        return adapters[context.kind](self, context)
 
     def workspace_snapshot(self, workspace_id: str) -> WorkspaceSnapshot:
         if not self._workspace_exists(workspace_id):
