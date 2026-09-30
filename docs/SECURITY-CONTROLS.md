@@ -86,3 +86,24 @@ The repository must not imply that these controls exist merely because an integr
 | Crash recovery | Expired lease reconciliation | `recover_orphans` |
 | Restart safety | Bounded restart count | Restart policy + fail-closed exhaustion |
 | Authority | No local capability grants | Agent Platform remains authority plane |
+
+
+## M13 developer-surface controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Manifest | Required identity/version/entrypoint fields | AgentManifest validation |
+| Capability declaration | Declaration is descriptive, not authorization | SDK + Platform boundary |
+| Capability integrity | Duplicate/empty requests rejected | CapabilityDeclaration validation |
+| Approval | Approval references remain opaque | Platform adapter |
+| Idempotency | Consequential SDK operations use deterministic or caller-supplied keys | Durable SDK idempotency ledger + Platform request key |
+| Replay | Replayed operations return the recorded Platform reference | sdk_idempotency |
+| Crash recovery | Claim survives process failure | SQLite durable transaction |
+| Trace integrity | W3C traceparent is validated | TraceContext |
+| Context isolation | Execution context is immutable | frozen SDK contracts + contextvars |
+| Error handling | Platform failures remain typed and distinguishable | SDKPlatformError |
+| Evidence | SDK exposes references but cannot create authoritative evidence | EvidenceRef |
+| HTTP boundary | SDK does not construct Platform HTTP requests | AgentPlatformClient adapter |
+| Authority | SDK cannot grant capabilities or approve itself | Platform remains authority |
+
+The developer surface is intentionally designed around current agent-security concerns: identity and authorization, excessive agency, tool misuse, memory/context poisoning, supply-chain risk, and auditable agent actions. OWASP's 2026 Agentic Applications guidance identifies these as material risks, while NIST's agent identity work emphasizes explicit identity, authorization, delegation, human binding, auditability and non-repudiation.
