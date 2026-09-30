@@ -371,9 +371,7 @@ class MemoryStore:
             trust in {MemoryTrust.TRUSTED_INSTRUCTION, MemoryTrust.VERIFIED_FACT}
             and write.provenance.source_type not in trusted_sources
         ):
-            raise MemoryValidationError(
-                "trusted memory classes require system, platform, or user provenance"
-            )
+            trust = MemoryTrust.UNTRUSTED_CONTENT
         state = MemoryState.ACTIVE
         quarantine_reason: str | None = None
         if reasons:
