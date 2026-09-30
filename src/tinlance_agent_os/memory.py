@@ -297,13 +297,62 @@ def _effective_expiry(write: MemoryWrite, now: datetime) -> datetime:
     return now + timedelta(seconds=defaults[write.scope])
 
 
+
+
+# Backward-compatible M0-M11 name. New code should use MemoryClassification.
+DataClassification = MemoryClassification
+
+
 class MemoryStore:
     """Security-aware memory API over the durable Agent OS StateStore."""
 
     def __init__(self, store: StateStore) -> None:
         self.store = store
 
-    def put(self, write: MemoryWrite, *, now: datetime | None = None) -> MemoryRecord:
+    def put(
+        self,
+        write: MemoryWrite | str,
+        *legacy_args: object,
+        now: datetime | None = None,
+    ) -> MemoryRecord:
+        if isinstance(write, str):
+            if len(legacy_args) != 3:
+                raise MemoryValidationError(
+                    "legacy memory.put requires workspace, scope, classification and content"
+                )
+            legacy_workspace = write
+            scope = legacy_args[0]
+            classification, content = legacy_args[1], legacy_args[2]
+            if not isinstance(scope, str):
+                raise MemoryValidationError("invalid legacy memory scope")
+            if not isinstance(classification, MemoryClassification) or not isinstance(content, str):
+                raise MemoryValidationError("invalid legacy memory.put arguments")
+            if classification == MemoryClassification.RESTRICTED:
+                raise PermissionError("restricted memory requires an explicit M15 classification ceiling")
+            scope_value = {
+                "working": MemoryScope.WORKING,
+                "session": MemoryScope.SESSION,
+                "task": MemoryScope.TASK,
+                "agent": MemoryScope.AGENT,
+                "long_term": MemoryScope.LONG_TERM,
+            }.get(scope, MemoryScope.SESSION)
+            scope_id = scope
+            write = MemoryWrite(
+                legacy_workspace,
+                scope_value,
+                scope_id,
+                "legacy-api",
+                content,
+                MemoryProvenance(MemorySourceType.IMPORT, f"legacy:{scope}"),
+                classification=classification,
+                memory_key=hashlib.sha256(f"{scope}:{content}".encode()).hexdigest(),
+                session_id=scope_id if scope_value in {MemoryScope.WORKING, MemoryScope.SESSION} else None,
+                task_id=scope_id if scope_value == MemoryScope.TASK else None,
+                conflict_policy=MemoryConflictPolicy.REPLACE,
+                expected_version=0,
+            )
+        if not isinstance(write, MemoryWrite):
+            raise MemoryValidationError("memory.put requires a MemoryWrite")
         write.validate()
         current_time = (now or datetime.now(UTC)).astimezone(UTC)
         reasons = _poison_reasons(write.content)
@@ -431,7 +480,40 @@ class MemoryStore:
                 return None
         return record if self._visible(record, retrieval) else None
 
-    def search(self, retrieval: MemoryRetrieval) -> tuple[MemoryRecord, ...]:
+    def search(
+        self,
+        retrieval: MemoryRetrieval | str,
+        *legacy_args: object,
+    ) -> tuple[MemoryRecord, ...]:
+        if isinstance(retrieval, str):
+            if (
+                len(legacy_args) != 2
+                or not isinstance(legacy_args[0], str)
+                or not isinstance(legacy_args[1], str)
+            ):
+                raise MemoryValidationError("legacy memory.search requires workspace, scope and query")
+            workspace_id = retrieval
+            scope = legacy_args[0]
+            query = legacy_args[1]
+            try:
+                scope_value = MemoryScope(scope)
+            except ValueError as exc:
+                raise MemoryValidationError("unknown legacy memory scope") from exc
+            retrieval = MemoryRetrieval(
+                query,
+                workspace_id,
+                "legacy-api",
+                session_id=(
+                    scope
+                    if scope_value in {MemoryScope.WORKING, MemoryScope.SESSION}
+                    else None
+                ),
+                task_id=scope if scope_value == MemoryScope.TASK else None,
+                scopes=(scope_value,),
+                max_classification=MemoryClassification.INTERNAL,
+            )
+        if not isinstance(retrieval, MemoryRetrieval):
+            raise MemoryValidationError("memory.search requires a MemoryRetrieval")
         retrieval.validate()
         now = datetime.now(UTC)
         self.store.expire_memories(now.isoformat())
