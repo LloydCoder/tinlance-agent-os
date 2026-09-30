@@ -594,3 +594,8 @@ MCP is used as an interoperability transport rather than replaced by a Tinlance-
 ## Observability and Reference Agents
 
 M21 provides OpenTelemetry traces/metrics with OTLP configuration and W3C context propagation. M22 provides the canonical Research, Cybersecurity, FDE/Engineering and World Intelligence agents, all routed through the same Agent OS + SDK + Platform governed execution path.
+
+
+## Production Distribution
+
+M24 adds signed release artifacts, CycloneDX SBOMs, Sigstore signing, GitHub artifact attestations, staged channels, health-gated deployment, automatic rollback, downgrade prevention, migration/backup controls and operational security runbooks.
