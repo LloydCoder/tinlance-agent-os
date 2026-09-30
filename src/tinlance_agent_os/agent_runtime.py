@@ -222,7 +222,8 @@ class AgentRuntime:
             return self.snapshot()
 
     def start(self) -> AgentSnapshot:
-        with self._lock:
+        with telemetry().span("agentos.agent.start", {"gen_ai.agent.id": self.definition.agent_id}):
+            with self._lock:
             self._require_state(AgentLifecycleState.READY, AgentLifecycleState.STOPPED)
             self._transition(AgentLifecycleState.STARTING, "agent.starting")
             try:
@@ -235,7 +236,8 @@ class AgentRuntime:
             return self.snapshot()
 
     def run(self) -> object:
-        with self._lock:
+        with telemetry().span("gen_ai.invoke_agent", {"gen_ai.agent.id": self.definition.agent_id}):
+            with self._lock:
             self._require_state(AgentLifecycleState.RUNNING)
         try:
             return self.worker(dict(self.definition.configuration))
