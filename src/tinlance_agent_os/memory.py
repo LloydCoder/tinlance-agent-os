@@ -328,7 +328,9 @@ class MemoryStore:
             if not isinstance(classification, MemoryClassification) or not isinstance(content, str):
                 raise MemoryValidationError("invalid legacy memory.put arguments")
             if classification == MemoryClassification.RESTRICTED:
-                raise PermissionError("restricted memory requires an explicit M15 classification ceiling")
+                raise PermissionError(
+                    "restricted memory requires an explicit M15 classification ceiling"
+                )
             scope_value = {
                 "working": MemoryScope.WORKING,
                 "session": MemoryScope.SESSION,
@@ -346,7 +348,11 @@ class MemoryStore:
                 MemoryProvenance(MemorySourceType.IMPORT, f"legacy:{scope}"),
                 classification=classification,
                 memory_key=hashlib.sha256(f"{scope}:{content}".encode()).hexdigest(),
-                session_id=scope_id if scope_value in {MemoryScope.WORKING, MemoryScope.SESSION} else None,
+                session_id=(
+                    scope_id
+                    if scope_value in {MemoryScope.WORKING, MemoryScope.SESSION}
+                    else None
+                ),
                 task_id=scope_id if scope_value == MemoryScope.TASK else None,
                 conflict_policy=MemoryConflictPolicy.REPLACE,
                 expected_version=0,
@@ -491,7 +497,9 @@ class MemoryStore:
                 or not isinstance(legacy_args[0], str)
                 or not isinstance(legacy_args[1], str)
             ):
-                raise MemoryValidationError("legacy memory.search requires workspace, scope and query")
+                raise MemoryValidationError(
+                    "legacy memory.search requires workspace, scope and query"
+                )
             workspace_id = retrieval
             scope = legacy_args[0]
             query = legacy_args[1]

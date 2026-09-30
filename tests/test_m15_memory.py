@@ -149,12 +149,12 @@ def test_session_and_task_memory_cannot_cross_context(tmp_path):
     )
     assert store.search(session_lookup) == ()
     assert store.search(task_lookup) == ()
-    with pytest.raises(Exception):
+    with pytest.raises(MemoryAccessError):
         store.get(
             session_record.memory_id,
             retrieval(session="session-2", scopes=(MemoryScope.SESSION,)),
         )
-    with pytest.raises(Exception):
+    with pytest.raises(MemoryAccessError):
         store.get(
             task_record.memory_id,
             retrieval(task="task-2", scopes=(MemoryScope.TASK,)),
