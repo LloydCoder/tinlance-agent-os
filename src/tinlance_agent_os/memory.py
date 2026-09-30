@@ -367,9 +367,11 @@ class MemoryStore:
             MemorySourceType.PLATFORM,
             MemorySourceType.USER,
         }
-        if trust in {MemoryTrust.TRUSTED_INSTRUCTION, MemoryTrust.VERIFIED_FACT}:
-            if write.provenance.source_type not in trusted_sources:
-                raise MemoryValidationError(
+        if (
+            trust in {MemoryTrust.TRUSTED_INSTRUCTION, MemoryTrust.VERIFIED_FACT}
+            and write.provenance.source_type not in trusted_sources
+        ):
+            raise MemoryValidationError(
                     "trusted memory classes require system, platform, or user provenance"
                 )
         state = MemoryState.ACTIVE
