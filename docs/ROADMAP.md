@@ -26,6 +26,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M17 | Multi-Agent Runtime | COMPLETE |
 | M18 | Agent Ecosystem Runtime | COMPLETE |
 | M19 | Agent Workspace & Channels | COMPLETE |
+| M20 | Local/Remote Agent Runtime | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -360,3 +361,46 @@ A channel is bound to exactly one workspace. A bound channel may carry session, 
 ### Acceptance
 
 The same agent/session/task can move between Web, CLI, Desktop, API, Messaging and Notification channels without changing lifecycle identifiers or trace continuity. Channel envelopes are durable and remain presentation-plane data.
+
+## M20 — Local/Remote Agent Runtime
+
+M20 strengthens local process supervision and remote-agent execution without creating a second authority plane.
+
+### Local runtime
+
+- bounded process supervision with CPU, address-space and process-count limits where the host exposes POSIX resource controls;
+- root-bound filesystem capability bindings;
+- explicit network endpoint policy;
+- deterministic process lifecycle supervision.
+
+### Remote runtime
+
+- workspace/tenant-bound endpoint enrollment;
+- authenticated endpoint identity and fingerprint verification;
+- durable endpoint state;
+- heartbeats, stale-endpoint detection and reconnect;
+- draining and disconnect lifecycle;
+- deterministic workspace fleet routing;
+- durable remote task assignments;
+- stable remote idempotency keys;
+- remote cancellation;
+- Platform Run mapping for consequential execution.
+
+### MCP boundary
+
+M20 uses an MCP transport adapter rather than inventing a second remote tool wire protocol. The adapter targets the current MCP ecosystem and keeps long-lived Agent OS lifecycle state outside transport sessions. MCP's current direction is stateless at the protocol core, with explicit handles/extensions for stateful or long-running work; the OS retains ownership of its durable task/endpoint lifecycle. citeturn1search10turn1search12
+
+### Acceptance
+
+A remote agent can:
+
+    enroll
+      -> authenticate
+      -> healthy
+      -> assigned work
+      -> execute through Platform
+      -> report/transport result
+      -> drain
+      -> disconnect
+
+without becoming a second authority plane. Platform identity, authorization, capability grants, approvals, policy, consequential execution and evidence remain authoritative in Agent Platform.
