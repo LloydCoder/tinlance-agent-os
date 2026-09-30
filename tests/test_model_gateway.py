@@ -1,3 +1,5 @@
+import pytest
+
 from __future__ import annotations
 
 from tinlance_agent_os import (
@@ -9,6 +11,7 @@ from tinlance_agent_os import (
     ModelPricing,
     ModelRouter,
     ModelResponse,
+    ModelRoutingError,
     ModelTask,
     ModelUsage,
     PrivacyLevel,
@@ -262,9 +265,5 @@ def test_capability_matching_is_explicit() -> None:
         "hello",
         required_capabilities=frozenset({"vision"}),
     )
-    try:
+    with pytest.raises(ModelRoutingError, match="no registered model"):
         gateway.invoke(request)
-    except Exception as exc:
-        assert "no registered model" in str(exc)
-    else:
-        raise AssertionError("gateway selected a model without required capabilities")
