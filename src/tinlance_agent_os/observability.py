@@ -43,6 +43,16 @@ class AgentOSTelemetry:
             unit="1",
             description="Tool calls initiated by Agent OS.",
         )
+        self.model_input_tokens = self.meter.create_counter(
+            "gen_ai.usage.input_tokens",
+            unit="{token}",
+            description="Generative AI input token usage.",
+        )
+        self.model_output_tokens = self.meter.create_counter(
+            "gen_ai.usage.output_tokens",
+            unit="{token}",
+            description="Generative AI output token usage.",
+        )
         self.approval_latency = self.meter.create_histogram(
             "agentos.approval.duration",
             unit="s",
@@ -125,17 +135,9 @@ class AgentOSTelemetry:
             attrs["gen_ai.provider.name"] = provider
         self.model_latency.record(duration, attrs)
         if input_tokens is not None:
-            self.meter.create_counter(
-                "agentos.model.input_tokens",
-                unit="{token}",
-                description="Model input token usage.",
-            ).add(input_tokens, attrs)
+            self.model_input_tokens.add(input_tokens, attrs)
         if output_tokens is not None:
-            self.meter.create_counter(
-                "agentos.model.output_tokens",
-                unit="{token}",
-                description="Model output token usage.",
-            ).add(output_tokens, attrs)
+            self.model_output_tokens.add(output_tokens, attrs)
 
     def record_tool(self, *, name: str, tool_type: str | None = None) -> None:
         attrs = {"gen_ai.tool.name": name}
