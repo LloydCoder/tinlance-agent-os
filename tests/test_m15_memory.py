@@ -44,7 +44,7 @@ def retrieval(
     include_quarantined=False,
 ):
     return MemoryRetrieval(
-        "memory",
+        "",
         workspace,
         agent,
         session_id=session,
