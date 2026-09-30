@@ -165,3 +165,13 @@ from .workflow_runtime import (
     WorkflowRuntimeError,
     WorkflowTrigger,
 )
+
+from .coordination import (
+    AgentMessage,
+    AgentPrincipal,
+    AgentTask,
+    AgentTaskState,
+    CoordinationError,
+    HMACMessageAuthenticator,
+    MultiAgentRuntime,
+)
