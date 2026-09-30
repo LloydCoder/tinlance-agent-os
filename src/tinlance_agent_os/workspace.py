@@ -89,7 +89,7 @@ class ChannelAdapter(Protocol):
 
 @dataclass(slots=True)
 class DurableChannelAdapter:
-    runtime: "ChannelRuntime"
+    runtime: ChannelRuntime
     context: ChannelContext
 
     def endpoint_id(self) -> str:
