@@ -1102,7 +1102,6 @@ class StateStore:
                 row,
             )
 
-
     def upsert_remote_endpoint(
         self,
         row: tuple[str, str, str, str, str, str, str, str, str, str, str],
