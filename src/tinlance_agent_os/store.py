@@ -705,8 +705,9 @@ class StateStore:
             if ids:
                 placeholders = ",".join("?" for _ in ids)
                 db.execute(
-                    f"UPDATE agent_tasks SET state='cancelled',updated_at=datetime('now') "
-                    f"WHERE task_id IN ({placeholders}) AND state NOT IN ('completed','failed','cancelled')",
+                    "UPDATE agent_tasks SET state='cancelled',updated_at=datetime('now') "
+                    f"WHERE task_id IN ({placeholders}) "
+                    "AND state NOT IN ('completed','failed','cancelled')",
                     ids,
                 )
             db.commit()
