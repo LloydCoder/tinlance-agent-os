@@ -22,20 +22,23 @@ def test_opentelemetry_spans_and_metrics_are_emitted() -> None:
     metrics.set_meter_provider(MeterProvider(metric_readers=[metric_reader]))
 
     telemetry = AgentOSTelemetry("tinlance.agent.os.test")
-    with telemetry.span(
-        "agentos.task",
-        {
-            "agentos.task.id": "task-1",
-            "gen_ai.agent.id": "agent-1",
-            "gen_ai.conversation.id": "session-1",
-        },
-    ), telemetry.span(
-        "gen_ai.invoke",
-        {
-            "gen_ai.operation.name": "invoke_agent",
-            "gen_ai.request.model": "model-1",
-            "gen_ai.provider.name": "provider-1",
-        },
+    with (
+        telemetry.span(
+            "agentos.task",
+            {
+                "agentos.task.id": "task-1",
+                "gen_ai.agent.id": "agent-1",
+                "gen_ai.conversation.id": "session-1",
+            },
+        ),
+        telemetry.span(
+            "gen_ai.invoke",
+            {
+                "gen_ai.operation.name": "invoke_agent",
+                "gen_ai.request.model": "model-1",
+                "gen_ai.provider.name": "provider-1",
+            },
+        ),
     ):
         telemetry.record_model(
             0.25,
