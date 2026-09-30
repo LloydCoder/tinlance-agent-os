@@ -1,3 +1,4 @@
+# fmt: off
 """Durable M16 workflow runtime.
 
 The runtime is a recovery-oriented state machine. Consequential step identity is
@@ -833,3 +834,5 @@ class DurableWorkflowRuntime:
             occurred_at=_now().isoformat(),
             payload=_json(payload),
         )
+
+# fmt: on
