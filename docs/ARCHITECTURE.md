@@ -530,3 +530,8 @@ The remote endpoint cannot mint capabilities, substitute an identity, approve it
 ## M21/M22 Operational and Reference-Agent Boundary
 
 OpenTelemetry is the telemetry substrate; Tinlance-specific identifiers are attached only as low-cardinality attributes where needed for lifecycle correlation. W3C trace context is propagated across lifecycle boundaries without recording sensitive payload content by default. Reference agents compose the existing SDK, memory/context, model gateway, skills and Platform adapter; they cannot turn model or skill output into authorization.
+
+
+## M24 Production Distribution Boundary
+
+The production distribution layer verifies external supply-chain evidence before activation. Sigstore/Cosign provides artifact signatures; GitHub artifact attestations provide signed SLSA/in-toto provenance and SBOM attestations; the runtime consumes those proofs through explicit verifier interfaces. Rollout, migration, backup, health and rollback state are durable operational controls and do not create a second execution authority.
