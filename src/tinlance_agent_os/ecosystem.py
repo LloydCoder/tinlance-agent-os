@@ -114,6 +114,8 @@ class AgentEcosystemRuntime:
             artifact=artifact,
             previous_version=previous,
         )
+        if current_version is None:
+            self.active[manifest.package_id] = manifest.version
 
     def resolve(self, package_id: str) -> tuple[PackageManifest, ...]:
         active_version = self.active.get(package_id)
