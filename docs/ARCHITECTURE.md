@@ -372,3 +372,43 @@ The workflow runtime never mints capabilities, approves itself, bypasses Platfor
 ### Local durability
 
 The current repository implementation uses SQLite with WAL and short transactions. SQLite permits concurrent readers but serializes writers; the runtime therefore uses optimistic workflow-instance versions and keeps each state transition small. A production multi-node scheduler remains an external deployment concern.
+
+
+## M17 Multi-Agent Runtime
+
+The coordination runtime preserves the authority boundary through every agent hop.
+
+```text
+Supervisor Agent
+   |
+   | authenticated identity + owned parent task
+   v
+Coordinator
+   | tenant/workspace check
+   | capability subset verification
+   | durable child task
+   | signed message + trace
+   v
+Child Agent
+   |
+   v
+Agent Platform authority
+```
+
+### Identity
+
+Every coordination principal is authenticated before it can create or own coordination state. Tenant and workspace are carried in the durable task and message envelope and are checked on delegation, send, receive and aggregation.
+
+### Anti-spoofing
+
+Agent messages contain a payload digest, nonce, sequence, sender/recipient identity, task identity and trace identifier. The complete envelope is authenticated with a signing adapter. The repository supplies HMAC for local deterministic tests; production identity/key management remains a Platform/deployment responsibility.
+
+### Delegation
+
+A supervisor can delegate only to an authenticated child in the same tenant/workspace. Requested capabilities are passed to an explicit verifier and must remain within the supervisor's declared capability set. These references are not grants; Platform authorization remains authoritative.
+
+### Propagation
+
+Child tasks retain the parent task ID and trace ID. Cancellation walks the durable task tree and marks active descendants cancelled. Result aggregation accepts only children owned by the requesting supervisor and tenant.
+
+No agent message, child task or delegated capability creates Platform authority.
