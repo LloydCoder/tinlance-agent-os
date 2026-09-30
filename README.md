@@ -119,7 +119,8 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M8 | Desktop/Shell foundation | Complete |
 | M9 | Extensions | Complete |
 | M10 | Enterprise / Remote OS foundation | Complete |
-| M11 | Production / Distribution foundation | Complete |\n| M12 | Agent Lifecycle Runtime | Complete |
+| M11 | Production / Distribution foundation | Complete |
+| M12 | Agent Lifecycle Runtime | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -334,7 +335,8 @@ Those boundaries are deliberate.
 
 ~~~text
 src/tinlance_agent_os/
-├── domain.py             # OS domain contracts\n├── agent_runtime.py      # M12 durable agent lifecycle runtime
+├── domain.py             # OS domain contracts
+├── agent_runtime.py      # M12 durable agent lifecycle runtime
 ├── contracts.py          # Platform-facing protocol
 ├── platform_adapter.py   # Platform mapping
 ├── transport.py          # Versioned transport
