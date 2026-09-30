@@ -68,6 +68,12 @@ class UpdateManager:
         self.staged_version = artifact.version
         self.state = UpdateState.STAGED
 
+    def discard_staged(self) -> None:
+        """Abort a staged update before activation."""
+        if self.state is UpdateState.STAGED:
+            self.staged_version = None
+            self.state = UpdateState.IDLE
+
     def apply(self, version: str) -> None:
         if self.state is not UpdateState.STAGED or self.staged_version != version:
             raise RuntimeError("update is not staged for this version")
