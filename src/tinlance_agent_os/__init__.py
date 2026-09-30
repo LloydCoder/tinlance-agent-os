@@ -101,6 +101,18 @@ __all__ = [
     "PackageManifest",
     "PackageState",
     "PackageType",
+    "APIChannel",
+    "CLIChannel",
+    "ChannelContext",
+    "ChannelEnvelope",
+    "ChannelKind",
+    "ChannelRuntime",
+    "DesktopChannel",
+    "MessagingChannel",
+    "NotificationChannel",
+    "WebChannel",
+    "WorkspaceError",
+    "WorkspaceSnapshot",
 ]
 
 from .sdk import (
@@ -198,4 +210,19 @@ from .ecosystem import (
     PackageManifest,
     PackageState,
     PackageType,
+)
+
+from .workspace import (
+    APIChannel,
+    CLIChannel,
+    ChannelContext,
+    ChannelEnvelope,
+    ChannelKind,
+    ChannelRuntime,
+    DesktopChannel,
+    MessagingChannel,
+    NotificationChannel,
+    WebChannel,
+    WorkspaceError,
+    WorkspaceSnapshot,
 )

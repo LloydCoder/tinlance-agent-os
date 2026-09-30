@@ -127,6 +127,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M16 | Real Workflow Runtime | Complete |
 | M17 | Multi-Agent Runtime | Complete |
 | M18 | Agent Ecosystem Runtime | Complete |
+| M19 | Agent Workspace & Channels | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -536,3 +537,32 @@ The coordinator is not an authority plane. Identity and capability verification 
 ## Agent Ecosystem Runtime
 
 M18 provides a verified package boundary for skills, applications, extensions, connectors and agents: artifact hashes, signatures, provenance, dependency resolution, quarantine, rollback and Platform-backed capability grants.
+
+### M19 — Agent Workspace & Channels
+
+M19 provides the unified presentation plane for the OS:
+
+- Web
+- CLI
+- Desktop
+- API
+- Messaging
+- Notifications
+
+All six use the same durable ChannelRuntime. A channel carries the workspace and, when bound, the same session/task/agent identity and lifecycle trace. Handoffs therefore change presentation surface without creating a new lifecycle or authority plane.
+
+The workspace surface is:
+
+text
+Workspace
+ ├── Agents
+ ├── Applications
+ ├── Skills
+ ├── Sessions
+ ├── Tasks
+ ├── Workflows
+ ├── Memory
+ ├── Integrations
+ └── Events
+
+This milestone defines the protocol/runtime boundary; it does not pretend that a specific GUI framework, messaging provider or hosted web frontend is embedded in the Python core.
