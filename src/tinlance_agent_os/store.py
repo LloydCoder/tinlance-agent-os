@@ -212,6 +212,21 @@ class StateStore:
                     version INTEGER NOT NULL,
                     updated_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS channel_messages (
+                    message_id TEXT PRIMARY KEY,
+                    channel_id TEXT NOT NULL REFERENCES channels(channel_id),
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    session_id TEXT,
+                    task_id TEXT,
+                    agent_id TEXT,
+                    trace_id TEXT NOT NULL,
+                    sequence INTEGER NOT NULL,
+                    payload TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    UNIQUE(channel_id, sequence)
+                );
+                CREATE INDEX IF NOT EXISTS idx_channel_messages_context
+                    ON channel_messages(workspace_id, session_id, task_id, created_at);
                 CREATE TABLE IF NOT EXISTS workspace_resources (
                     workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
                     resource_type TEXT NOT NULL,
@@ -1034,5 +1049,28 @@ class StateStore:
                 "INSERT INTO workspace_resources VALUES (?,?,?,?,?,?) "
                 "ON CONFLICT(workspace_id,resource_type,resource_id) DO UPDATE SET "
                 "state=excluded.state, metadata=excluded.metadata, updated_at=excluded.updated_at",
+                row,
+            )
+
+
+    def append_channel_message(
+        self,
+        row: tuple[
+            str,
+            str,
+            str,
+            str | None,
+            str | None,
+            str | None,
+            str,
+            int,
+            str,
+            str,
+        ],
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO channel_messages VALUES (?,?,?,?,?,?,?,?,?,?)",
                 row,
             )
