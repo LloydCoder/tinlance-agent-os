@@ -122,6 +122,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M11 | Production / Distribution foundation | Complete |
 | M12 | Agent Lifecycle Runtime | Complete |
 | M13 | Agent SDK / Application SDK | Complete |
+| M14 | Model Gateway + Model Router | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -339,6 +340,7 @@ src/tinlance_agent_os/
 ├── domain.py             # OS domain contracts
 ├── agent_runtime.py      # M12 durable agent lifecycle runtime
 ├── sdk.py                # M13 official high-level Agent Developer SDK
+├── model_gateway.py      # M14 model provider abstraction and router
 ├── contracts.py          # Platform-facing protocol
 ├── platform_adapter.py   # Platform mapping
 ├── transport.py          # Versioned transport
@@ -473,9 +475,21 @@ result = sdk.execute(task)
 
 The SDK provides typed scaffolding, lifecycle/session/task/workflow helpers, capability declarations, Platform-backed approval requests, execution/evidence results, structured errors, durable idempotency and execution-context propagation. It is deliberately not an authorization layer; the Agent Platform remains authoritative.
 
+## Model Gateway + Router
+
+M14 adds a provider-neutral model surface so agent logic does not depend on a vendor API:
+
+~~~text
+Agent -> Agent SDK -> Model Gateway -> Model Router -> Provider
+~~~
+
+The gateway supports provider abstraction, model registration, capability matching, deterministic routing, strict cost/latency/context/privacy policy, provider/model allowlists, transient fallback, decision models, embeddings and reranking. Hosted, private and local deployments use the same provider contract. Vision and speech are explicitly reserved for a later phase.
+
+A reference agent calls `sdk.model(ModelRequest(...))`; switching the registered provider/model changes routing configuration rather than agent logic. Model output remains untrusted data and cannot grant Platform authority.
+
 ## Status
 
-**M0–M13 repository implementation: complete.**
+**M0–M14 repository implementation: complete.**
 
 "Complete" means the repository-owned contracts, implementation, tests, architecture constraints and documentation are implemented and verified by CI. External infrastructure is explicitly represented as an integration seam rather than being simulated or overstated.
 

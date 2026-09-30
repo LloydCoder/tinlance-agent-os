@@ -23,6 +23,7 @@ from .applications import AgentManifest, CapabilityRequest
 from .contracts import AgentPlatformClient
 from .domain import ApprovalRef, Event, EvidenceRef, PlatformRunRef, Session, Task
 from .errors import PlatformAdapterError
+from .model_gateway import ModelError, ModelGateway, ModelRequest, ModelResponse, RoutingPolicy
 from .store import StateStore
 from .workflow import WorkflowDefinition, WorkflowEngine, WorkflowExecution
 
@@ -39,6 +40,16 @@ class SDKError(RuntimeError):
 
 class ContractValidationError(SDKError, ValueError):
     """A public SDK contract failed validation."""
+
+
+class SDKModelError(SDKError):
+    """A model gateway operation failed through the SDK boundary."""
+
+    def __init__(self, operation: str, cause: ModelError) -> None:
+        super().__init__(f"{operation} failed: {cause}")
+        self.operation = operation
+        self.cause = cause
+        self.retryable = isinstance(cause, (TimeoutError, ConnectionError))
 
 
 class SDKPlatformError(SDKError):
@@ -206,6 +217,7 @@ class AgentSDK:
     platform: AgentPlatformClient
     store: StateStore
     workflow_engine: WorkflowEngine = field(default_factory=WorkflowEngine)
+    model_gateway: ModelGateway | None = None
 
     @staticmethod
     def validate_manifest(manifest: AgentManifest) -> AgentManifest:
@@ -421,6 +433,31 @@ class AgentSDK:
             )
         except Exception as exc:
             raise self._wrap(f"approval.request:{key.value}", exc) from exc
+
+    def model(
+        self,
+        request: ModelRequest,
+        *,
+        policy: RoutingPolicy | None = None,
+    ) -> ModelResponse:
+        """Invoke the configured model gateway without changing agent logic.
+
+        Model output is untrusted data. This helper never converts it into a
+        Platform capability, approval, run, evidence reference or secret.
+        """
+        if self.model_gateway is None:
+            raise ContractValidationError("model gateway is not configured")
+        context = self._context()
+        effective_request = request
+        if effective_request.traceparent is None and context.trace is not None:
+            effective_request = replace(
+                effective_request,
+                traceparent=context.trace.traceparent,
+            )
+        try:
+            return self.model_gateway.invoke(effective_request, policy)
+        except ModelError as exc:
+            raise SDKModelError("model.invoke", exc) from exc
 
     def result(
         self,

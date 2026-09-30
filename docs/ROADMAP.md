@@ -20,6 +20,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M11 | Production / Distribution foundation | COMPLETE |
 | M12 | Agent Lifecycle Runtime | COMPLETE |
 | M13 | Agent SDK / Application SDK | COMPLETE |
+| M14 | Model Gateway + Model Router | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -205,3 +206,34 @@ The M13 reference test proves:
 - preserve execution context and trace metadata;
 - compose and complete a typed workflow;
 - reject invalid public contracts.
+
+## M14 — Model Gateway + Model Router
+
+M14 is the provider-neutral model control surface above hosted, private and local model providers.
+
+### Scope
+
+- provider abstraction and runtime registry;
+- model descriptors and capability matching;
+- deterministic routing with preferred models/providers;
+- strict cost, latency, privacy and context-window policy;
+- model/provider allowlists;
+- transient failure fallback;
+- decision models, embeddings and reranking;
+- SDK integration through `AgentSDK.model()`;
+- trace-context propagation;
+- authority-boundary architecture tests.
+
+Vision and speech are reserved for a later milestone and are rejected explicitly by M14 rather than exposed as partially implemented capabilities.
+
+### Authority rule
+
+The Model Gateway is a model-selection and provider-integration layer, not an authorization layer. Model output is untrusted data. M14 cannot grant capabilities, approve actions, create Platform runs, execute tools, issue Platform authority, or create authoritative evidence.
+
+### Policy rule
+
+A request cannot weaken an application routing policy. When both specify constraints, the stricter cost, latency, privacy, context, model-allowlist and provider-allowlist constraint applies. Cost- or latency-constrained routing fails closed when the registry lacks the corresponding estimate.
+
+### Acceptance
+
+A reference agent calls `AgentSDK.model(ModelRequest(...))` without knowing provider-specific APIs. Replacing the registered model/provider changes routing configuration, not agent logic.

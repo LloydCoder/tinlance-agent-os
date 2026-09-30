@@ -221,3 +221,55 @@ The Platform remains responsible for server-side idempotency and exactly-once co
 ### Trace propagation
 
 ExecutionContext is immutable. TraceContext validates W3C traceparent. When the concrete Platform adapter supports trace binding, the SDK creates a derived adapter carrying the same trace context rather than mutating shared client state. This follows OpenTelemetry's immutable context and propagation model.
+
+## M14 Model Gateway + Router
+
+The model path is deliberately separate from the authority path:
+
+```text
+Agent code
+   |
+   v
+Agent SDK
+   |
+   v
+Model Gateway
+   |
+   v
+Model Router
+   |
+   +--> hosted provider
+   +--> private provider
+   +--> local provider
+```
+
+The gateway owns provider abstraction, model registration, capability matching, routing policy, fallback and normalized model results. It does not own identity, authorization, approvals, budgets, secrets, tool execution or evidence authority.
+
+### Routing contract
+
+A `ModelRequest` describes the model task and routing constraints. A `RoutingPolicy` supplies application-level constraints. The router applies the stricter constraint whenever both exist. This prevents an agent request from widening an application's model, provider, privacy, cost, latency or context boundary.
+
+Candidate admission requires:
+
+- task capability;
+- requested model/provider allowlists;
+- application allowlists;
+- required capability features;
+- sufficient context window for estimated input plus maximum output;
+- required privacy level;
+- declared latency within the ceiling;
+- declared pricing within the cost ceiling when a ceiling is enforced.
+
+Candidates are then ordered deterministically by preferred model/provider, estimated cost, estimated latency, priority and stable identifiers.
+
+### Fallback
+
+Fallback is restricted to transient provider failures: unavailable, timeout and rate-limit conditions. Invalid requests, contract violations and malformed provider responses fail closed. The gateway never retries a failed model with a different model merely because a model response is semantically undesirable; quality evaluation belongs to later evaluation/orchestration layers.
+
+### Model output boundary
+
+`ModelResponse.output` is untrusted data. No model output is converted into a Platform capability, approval, run, evidence reference, secret or policy decision. M14 intentionally contains no imports from the Platform authority contracts.
+
+### Current tasks
+
+M14 implements chat, decision, embedding and reranking. Vision and speech are explicit future task types and are rejected until their contracts, provider semantics, privacy handling and tests are defined.
