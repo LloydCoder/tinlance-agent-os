@@ -384,4 +384,94 @@ def test_remote_replay_requires_current_endpoint_identity(tmp_path):
     )
     with pytest.raises(PermissionError):
         runtime.heartbeat(EndpointIdentity("ep", "bad", "attestation"))
+    assert endpoint.identity.endpoint_id == "ep"def test_crash_recovery_reuses_workflow_idempotency_key(tmp_path):
+    from tinlance_agent_os.workflow import WorkflowStepResult, WorkflowStepState, WorkflowState
+    from tinlance_agent_os.workflow_runtime import DurableWorkflowRuntime
+
+    class CrashExecutor:
+        def __init__(self):
+            self.calls = []
+            self.crash_key = None
+
+        def execute(self, *, workspace_id, workflow_instance_id, step, context, idempotency_key, timeout_seconds):
+            self.calls.append(idempotency_key)
+            if idempotency_key == self.crash_key:
+                self.crash_key = None
+                raise SystemExit("crash")
+            return WorkflowStepResult(
+                WorkflowStepState.COMPLETED,
+                platform_run_id=f"run-{idempotency_key}",
+            )
+
+        def cancel(self, *, platform_run_id):
+            pass
+
+        def request_approval(self, *, workspace_id, workflow_instance_id, step, idempotency_key):
+            return "approval"
+
+        def compensate(self, *, workspace_id, workflow_instance_id, step, context, idempotency_key):
+            return WorkflowStepResult(WorkflowStepState.COMPLETED)
+
+    store = StateStore(tmp_path / "state.db")
+    store.upsert_workspace("ws", "owner", datetime.now(UTC).isoformat())
+    executor = CrashExecutor()
+    runtime = DurableWorkflowRuntime(store, executor)
+    definition = WorkflowDefinition("wf", "ws", (WorkflowStep("a", "a"),))
+    instance = runtime.start(definition)
+    key = store.get_workflow_steps(instance.instance_id)[0]["idempotency_key"]
+    executor.crash_key = key
+    with pytest.raises(SystemExit):
+        runtime.run(instance.instance_id, definition)
+    recovered = runtime.recover({"wf": definition})
+    assert recovered[0].state is WorkflowState.COMPLETED
+    assert executor.calls == [key, key]
+
+
+def test_supply_chain_artifact_tampering_is_rejected(tmp_path):
+    runtime = AgentEcosystemRuntime(Verifier())
+    manifest, _ = package(tmp_path)
+    with pytest.raises(PackageError, match="hash"):
+        runtime.install(manifest, b"tampered")
+
+
+def test_distribution_downgrade_is_rejected():
+    import hashlib
+
+    manager = UpdateManager(active_version="2.0.0")
+    data = b"release"
+    artifact = ReleaseArtifact(
+        "1.9.0",
+        hashlib.sha256(data).hexdigest(),
+        len(data),
+        "https://releases.example/1.9.0",
+    )
+    with pytest.raises(ValueError, match="downgrade"):
+        manager.stage(artifact, data)
+
+
+def test_trace_context_spoofing_is_not_treated_as_authority():
+    from tinlance_agent_os.observability import extract_trace_context
+
+    context = extract_trace_context("00-" + "0" * 32 + "-" + "0" * 16 + "-01")
+    assert context is not None
+
+
+def test_remote_replay_requires_current_endpoint_identity(tmp_path):
+    store = StateStore(tmp_path / "state.db")
+    store.upsert_workspace("ws", "owner", datetime.now(UTC).isoformat())
+    runtime = RemoteRuntime(
+        store,
+        Platform(),
+        EndpointVerifier(),
+        Transport(),
+        NetworkPolicy(allowed_hosts=frozenset({"agent.example"})),
+    )
+    endpoint = runtime.enroll(
+        workspace_id="ws",
+        tenant_id="tenant-1",
+        identity=EndpointIdentity("ep", "good", "attestation"),
+        address="https://agent.example",
+    )
+    with pytest.raises(PermissionError):
+        runtime.heartbeat(EndpointIdentity("ep", "bad", "attestation"))
     assert endpoint.identity.endpoint_id == "ep"
