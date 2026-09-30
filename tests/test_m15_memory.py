@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from tinlance_agent_os.memory import (
+    MemoryAccessError,
     MemoryClassification,
     MemoryConflictError,
     MemoryConflictPolicy,
@@ -88,7 +89,7 @@ def test_workspace_and_agent_boundaries_are_fail_closed(tmp_path):
     )
     assert store.search(retrieval(workspace="ws-2")) == ()
     assert store.search(retrieval(agent="agent-2")) == ()
-    with pytest.raises(Exception):
+    with pytest.raises(MemoryAccessError):
         store.get(record.memory_id, retrieval(workspace="ws-2"))
 
 

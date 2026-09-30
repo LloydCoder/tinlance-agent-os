@@ -89,10 +89,16 @@ _POISON_PATTERNS = (
     re.compile(r"\bignore\s+(?:all\s+)?previous\s+instructions\b", re.I),
     re.compile(r"\bdisregard\s+(?:all\s+)?prior\s+(?:instructions|rules)\b", re.I),
     re.compile(r"\b(?:system|developer)\s+prompt\b.*\b(?:reveal|print|show|leak)\b", re.I | re.S),
-    re.compile(r"\b(?:exfiltrat|leak|steal)\w*\b.*\b(?:secret|credential|token|password|key)\b", re.I | re.S),
+    re.compile(
+        r"\b(?:exfiltrat|leak|steal)\w*\b.*\b(?:secret|credential|token|password|key)\b",
+        re.I | re.S,
+    ),
     re.compile(r"\bdisable\s+(?:security|safety|approval|policy)\b", re.I),
     re.compile(r"\bapprove\s+(?:this|the)\s+(?:action|tool|request)\b", re.I),
-    re.compile(r"\bcall\s+(?:the\s+)?(?:tool|api)\b.*\bwithout\s+(?:approval|authorization)\b", re.I | re.S),
+    re.compile(
+        r"\bcall\s+(?:the\s+)?(?:tool|api)\b.*\bwithout\s+(?:approval|authorization)\b",
+        re.I | re.S,
+    ),
     re.compile(r"-----BEGIN (?:RSA|EC|OPENSSH|PRIVATE) KEY-----", re.I),
     re.compile(r"\b(?:sk|ghp|github_pat|xox[baprs]|AKIA)[A-Za-z0-9_\-]{12,}\b"),
 )
@@ -258,7 +264,7 @@ def _digest(
                 "source_id": provenance.source_id,
                 "actor_id": provenance.actor_id,
                 "origin": provenance.origin,
-                "collected_at": (provenance.collected_at or current_time).isoformat(),
+                "collected_at": (provenance.collected_at or datetime.now(UTC)).isoformat(),
                 "parent_digest": provenance.parent_digest,
             },
         },
@@ -416,8 +422,11 @@ class MemoryStore:
             return None
         record = self._row_to_record(row)
         self._assert_access(record, retrieval)
-        if record.state == MemoryState.ACTIVE and record.expires_at is not None:
-            if record.expires_at <= datetime.now(UTC):
+        if (
+            record.state == MemoryState.ACTIVE
+            and record.expires_at is not None
+            and record.expires_at <= datetime.now(UTC)
+        ):
                 self.store.expire_memory_record(memory_id, datetime.now(UTC).isoformat())
                 return None
         return record if self._visible(record, retrieval) else None
