@@ -153,3 +153,71 @@ Lifecycle events use a deterministic SHA-256 identifier derived from agent ID, p
 ### Version binding
 
 An agent ID cannot be re-registered against a different version. This prevents a runtime restart from silently replacing the implementation associated with an existing durable identity.
+
+
+## M13 Agent Developer Surface
+
+The M13 SDK is the official application/developer layer between agent code and the OS/Platform contracts.
+
+    Developer code
+        |
+        v
+    Agent SDK / Application SDK
+        |
+        +--> AgentManifest / CapabilityDeclaration
+        +--> M12 AgentRuntime
+        +--> Session / Task helpers
+        +--> Workflow helpers
+        +--> ExecutionResult / EvidenceRef
+        +--> ApprovalWorkflow
+        +--> Idempotency / TraceContext
+        |
+        v
+    Agent Platform client
+        |
+        v
+    Platform authority
+
+### SDK responsibilities
+
+The SDK owns developer ergonomics and contract composition:
+
+- scaffold validated agent applications;
+- bind an application to an M12 runtime;
+- create and type session/task/workflow handles;
+- carry immutable execution context;
+- generate deterministic idempotency keys;
+- durably claim and complete SDK consequential operations;
+- request Platform approvals;
+- normalize execution results, events and evidence references;
+- translate boundary failures into structured SDK errors.
+
+### SDK non-responsibilities
+
+The SDK MUST NOT:
+
+- decide whether a capability is authorized;
+- mint capability grants;
+- validate an approval as sufficient authority;
+- issue or handle raw secrets as authority;
+- execute tools outside Platform governance;
+- write authoritative evidence;
+- bypass Platform policy;
+- treat a manifest declaration as an actual permission.
+
+### Idempotency protocol
+
+For consequential SDK operations:
+
+1. validate the caller-supplied or deterministic idempotency key;
+2. atomically claim the operation in the durable OS idempotency ledger;
+3. send the same key to the Platform client;
+4. record the resulting Platform reference;
+5. on replay, return the recorded reference;
+6. after a crash between claim and Platform completion, retry the same logical operation using the same key.
+
+The Platform remains responsible for server-side idempotency and exactly-once consequential side effects.
+
+### Trace propagation
+
+ExecutionContext is immutable. TraceContext validates W3C traceparent. When the concrete Platform adapter supports trace binding, the SDK creates a derived adapter carrying the same trace context rather than mutating shared client state. This follows OpenTelemetry's immutable context and propagation model.
