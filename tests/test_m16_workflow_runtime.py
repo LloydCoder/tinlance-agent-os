@@ -37,6 +37,7 @@ class FakeExecutor:
     ):
         if idempotency_key in self.crash_once:
             self.crash_once.remove(idempotency_key)
+            self.run_ids[idempotency_key] = f"run-{len(self.run_ids) + 1}"
             self.calls.append(idempotency_key)
             raise SystemExit("simulated process crash")
         if idempotency_key in self.fail_once:
@@ -226,3 +227,185 @@ def test_deadline_fails_closed(tmp_path):
         db.commit()
     result = runtime.run(instance.instance_id, definition)
     assert result.state == WorkflowState.FAILED
+
+def test_event_trigger_and_schedule_fire(tmp_path):
+    executor = FakeExecutor()
+    store, runtime = setup(tmp_path, executor)
+    definition = WorkflowDefinition("wf", "ws", (WorkflowStep("a", "a"),))
+    event_instance = runtime.trigger_event("invoice.created", {"id": "42"}, definition)
+    assert event_instance.context["event_type"] == "invoice.created"
+    assert runtime.run(event_instance.instance_id, definition).state == WorkflowState.COMPLETED
+
+    schedule_at = datetime.now(UTC) - timedelta(seconds=1)
+    runtime.schedule("schedule-1", definition, "*/5 * * * *", schedule_at)
+    due = runtime.fire_due_schedules({"wf": definition}, now=datetime.now(UTC))
+    assert len(due) == 1
+    assert due[0].context["schedule_id"] == "schedule-1"
+
+
+def test_condition_equality_and_inequality(tmp_path):
+    executor = FakeExecutor()
+    _, runtime = setup(tmp_path, executor)
+    definition = WorkflowDefinition(
+        "wf",
+        "ws",
+        (
+            WorkflowStep("eq", "eq", condition="mode == 'safe'"),
+            WorkflowStep("neq", "neq", depends_on=("eq",), condition="mode != 'blocked'"),
+        ),
+    )
+    instance = runtime.start(definition, context={"mode": "safe"})
+    assert runtime.run(instance.instance_id, definition).state == WorkflowState.COMPLETED
+
+
+def test_approval_rejection_fails_workflow(tmp_path):
+    executor = FakeExecutor()
+    _, runtime = setup(tmp_path, executor)
+    definition = WorkflowDefinition(
+        "wf",
+        "ws",
+        (WorkflowStep("approve", "approve", kind=WorkflowStepKind.APPROVAL),),
+    )
+    instance = runtime.start(definition)
+    paused = runtime.run(instance.instance_id, definition)
+    rejected = runtime.approve(paused.instance_id, definition, "approve", False)
+    assert rejected.state == WorkflowState.FAILED
+
+
+def test_retry_exhaustion_fails(tmp_path):
+    executor = FakeExecutor()
+    store, runtime = setup(tmp_path, executor)
+    definition = WorkflowDefinition(
+        "wf",
+        "ws",
+        (WorkflowStep("a", "a", retry=RetryPolicy(1, 0)),),
+    )
+    instance = runtime.start(definition)
+    key = store.get_workflow_steps(instance.instance_id)[0]["idempotency_key"]
+    executor.fail_once.add(key)
+    assert runtime.run(instance.instance_id, definition).state == WorkflowState.FAILED
+
+
+def test_cancel_propagates_to_running_platform_run(tmp_path):
+    executor = FakeExecutor()
+    store, runtime = setup(tmp_path, executor)
+    definition = WorkflowDefinition("wf", "ws", (WorkflowStep("a", "a"),))
+    instance = runtime.start(definition)
+    row = store.get_workflow_steps(instance.instance_id)[0]
+    store.upsert_workflow_step(
+        instance_id=instance.instance_id,
+        step_id="a",
+        state=WorkflowStepState.RUNNING.value,
+        attempt=1,
+        next_attempt_at=None,
+        idempotency_key=row["idempotency_key"],
+        platform_run_id="platform-run-1",
+        approval_id=None,
+        input_data="{}",
+        output_data=None,
+        error=None,
+        started_at=datetime.now(UTC).isoformat(),
+        completed_at=None,
+        updated_at=datetime.now(UTC).isoformat(),
+    )
+    runtime.cancel(instance.instance_id, definition)
+    assert executor.cancelled == ["platform-run-1"]
+
+
+def test_compensation_runs_after_failure(tmp_path):
+    class FailingExecutor(FakeExecutor):
+        def execute(self, *, workspace_id, workflow_instance_id, step, context, idempotency_key, timeout_seconds):
+            if step.step_id == "fail":
+                raise RuntimeError("boom")
+            return super().execute(
+                workspace_id=workspace_id,
+                workflow_instance_id=workflow_instance_id,
+                step=step,
+                context=context,
+                idempotency_key=idempotency_key,
+                timeout_seconds=timeout_seconds,
+            )
+
+    executor = FailingExecutor()
+    _, runtime = setup(tmp_path, executor)
+    definition = WorkflowDefinition(
+        "wf",
+        "ws",
+        (
+            WorkflowStep("done", "done", compensate_with="undo"),
+            WorkflowStep("fail", "fail", depends_on=("done",)),
+            WorkflowStep("undo", "undo", kind=WorkflowStepKind.COMPENSATION),
+        ),
+        compensation_enabled=True,
+    )
+    instance = runtime.start(definition)
+    assert runtime.run(instance.instance_id, definition).state == WorkflowState.FAILED
+
+
+def test_platform_executor_maps_runs():
+    class Run:
+        run_id = "run-1"
+
+    class Approval:
+        approval_id = "approval-1"
+
+    class Platform:
+        def __init__(self):
+            self.calls = []
+
+        def create_run(self, **kwargs):
+            self.calls.append(("create", kwargs))
+            return Run()
+
+        def request_approval(self, **kwargs):
+            self.calls.append(("approval", kwargs))
+            return Approval()
+
+        def cancel_run(self, **kwargs):
+            self.calls.append(("cancel", kwargs))
+
+    from tinlance_agent_os.workflow_runtime import AgentPlatformWorkflowExecutor
+
+    platform = Platform()
+    adapter = AgentPlatformWorkflowExecutor(platform, "agent-1")
+    step = WorkflowStep("a", "do a")
+    result = adapter.execute(
+        workspace_id="ws",
+        workflow_instance_id="wf-1",
+        step=step,
+        context={},
+        idempotency_key="key",
+        timeout_seconds=5,
+    )
+    assert result.platform_run_id == "run-1"
+    assert adapter.request_approval(
+        workspace_id="ws",
+        workflow_instance_id="wf-1",
+        step=WorkflowStep("approve", "approve", kind=WorkflowStepKind.APPROVAL),
+        idempotency_key="approval-key",
+    ) == "approval-1"
+    adapter.cancel(platform_run_id="run-1")
+    assert [kind for kind, _ in platform.calls] == ["create", "create", "approval", "cancel"]
+
+
+def test_definition_rejects_dependency_cycles():
+    definition = WorkflowDefinition(
+        "wf",
+        "ws",
+        (
+            WorkflowStep("a", "a", depends_on=("b",)),
+            WorkflowStep("b", "b", depends_on=("a",)),
+        ),
+    )
+    with pytest.raises(ValueError, match="cycle"):
+        definition.validate()
+
+
+def test_recovery_handles_completed_state(tmp_path):
+    executor = FakeExecutor()
+    _, runtime = setup(tmp_path, executor)
+    definition = WorkflowDefinition("wf", "ws", (WorkflowStep("a", "a"),))
+    instance = runtime.start(definition)
+    done = runtime.run(instance.instance_id, definition)
+    assert runtime.recover({"wf": definition}) == ()
+    assert done.state == WorkflowState.COMPLETED
