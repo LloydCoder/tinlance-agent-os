@@ -114,7 +114,8 @@ class StateStore:
                     ON memory(workspace_id, scope, created_at);
                 CREATE INDEX IF NOT EXISTS idx_workflows_workspace ON workflows(workspace_id);
                 CREATE INDEX IF NOT EXISTS idx_agents_workspace ON agents(workspace_id);
-                CREATE INDEX IF NOT EXISTS idx_agents_state_lease ON agents(state, lease_expires_at);
+                CREATE INDEX IF NOT EXISTS idx_agents_state_lease
+                    ON agents(state, lease_expires_at);
                 CREATE INDEX IF NOT EXISTS idx_agent_events_agent_sequence
                     ON agent_lifecycle_events(agent_id, sequence);
                 """
@@ -238,7 +239,7 @@ class StateStore:
             if existing is None:
                 import hashlib
                 event_id = hashlib.sha256(
-                    f"agent:{definition.agent_id}:1:agent.registered".encode("utf-8")
+                    f"agent:{definition.agent_id}:1:agent.registered".encode()
                 ).hexdigest()
                 db.execute(
                     "INSERT INTO agent_lifecycle_events VALUES (?,?,?,?,?,?,?,?,?,?)",
