@@ -417,3 +417,37 @@ No agent message, child task or delegated capability creates Platform authority.
 ## M18 Agent Ecosystem Runtime
 
 Packages are treated as untrusted supply-chain inputs until artifact hash and signature verification succeed. Dependency resolution is deterministic and version-exact. A package can be quarantined independently of its manifest. Capability requests are metadata; a separate Platform-backed grant is required before a package can receive authority.
+
+## M19 Workspace + Channels
+
+M19 introduces a unified presentation/channel plane:
+
+text
+                         Workspace
+                             |
+              +--------------+--------------+
+              |              |              |
+           Agents        Sessions        Tasks
+              |              |              |
+              +--------------+--------------+
+                             |
+                    unified ChannelRuntime
+                             |
+     +---------+------+-----+------+-----------+
+     |         |      |     |      |           |
+    Web       CLI  Desktop API  Messaging  Notifications
+                             |
+                             v
+                    same OS lifecycle IDs
+                    same trace continuity
+                             |
+                             v
+                    Platform authority
+
+ChannelRuntime is a routing/presentation abstraction. It does not authorize actions, mint capabilities, validate approvals as authority, or execute consequential operations.
+
+Channel bindings are workspace-scoped. A handoff can bind an unbound target channel to an existing session/task/agent and copies the established lifecycle trace. If a target channel is already bound, its lifecycle identity and trace must match the source before handoff is accepted.
+
+Channel envelopes retain workspace, session, task, agent and trace identifiers and are persisted as presentation events. This allows Web -> CLI -> Desktop -> API or messaging/notification transitions without creating a second session/task lifecycle.
+
+The desktop channel is intentionally a protocol adapter, not a claim that a GUI toolkit is bundled. Concrete Web/API/messaging/desktop transports remain integration surfaces above this stable contract.
