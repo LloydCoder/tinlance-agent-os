@@ -23,6 +23,7 @@ from .applications import AgentManifest, CapabilityRequest
 from .contracts import AgentPlatformClient
 from .domain import ApprovalRef, Event, EvidenceRef, PlatformRunRef, Session, Task
 from .errors import PlatformAdapterError
+from .memory import AssembledContext, MemoryRecord, MemoryRetrieval, MemoryStore, MemoryWrite
 from .model_gateway import ModelError, ModelGateway, ModelRequest, ModelResponse, RoutingPolicy
 from .store import StateStore
 from .workflow import WorkflowDefinition, WorkflowEngine, WorkflowExecution
@@ -218,6 +219,7 @@ class AgentSDK:
     store: StateStore
     workflow_engine: WorkflowEngine = field(default_factory=WorkflowEngine)
     model_gateway: ModelGateway | None = None
+    memory_store: MemoryStore | None = None
 
     @staticmethod
     def validate_manifest(manifest: AgentManifest) -> AgentManifest:
@@ -433,6 +435,33 @@ class AgentSDK:
             )
         except Exception as exc:
             raise self._wrap(f"approval.request:{key.value}", exc) from exc
+
+    def remember(self, write: MemoryWrite) -> MemoryRecord:
+        """Persist memory through the M15 trust, provenance and scope boundary."""
+        if self.memory_store is None:
+            raise ContractValidationError("memory store is not configured")
+        try:
+            return self.memory_store.put(write)
+        except Exception as exc:
+            raise self._wrap("memory.put", exc) from exc
+
+    def recall(self, retrieval: MemoryRetrieval) -> tuple[MemoryRecord, ...]:
+        """Retrieve memory subject to workspace, scope, trust and classification filters."""
+        if self.memory_store is None:
+            raise ContractValidationError("memory store is not configured")
+        try:
+            return self.memory_store.search(retrieval)
+        except Exception as exc:
+            raise self._wrap("memory.search", exc) from exc
+
+    def assemble_context(self, retrieval: MemoryRetrieval) -> AssembledContext:
+        """Build trust-separated context; quarantined content never becomes trusted context."""
+        if self.memory_store is None:
+            raise ContractValidationError("memory store is not configured")
+        try:
+            return self.memory_store.assemble_context(retrieval)
+        except Exception as exc:
+            raise self._wrap("context.assemble", exc) from exc
 
     def model(
         self,

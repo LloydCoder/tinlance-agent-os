@@ -66,6 +66,31 @@ class StateStore:
                     content TEXT NOT NULL,
                     created_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS memory_records (
+                    memory_id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    scope TEXT NOT NULL,
+                    scope_id TEXT NOT NULL,
+                    agent_id TEXT NOT NULL,
+                    memory_key TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    classification TEXT NOT NULL,
+                    trust TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    version INTEGER NOT NULL,
+                    provenance TEXT NOT NULL,
+                    content_digest TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    expires_at TEXT,
+                    deleted_at TEXT,
+                    quarantine_reason TEXT,
+                    UNIQUE(workspace_id, scope, scope_id, memory_key, version)
+                );
+                CREATE INDEX IF NOT EXISTS idx_memory_records_scope
+                    ON memory_records(workspace_id, scope, scope_id, updated_at);
+                CREATE INDEX IF NOT EXISTS idx_memory_records_agent
+                    ON memory_records(workspace_id, agent_id, state, updated_at);
                 CREATE TABLE IF NOT EXISTS workflows (
                     workflow_id TEXT PRIMARY KEY,
                     workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
@@ -184,6 +209,105 @@ class StateStore:
         with sqlite3.connect(self.path) as db:
             db.execute("PRAGMA foreign_keys=ON")
             db.execute("INSERT INTO memory VALUES (?,?,?,?,?,?)", row)
+
+
+    def insert_memory_record(self, row: tuple[object, ...]) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO memory_records VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                row,
+            )
+            db.commit()
+
+    def get_memory_record(self, memory_id: str) -> sqlite3.Row | None:
+        with sqlite3.connect(self.path) as db:
+            db.row_factory = sqlite3.Row
+            row = db.execute(
+                "SELECT * FROM memory_records WHERE memory_id=?", (memory_id,)
+            ).fetchone()
+            return cast(sqlite3.Row | None, row)
+
+    def memory_current(
+        self, *, workspace_id: str, scope: str, scope_id: str, memory_key: str
+    ) -> sqlite3.Row | None:
+        with sqlite3.connect(self.path) as db:
+            db.row_factory = sqlite3.Row
+            row = db.execute(
+                "SELECT * FROM memory_records "
+                "WHERE workspace_id=? AND scope=? AND scope_id=? AND memory_key=? "
+                "AND state != 'deleted' ORDER BY version DESC LIMIT 1",
+                (workspace_id, scope, scope_id, memory_key),
+            ).fetchone()
+            return cast(sqlite3.Row | None, row)
+
+    def search_memory_records(
+        self,
+        *,
+        workspace_id: str,
+        agent_id: str,
+        scopes: tuple[str, ...],
+        session_id: str | None,
+        task_id: str | None,
+        max_classification: int,
+        include_quarantined: bool,
+    ) -> list[sqlite3.Row]:
+        if not scopes:
+            return []
+        placeholders = ",".join("?" for _ in scopes)
+        states = ("active", "quarantined") if include_quarantined else ("active",)
+        state_placeholders = ",".join("?" for _ in states)
+        params: list[object] = [workspace_id, agent_id, *scopes, *states]
+        rows = self.query(
+            "SELECT * FROM memory_records WHERE workspace_id=? AND agent_id=? "
+            f"AND scope IN ({placeholders}) AND state IN ({state_placeholders}) "
+            "AND CAST(CASE classification WHEN 'public' THEN 0 "
+            "WHEN 'internal' THEN 1 WHEN 'confidential' THEN 2 ELSE 3 END AS INTEGER) <= ? "
+            "AND (expires_at IS NULL OR expires_at > datetime('now'))",
+            (*params, max_classification),
+        )
+        current: dict[tuple[str, str, str], sqlite3.Row] = {}
+        for row in rows:
+            key = (row["scope"], row["scope_id"], row["memory_key"])
+            if key not in current or int(row["version"]) > int(current[key]["version"]):
+                current[key] = row
+        return list(current.values())
+
+    def expire_memory_record(self, memory_id: str, now: str) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute(
+                "UPDATE memory_records SET state='expired',updated_at=? "
+                "WHERE memory_id=? AND state='active'",
+                (now, memory_id),
+            )
+            db.commit()
+
+    def expire_memories(self, now: str) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute(
+                "UPDATE memory_records SET state='expired',updated_at=? "
+                "WHERE state='active' AND expires_at IS NOT NULL AND expires_at <= ?",
+                (now, now),
+            )
+            db.commit()
+
+    def delete_memory_record(self, memory_id: str, now: str) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute(
+                "UPDATE memory_records SET state='deleted',deleted_at=?,updated_at=? "
+                "WHERE memory_id=? AND state IN ('active','quarantined','expired')",
+                (now, now, memory_id),
+            )
+            db.commit()
+
+    def quarantine_memory_record(self, memory_id: str, reason: str, now: str) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute(
+                "UPDATE memory_records SET state='quarantined',trust='quarantined',"
+                "quarantine_reason=?,updated_at=? WHERE memory_id=? AND state='active'",
+                (reason, now, memory_id),
+            )
+            db.commit()
 
     def put_workflow(self, row: tuple[str, str, str, str, str]) -> None:
         with sqlite3.connect(self.path) as db:
