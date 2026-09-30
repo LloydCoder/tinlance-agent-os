@@ -15,7 +15,8 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Callable, Iterator, Mapping, cast
+from collections.abc import Callable, Iterator, Mapping
+from typing import cast
 
 from .agent_runtime import AgentDefinition, AgentRuntime, RestartPolicy, RuntimeConfig
 from .applications import AgentManifest, CapabilityRequest
