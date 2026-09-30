@@ -200,16 +200,15 @@ def configure_telemetry(
     )
     tracer_provider = TracerProvider(resource=resource)
     if otlp_endpoint:
-        from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
-        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-
-        tracer_provider.add_span_processor(
-            BatchSpanProcessor(OTLPSpanExporter(endpoint=otlp_endpoint))
-        )
-        metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter(endpoint=otlp_endpoint))
+        metric_module = import_module("opentelemetry.exporter.otlp.proto.http.metric_exporter")
+        trace_module = import_module("opentelemetry.exporter.otlp.proto.http.trace_exporter")
+        metric_exporter = metric_module.OTLPMetricExporter(endpoint=otlp_endpoint)
+        span_exporter = trace_module.OTLPSpanExporter(endpoint=otlp_endpoint)
+        tracer_provider.add_span_processor(BatchSpanProcessor(span_exporter))
+        metric_reader = PeriodicExportingMetricReader(metric_exporter)
+        meter_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
     else:
-        metric_reader = PeriodicExportingMetricReader(export_interval_millis=60_000)
-    meter_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
+        meter_provider = MeterProvider(resource=resource)
     trace.set_tracer_provider(tracer_provider)
     metrics.set_meter_provider(meter_provider)
     return AgentOSTelemetry(service_name)
