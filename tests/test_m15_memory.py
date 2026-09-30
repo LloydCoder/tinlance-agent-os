@@ -26,12 +26,11 @@ def provenance(source_id: str, source_type: MemorySourceType = MemorySourceType.
     return MemoryProvenance(source_type, source_id, actor_id="user-1")
 
 
-
-
 def memory_store(tmp_path):
     state = StateStore(tmp_path / "state.db")
     state.upsert_workspace("ws-1", "owner-1", datetime.now(UTC).isoformat())
     return MemoryStore(state)
+
 
 def retrieval(
     *,
@@ -101,7 +100,7 @@ def test_workspace_and_agent_boundaries_are_fail_closed(tmp_path):
 
 
 def test_classification_prevents_confidential_leakage(tmp_path):
-    store = MemoryStore(StateStore(tmp_path / "state.db"))
+    store = memory_store(tmp_path)
     store.put(
         MemoryWrite(
             "ws-1",
@@ -119,7 +118,7 @@ def test_classification_prevents_confidential_leakage(tmp_path):
 
 
 def test_session_and_task_memory_cannot_cross_context(tmp_path):
-    store = MemoryStore(StateStore(tmp_path / "state.db"))
+    store = memory_store(tmp_path)
     session_record = store.put(
         MemoryWrite(
             "ws-1",
@@ -167,7 +166,7 @@ def test_session_and_task_memory_cannot_cross_context(tmp_path):
 
 
 def test_versioning_requires_explicit_compare_and_swap(tmp_path):
-    store = MemoryStore(StateStore(tmp_path / "state.db"))
+    store = memory_store(tmp_path)
     first = store.put(
         MemoryWrite(
             "ws-1",
@@ -210,7 +209,7 @@ def test_versioning_requires_explicit_compare_and_swap(tmp_path):
 
 
 def test_poisoning_is_quarantined_and_not_context_trusted(tmp_path):
-    store = MemoryStore(StateStore(tmp_path / "state.db"))
+    store = memory_store(tmp_path)
     record = store.put(
         MemoryWrite(
             "ws-1",
@@ -238,7 +237,7 @@ def test_poisoning_is_quarantined_and_not_context_trusted(tmp_path):
 
 
 def test_trusted_instructions_and_untrusted_content_are_separated(tmp_path):
-    store = MemoryStore(StateStore(tmp_path / "state.db"))
+    store = memory_store(tmp_path)
     store.put(
         MemoryWrite(
             "ws-1",
@@ -270,7 +269,7 @@ def test_trusted_instructions_and_untrusted_content_are_separated(tmp_path):
 
 
 def test_retention_and_explicit_deletion(tmp_path):
-    store = MemoryStore(StateStore(tmp_path / "state.db"))
+    store = memory_store(tmp_path)
     now = datetime.now(UTC)
     expired = store.put(
         MemoryWrite(
@@ -311,7 +310,7 @@ def test_retention_and_explicit_deletion(tmp_path):
 
 
 def test_invalid_scope_contract_is_rejected(tmp_path):
-    store = MemoryStore(StateStore(tmp_path / "state.db"))
+    store = memory_store(tmp_path)
     with pytest.raises(MemoryValidationError):
         store.put(
             MemoryWrite(
