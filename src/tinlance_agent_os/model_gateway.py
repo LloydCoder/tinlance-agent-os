@@ -392,8 +392,10 @@ class ModelRouter:
             effective.required_context_window,
             request.estimated_input_tokens + request.max_output_tokens,
         )
-        required_privacy = PrivacyLevel(
-            max(request.required_privacy.rank, effective.required_privacy.rank)
+        required_privacy = (
+            request.required_privacy
+            if request.required_privacy.rank >= effective.required_privacy.rank
+            else effective.required_privacy
         )
         allowed_models = _intersect_allowlists(
             request.allowed_models,
