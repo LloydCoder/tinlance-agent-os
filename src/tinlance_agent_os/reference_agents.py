@@ -8,7 +8,7 @@ from typing import Protocol
 from .applications import CapabilityRequest
 from .model_gateway import ModelRequest, ModelResponse, ModelTask
 from .sdk import AgentApplication, AgentSDK, ExecutionResult, SessionHandle, TaskHandle
-from .memory import AssembledContext, MemoryRetrieval
+from .memory import AssembledContext, MemoryRetrieval, MemoryWrite
 
 
 class SkillInvoker(Protocol):
