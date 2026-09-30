@@ -234,6 +234,7 @@ def test_memory_poisoning_does_not_become_persistent_trusted_instruction(tmp_pat
         )
     )
     assert record.state is MemoryState.QUARANTINED
+    assert record.trust is MemoryTrust.QUARANTINED
     assert store.search(retrieval()) == ()
 
 
