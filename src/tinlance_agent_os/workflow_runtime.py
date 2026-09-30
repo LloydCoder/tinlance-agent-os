@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import time
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from hashlib import sha256
@@ -17,10 +17,8 @@ from typing import Any, Protocol
 
 from .store import StateStore
 from .workflow import (
-    RetryPolicy,
     WorkflowDefinition,
     WorkflowEngine,
-    WorkflowExecution,
     WorkflowState,
     WorkflowStep,
     WorkflowStepKind,
@@ -197,7 +195,8 @@ def _step_key(instance_id: str, step_id: str) -> str:
 
 def _event_id(instance_id: str, event_type: str, step_id: str | None, payload: Any) -> str:
     return sha256(
-        _json({"instance": instance_id, "type": event_type, "step": step_id, "payload": payload}).encode()
+        _json({"instance": instance_id, "type": event_type, "step": step_id,
+            "payload": payload}).encode()
     ).hexdigest()
 
 
@@ -229,7 +228,8 @@ class DurableWorkflowRuntime:
             _json({
                 "workflow": definition.workflow_id,
                 "workspace": definition.workspace_id,
-                "trigger": (trigger.trigger_type, trigger.trigger_id) if trigger else ("manual", None),
+                "trigger": (trigger.trigger_type, trigger.trigger_id) if trigger else ("manual",
+                    None),
                 "at": now.isoformat(),
             }).encode()
         ).hexdigest()
@@ -331,10 +331,13 @@ class DurableWorkflowRuntime:
                     WorkflowStepState.CANCELLED.value,
                 } for row in rows.values()):
                     return self._complete(instance)
-                if any(row["state"] == WorkflowStepState.RETRY_WAIT.value for row in rows.values()):
-                    if wait_for_retry:
+                if any(
+                    row["state"] == WorkflowStepState.RETRY_WAIT.value
+                    for row in rows.values()
+                ) and wait_for_retry:
                         delays = [
-                            max(0.0, (datetime.fromisoformat(row["next_attempt_at"]) - _now()).total_seconds())
+                            max(0.0,
+                                (datetime.fromisoformat(row["next_attempt_at"]) - _now()).total_seconds())
                             for row in rows.values() if row["state"] == WorkflowStepState.RETRY_WAIT.value
                         ]
                         time.sleep(min(delays, default=0.0))
@@ -342,7 +345,8 @@ class DurableWorkflowRuntime:
                 return instance
 
             with ThreadPoolExecutor(max_workers=min(self.max_parallelism, len(ready))) as pool:
-                futures = {pool.submit(self._run_step, instance_id, steps[step.step_id], instance): step for step in ready}
+                futures = {pool.submit(self._run_step, instance_id, steps[step.step_id],
+                    instance): step for step in ready}
                 results: list[tuple[WorkflowStep, WorkflowStepResult]] = []
                 for future, step in futures.items():
                     try:
@@ -372,7 +376,8 @@ class DurableWorkflowRuntime:
                 elif result.state == WorkflowStepState.RETRY_WAIT:
                     self._retry(instance_id, step, result.error or "retry requested")
                 elif result.state == WorkflowStepState.FAILED:
-                    self._handle_failure(instance_id, definition, step, result.error or "step failed")
+                    self._handle_failure(instance_id, definition, step,
+                        result.error or "step failed")
                     return self.get(instance_id)
 
     def resume(self, instance_id: str, definition: WorkflowDefinition) -> WorkflowInstance:
@@ -385,10 +390,10 @@ class DurableWorkflowRuntime:
         rows = self.store.get_workflow_steps(instance_id)
         for row in rows:
             if row["platform_run_id"] and row["state"] == WorkflowStepState.RUNNING.value:
-                try:
+                from contextlib import suppress
+
+                with suppress(Exception):
                     self.executor.cancel(platform_run_id=row["platform_run_id"])
-                except Exception:
-                    pass
         self.store.update_workflow_instance(
             instance_id=instance_id, expected_version=instance.version,
             state=WorkflowState.CANCELLING.value, checkpoint=instance.checkpoint,
@@ -444,7 +449,8 @@ class DurableWorkflowRuntime:
             state=WorkflowState.RUNNING.value, checkpoint=step_id, context=instance.context | {},
             cancel_requested=False, updated_at=_now().isoformat()
         )
-        self._event(instance_id, "workflow.approval.accepted", step_id, {"approval_id": row["approval_id"]})
+        self._event(instance_id, "workflow.approval.accepted", step_id,
+            {"approval_id": row["approval_id"]})
         return self.run(instance_id, definition)
 
     def recover(self, definitions: dict[str, WorkflowDefinition]) -> tuple[WorkflowInstance, ...]:
@@ -563,7 +569,8 @@ class DurableWorkflowRuntime:
             )
         timeout = step.timeout_seconds
         if step.deadline_seconds is not None:
-            timeout = min(timeout, step.deadline_seconds) if timeout is not None else step.deadline_seconds
+            timeout = min(timeout,
+                step.deadline_seconds) if timeout is not None else step.deadline_seconds
         result = self.executor.execute(
             workspace_id=instance.workspace_id,
             workflow_instance_id=instance_id,
@@ -591,7 +598,8 @@ class DurableWorkflowRuntime:
             return WorkflowStepResult(WorkflowStepState.COMPLETED, actual != wanted)
         return WorkflowStepResult(WorkflowStepState.COMPLETED, bool(context.get(expression)))
 
-    def _complete_step(self, instance_id: str, step: WorkflowStep, result: WorkflowStepResult) -> None:
+    def _complete_step(self, instance_id: str, step: WorkflowStep,
+        result: WorkflowStepResult) -> None:
         now = _now().isoformat()
         row = next(r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id)
         self.store.upsert_workflow_step(
@@ -626,7 +634,8 @@ class DurableWorkflowRuntime:
             input_data=row["input_data"], output_data=row["output_data"], error=error,
             started_at=row["started_at"], completed_at=None, updated_at=_now().isoformat()
         )
-        self._event(instance_id, "workflow.step.retry", step.step_id, {"attempt": attempt, "error": error})
+        self._event(instance_id, "workflow.step.retry", step.step_id, {"attempt": attempt,
+            "error": error})
 
     def _handle_failure(
         self, instance_id: str, definition: WorkflowDefinition | None,
@@ -647,7 +656,8 @@ class DurableWorkflowRuntime:
         else:
             self._fail(instance, step.step_id, error)
 
-    def _compensate(self, instance_id: str, definition: WorkflowDefinition, context: dict[str, Any]) -> None:
+    def _compensate(self, instance_id: str, definition: WorkflowDefinition, context: dict[str,
+        Any]) -> None:
         self.store.update_workflow_instance(
             instance_id=instance_id, expected_version=self.get(instance_id).version,
             state=WorkflowState.COMPENSATING.value, checkpoint=self.get(instance_id).checkpoint,
@@ -672,7 +682,8 @@ class DurableWorkflowRuntime:
                 )
         self._fail(self.get(instance_id), None, "workflow failed after compensation")
 
-    def _wait_approval(self, instance_id: str, step: WorkflowStep, result: WorkflowStepResult) -> None:
+    def _wait_approval(self, instance_id: str, step: WorkflowStep,
+        result: WorkflowStepResult) -> None:
         row = next(r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id)
         self.store.upsert_workflow_step(
             instance_id=instance_id, step_id=step.step_id, state=WorkflowStepState.WAITING_APPROVAL.value,
@@ -687,7 +698,8 @@ class DurableWorkflowRuntime:
             state=WorkflowState.WAITING_APPROVAL.value, checkpoint=step.step_id,
             context=_json(instance.context), cancel_requested=False, updated_at=_now().isoformat()
         )
-        self._event(instance_id, "workflow.approval.requested", step.step_id, {"approval_id": result.approval_id})
+        self._event(instance_id, "workflow.approval.requested", step.step_id,
+            {"approval_id": result.approval_id})
 
     def _wait_input(self, instance_id: str, step: WorkflowStep, result: WorkflowStepResult) -> None:
         row = next(r for r in self.store.get_workflow_steps(instance_id) if r["step_id"] == step.step_id)
@@ -704,7 +716,8 @@ class DurableWorkflowRuntime:
             state=WorkflowState.WAITING_INPUT.value, checkpoint=step.step_id,
             context=_json(instance.context), cancel_requested=False, updated_at=_now().isoformat()
         )
-        self._event(instance_id, "workflow.input.requested", step.step_id, {"key": step.human_input_key})
+        self._event(instance_id, "workflow.input.requested", step.step_id,
+            {"key": step.human_input_key})
 
     def _complete(self, instance: WorkflowInstance) -> WorkflowInstance:
         self.store.update_workflow_instance(
@@ -726,7 +739,8 @@ class DurableWorkflowRuntime:
             self._event(current.instance_id, "workflow.cancelled", None, {})
         return self.get(instance.instance_id)
 
-    def _fail(self, instance: WorkflowInstance, step_id: str | None, error: str) -> WorkflowInstance:
+    def _fail(self, instance: WorkflowInstance, step_id: str | None,
+        error: str) -> WorkflowInstance:
         current = self.get(instance.instance_id)
         if current.state != WorkflowState.FAILED:
             self.store.update_workflow_instance(
