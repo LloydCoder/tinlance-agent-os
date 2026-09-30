@@ -23,3 +23,17 @@ def test_m0_does_not_embed_domain_products() -> None:
         "import hezqara",
     )
     assert not any(token in source.lower() for token in forbidden)
+
+
+def test_model_gateway_has_no_platform_authority_imports() -> None:
+    source = (SRC / "model_gateway.py").read_text()
+    forbidden = (
+        "agent_platform",
+        "platform_adapter",
+        "contracts",
+        "ApprovalRef",
+        "CapabilityRef",
+        "EvidenceRef",
+        "PlatformRunRef",
+    )
+    assert not any(token in source for token in forbidden)
