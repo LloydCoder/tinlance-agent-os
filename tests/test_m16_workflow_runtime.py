@@ -166,7 +166,10 @@ def test_process_crash_recovers_running_step_without_duplicate_side_effect(tmp_p
     executor.crash_once.add(key)
     with pytest.raises(SystemExit):
         runtime.run(instance.instance_id, definition)
-    assert store.get_workflow_steps(instance.instance_id)[0]["state"] == WorkflowStepState.RUNNING.value
+    assert (
+        store.get_workflow_steps(instance.instance_id)[0]["state"]
+        == WorkflowStepState.RUNNING.value
+    )
 
     recovered = runtime.recover({"wf": definition})
     assert recovered[0].state == WorkflowState.COMPLETED
@@ -208,7 +211,7 @@ def test_deadline_fails_closed(tmp_path):
     )
     runtime.store.query("SELECT instance_id FROM workflow_instances WHERE instance_id=?",
         (instance.instance_id,))
-    # The deadline is computed at start; move it to the past through the durable row for deterministic testing.
+    # Move the durable deadline into the past for deterministic testing.
     with sqlite3.connect(runtime.store.path) as db:
         db.execute("UPDATE workflow_instances SET deadline_at=? WHERE instance_id=?",
                    ((datetime.now(UTC) - timedelta(seconds=1)).isoformat(), instance.instance_id))
