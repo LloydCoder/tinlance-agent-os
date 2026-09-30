@@ -342,10 +342,12 @@ class DurableWorkflowRuntime:
                     for row in rows.values()
                 ) and wait_for_retry:
                         delays = [
-                            max(0.0,
+                            max(
+                                0.0,
                                 (
                                     datetime.fromisoformat(row["next_attempt_at"]) - _now()
-                                ).total_seconds()
+                                ).total_seconds(),
+                            )
                             for row in rows.values()
                             if row["state"] == WorkflowStepState.RETRY_WAIT.value
                         ]
