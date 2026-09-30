@@ -26,6 +26,13 @@ def provenance(source_id: str, source_type: MemorySourceType = MemorySourceType.
     return MemoryProvenance(source_type, source_id, actor_id="user-1")
 
 
+
+
+def memory_store(tmp_path):
+    state = StateStore(tmp_path / "state.db")
+    state.upsert_workspace("ws-1", "owner-1", datetime.now(UTC).isoformat())
+    return MemoryStore(state)
+
 def retrieval(
     *,
     workspace="ws-1",
@@ -52,7 +59,7 @@ def retrieval(
 
 def test_memory_persists_across_store_instances_and_preserves_provenance(tmp_path):
     path = tmp_path / "state.db"
-    first = MemoryStore(StateStore(path))
+    first = memory_store(path.parent)
     record = first.put(
         MemoryWrite(
             "ws-1",
@@ -66,7 +73,7 @@ def test_memory_persists_across_store_instances_and_preserves_provenance(tmp_pat
         )
     )
 
-    second = MemoryStore(StateStore(path))
+    second = memory_store(path.parent)
     found = second.get(record.memory_id, retrieval())
     assert found is not None
     assert found.content == record.content
@@ -75,7 +82,7 @@ def test_memory_persists_across_store_instances_and_preserves_provenance(tmp_pat
 
 
 def test_workspace_and_agent_boundaries_are_fail_closed(tmp_path):
-    store = MemoryStore(StateStore(tmp_path / "state.db"))
+    store = memory_store(tmp_path)
     record = store.put(
         MemoryWrite(
             "ws-1",
