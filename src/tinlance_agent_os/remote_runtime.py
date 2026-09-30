@@ -292,9 +292,7 @@ class LocalProcessSupervisor:
 
         def limit() -> None:
             resource.setrlimit(resource.RLIMIT_CPU, (limits.cpu_seconds, limits.cpu_seconds))
-            resource.setrlimit(
-                resource.RLIMIT_AS, (limits.memory_bytes, limits.memory_bytes)
-            )
+            resource.setrlimit(resource.RLIMIT_AS, (limits.memory_bytes, limits.memory_bytes))
             resource.setrlimit(resource.RLIMIT_NPROC, (limits.max_processes, limits.max_processes))
 
         return limit
