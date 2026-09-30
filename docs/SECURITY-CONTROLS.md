@@ -158,3 +158,19 @@ M14 therefore treats the model provider as an untrusted dependency from the pers
 | Authority | Memory never creates Platform authority | Architecture boundary + no Platform grants |
 
 OWASP's 2026 Agentic Applications material identifies memory/context poisoning as a distinct persistent attack surface and recommends origin tracking, access segmentation, retention limits, anomaly detection and rollback-oriented controls. M15 implements the repository-local portions of that boundary; semantic validation, external truth verification and enterprise retention policy remain deployment/application responsibilities.
+
+
+## M25 forensic-hardening controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Release compatibility | Active version must satisfy manifest minimum supported version | Production release controller |
+| Release evidence | Signature bundle, issuer, provenance and SBOM digest have strict shape validation | Release manifest validation |
+| Staging safety | Failed backup preparation cannot leave a staged release behind | Update manager staged-release cancellation |
+| Rollback correctness | Pre-activation failures do not invoke an unapplied-version rollback | Production controller state checks |
+| Memory trust | Agent/external/import provenance cannot self-declare trusted instructions or verified facts | Memory store write boundary |
+| Process environment | Loader/interpreter injection variables and non-allowlisted environment keys are rejected | Local process supervisor |
+| Fleet endpoints | Unix sockets require absolute local paths; HTTPS endpoints require an authority | Fleet registry |
+| CI supply chain | All workflow action references must resolve to immutable 40-hex commit SHAs | CI workflow pinning gate |
+
+The hardening layer preserves the same authority boundary: these controls constrain local composition and release integrity; they do not replace Agent Platform authorization, enterprise identity, sandboxing, signing infrastructure or centralized evidence.
