@@ -29,16 +29,15 @@ def test_opentelemetry_spans_and_metrics_are_emitted() -> None:
             "gen_ai.agent.id": "agent-1",
             "gen_ai.conversation.id": "session-1",
         },
+    ), telemetry.span(
+        "gen_ai.invoke",
+        {
+            "gen_ai.operation.name": "invoke_agent",
+            "gen_ai.request.model": "model-1",
+            "gen_ai.provider.name": "provider-1",
+        },
     ):
-        with telemetry.span(
-            "gen_ai.invoke",
-            {
-                "gen_ai.operation.name": "invoke_agent",
-                "gen_ai.request.model": "model-1",
-                "gen_ai.provider.name": "provider-1",
-            },
-        ):
-            telemetry.record_model(
+        telemetry.record_model(
                 0.25,
                 operation="chat",
                 model="model-1",
