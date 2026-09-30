@@ -18,7 +18,8 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M9 | Extensions | COMPLETE |
 | M10 | Enterprise / Remote OS foundation | COMPLETE |
 | M11 | Production / Distribution foundation | COMPLETE |
-| M12 | Agent Lifecycle Runtime | COMPLETE |\n| M13 | Agent SDK / Application SDK | COMPLETE |
+| M12 | Agent Lifecycle Runtime | COMPLETE |
+| M13 | Agent SDK / Application SDK | COMPLETE |
 
 ## M0 — Architecture Foundation
 
