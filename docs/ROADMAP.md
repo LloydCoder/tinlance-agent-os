@@ -21,6 +21,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M12 | Agent Lifecycle Runtime | COMPLETE |
 | M13 | Agent SDK / Application SDK | COMPLETE |
 | M14 | Model Gateway + Model Router | COMPLETE |
+| M15 | Context + Trusted Memory | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -237,3 +238,51 @@ A request cannot weaken an application routing policy. When both specify constra
 ### Acceptance
 
 A reference agent calls `AgentSDK.model(ModelRequest(...))` without knowing provider-specific APIs. Replacing the registered model/provider changes routing configuration, not agent logic.
+
+
+## M15 — Context + Trusted Memory
+
+M15 replaces the historical M5 memory primitive with a real agent memory subsystem. Persistent memory is treated as a security-relevant state surface because retrieved state can influence future reasoning and tool use across sessions. OWASP identifies this as ASI06 Memory & Context Poisoning. See the OWASP Agentic Applications 2026 source cited in the M15 security documentation.
+
+### Components
+
+- working memory;
+- session memory;
+- task memory;
+- agent memory;
+- workspace long-term memory;
+- immutable provenance records and parent-digest chains;
+- public/internal/confidential/restricted classification;
+- trusted-instruction, verified-fact, untrusted-content and quarantined trust classes;
+- retention defaults plus explicit TTL/expiry;
+- tombstone deletion;
+- immutable versions with compare-and-swap conflict detection;
+- deterministic retrieval;
+- poisoning detection and quarantine;
+- trust-separated context assembly.
+
+### Scope boundary
+
+Every memory record is bound to exactly one workspace and agent. Session and working memory are bound to a session; task memory is bound to a task; agent memory is bound to the agent; long-term memory is bound to the workspace. Retrieval applies the same boundary before content is exposed.
+
+### Confidentiality boundary
+
+Classification is monotonic. A retrieval request has a maximum classification ceiling; records above that ceiling are omitted. The OS never downgrades a record merely to make it fit a lower clearance. Restricted/confidential content therefore fails closed rather than leaking through context assembly.
+
+### Trust boundary
+
+Trust is metadata, not authority. User/system/platform instructions may be represented as trusted instructions, verified facts are separated from instructions, and external/agent-generated content remains untrusted by default. Suspicious content is stored only in the quarantined state and is excluded from normal retrieval.
+
+Memory trust never creates Platform capability, approval, execution authority, secret access or evidence authority.
+
+### Poisoning controls
+
+M15 performs deterministic pre-persistence screening for common instruction-hijack, exfiltration, security-bypass and credential/key patterns. Detection is a quarantine signal rather than a claim of semantic truth. Quarantined entries remain inspectable only through an explicit quarantine-inclusive retrieval path.
+
+### Context assembly
+
+MemoryStore.assemble_context() produces four separate channels: trusted instructions, verified facts, untrusted content and quarantined content. Future vector/embedding retrieval can plug into the same contract without changing the trust boundary.
+
+### Acceptance
+
+A reference agent can write memory, close its process, reopen the SQLite store, and retrieve the memory in a later session while retaining provenance and version metadata. Cross-workspace, cross-agent, cross-session and over-classification reads fail closed; suspicious memory is quarantined; explicit deletion and expiry remove records from active retrieval.
