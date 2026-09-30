@@ -1,6 +1,7 @@
 """Durable Agent OS runtime and lifecycle state machine (M12)."""
 
 from __future__ import annotations
+from .observability import telemetry
 
 import hashlib
 import json
@@ -222,8 +223,10 @@ class AgentRuntime:
             return self.snapshot()
 
     def start(self) -> AgentSnapshot:
-        with telemetry().span("agentos.agent.start", {"gen_ai.agent.id": self.definition.agent_id}):
-            with self._lock:
+        with telemetry().span(
+            "agentos.agent.start",
+            {"gen_ai.agent.id": self.definition.agent_id},
+        ), self._lock:
                 self._require_state(AgentLifecycleState.READY, AgentLifecycleState.STOPPED)
                 self._transition(AgentLifecycleState.STARTING, "agent.starting")
                 try:
