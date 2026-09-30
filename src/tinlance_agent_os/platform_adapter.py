@@ -198,7 +198,7 @@ class AgentPlatformAdapter(AgentPlatformClient):
         items = _sequence(payload, "evidence")
         return tuple(EvidenceRef(_string(item, "evidence_id")) for item in items)
 
-    def with_trace_context(self, traceparent: str | None) -> "AgentPlatformAdapter":
+    def with_trace_context(self, traceparent: str | None) -> AgentPlatformAdapter:
         """Return an adapter carrying the supplied trace context."""
         return replace(self, context=replace(self.context, trace_id=traceparent))
 
