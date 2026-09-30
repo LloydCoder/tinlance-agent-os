@@ -7,7 +7,7 @@ from typing import Protocol
 
 from .applications import CapabilityRequest
 from .model_gateway import ModelRequest, ModelResponse, ModelTask
-from .sdk import AgentApplication, AgentSDK, ExecutionResult, TaskHandle
+from .sdk import AgentApplication, AgentSDK, ExecutionResult, SessionHandle, TaskHandle
 from .memory import AssembledContext, MemoryRetrieval
 
 
@@ -43,7 +43,7 @@ class ReferenceAgent:
     def execute(
         self,
         *,
-        session,
+        session: SessionHandle,
         intent: str,
         model_payload: object | None = None,
         model_task: ModelTask = ModelTask.CHAT,
@@ -113,7 +113,7 @@ class ReferenceAgent:
         intent: str,
         model_response: ModelResponse | None,
         skill_output: object | None,
-    ):
+    ) -> MemoryWrite:
         from .memory import MemoryProvenance, MemoryScope, MemorySourceType, MemoryWrite
 
         return MemoryWrite(
