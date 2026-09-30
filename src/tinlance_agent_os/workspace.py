@@ -80,7 +80,7 @@ class WorkspaceSnapshot:
 
 
 class ChannelAdapter(Protocol):
-    kind: ChannelKind
+    kind: ClassVar[ChannelKind]
 
     def endpoint_id(self) -> str: ...
 
