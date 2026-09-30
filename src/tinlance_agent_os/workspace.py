@@ -241,12 +241,13 @@ class ChannelRuntime:
     ) -> ChannelContext:
         if source.workspace_id != target.workspace_id:
             raise WorkspaceError("cross-workspace channel handoff denied")
-        if source.session_id != target.session_id or source.task_id != target.task_id:
-            raise WorkspaceError("handoff must preserve session and task identity")
-        if source.agent_id != target.agent_id:
-            raise WorkspaceError("handoff must preserve agent identity")
-        if source.trace_id != target.trace_id:
-            raise WorkspaceError("handoff must preserve trace continuity")
+        if target.version > 0:
+            if source.session_id != target.session_id or source.task_id != target.task_id:
+                raise WorkspaceError("handoff must preserve session and task identity")
+            if source.agent_id != target.agent_id:
+                raise WorkspaceError("handoff must preserve agent identity")
+            if source.trace_id != target.trace_id:
+                raise WorkspaceError("handoff must preserve trace continuity")
         return self.bind(
             target,
             session_id=source.session_id,
