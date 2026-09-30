@@ -158,7 +158,7 @@ class AgentPlatformWorkflowExecutor:
             reason="Durable workflow approval gate",
             idempotency_key=idempotency_key,
         )
-        return approval.approval_id
+        return str(approval.approval_id)
 
     def compensate(
         self,
@@ -472,7 +472,7 @@ class DurableWorkflowRuntime:
         )
         self.store.update_workflow_instance(
             instance_id=instance_id, expected_version=instance.version,
-            state=WorkflowState.RUNNING.value, checkpoint=step_id, context=instance.context | {},
+            state=WorkflowState.RUNNING.value, checkpoint=step_id, context=_json(instance.context),
             cancel_requested=False, updated_at=_now().isoformat()
         )
         self._event(instance_id, "workflow.approval.accepted", step_id,
@@ -622,8 +622,8 @@ class DurableWorkflowRuntime:
         if "!=" in expression:
             key, expected = (part.strip() for part in expression.split("!=", 1))
             actual = context.get(key)
-            wanted: Any = expected.strip("'\"")
-            return WorkflowStepResult(WorkflowStepState.COMPLETED, actual != wanted)
+            wanted_not_equal: Any = expected.strip("'\"")
+            return WorkflowStepResult(WorkflowStepState.COMPLETED, actual != wanted_not_equal)
         return WorkflowStepResult(WorkflowStepState.COMPLETED, bool(context.get(expression)))
 
     def _complete_step(self, instance_id: str, step: WorkflowStep,
