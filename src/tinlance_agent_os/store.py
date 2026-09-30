@@ -201,7 +201,6 @@ class StateStore:
                 return row
         return None
 
-
     def register_agent(self, definition: Any, registered_at: str) -> None:
         values = (
             definition.agent_id,
@@ -249,6 +248,7 @@ class StateStore:
             )
             if existing is None:
                 import hashlib
+
                 event_id = hashlib.sha256(
                     f"agent:{definition.agent_id}:1:agent.registered".encode()
                 ).hexdigest()
