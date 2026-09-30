@@ -279,7 +279,6 @@ class StateStore:
                     ),
                 )
 
-
     def claim_idempotency(
         self,
         *,
