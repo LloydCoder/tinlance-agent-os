@@ -321,9 +321,12 @@ class AgentRuntime:
         if row is None:
             raise ValueError("agent is not registered")
         lease = row["lease_expires_at"]
-        if row["state"] == AgentLifecycleState.RUNNING.value and isinstance(lease, str):
-            if datetime.fromisoformat(lease) < _now():
-                return HealthState.UNHEALTHY
+        if (
+            row["state"] == AgentLifecycleState.RUNNING.value
+            and isinstance(lease, str)
+            and datetime.fromisoformat(lease) < _now()
+        ):
+            return HealthState.UNHEALTHY
         return HealthState(row["health_state"])
 
     def snapshot(self) -> AgentSnapshot:
