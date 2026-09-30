@@ -4,8 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+import os
 from time import monotonic
 from opentelemetry import metrics, trace
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace import Span, Status, StatusCode
 
 
@@ -81,6 +87,11 @@ class AgentOSTelemetry:
             unit="1",
             description="Recovered runtime operations.",
         )
+        self.model_cost = self.meter.create_counter(
+            "agentos.model.cost",
+            unit="{USD}",
+            description="Estimated model cost in USD.",
+        )
 
     @contextmanager
     def span(
@@ -110,6 +121,9 @@ class AgentOSTelemetry:
             if isinstance(value, (str, bool, int, float)):
                 span.set_attribute(key, value)
 
+    def record_agent_uptime(self, duration: float, *, agent_id: str) -> None:
+        self.agent_uptime.set(duration, {"gen_ai.agent.id": agent_id})
+
     def record_task(self, duration: float, *, state: str) -> None:
         self.task_latency.record(duration, {"task.state": state})
 
@@ -125,6 +139,7 @@ class AgentOSTelemetry:
         provider: str | None = None,
         input_tokens: int | None = None,
         output_tokens: int | None = None,
+        cost_usd: float | None = None,
     ) -> None:
         attrs: dict[str, object] = {"gen_ai.operation.name": operation}
         if model:
@@ -136,6 +151,8 @@ class AgentOSTelemetry:
             self.model_input_tokens.add(input_tokens, attrs)
         if output_tokens is not None:
             self.model_output_tokens.add(output_tokens, attrs)
+        if cost_usd is not None:
+            self.model_cost.add(cost_usd, attrs)
 
     def record_tool(self, *, name: str, tool_type: str | None = None) -> None:
         attrs = {"gen_ai.tool.name": name}
@@ -161,3 +178,36 @@ _default = AgentOSTelemetry()
 
 def telemetry() -> AgentOSTelemetry:
     return _default
+
+def configure_telemetry(
+    *,
+    service_name: str = "tinlance-agent-os",
+    service_version: str = "0.1.0",
+    endpoint: str | None = None,
+) -> AgentOSTelemetry:
+    """Configure process-wide OTLP tracing and metrics."""
+    otlp_endpoint = endpoint or os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+    resource = Resource.create(
+        {
+            "service.name": service_name,
+            "service.version": service_version,
+            "service.namespace": "tinlance",
+        }
+    )
+    tracer_provider = TracerProvider(resource=resource)
+    if otlp_endpoint:
+        from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+
+        tracer_provider.add_span_processor(
+            BatchSpanProcessor(OTLPSpanExporter(endpoint=otlp_endpoint))
+        )
+        metric_reader = PeriodicExportingMetricReader(
+            OTLPMetricExporter(endpoint=otlp_endpoint)
+        )
+    else:
+        metric_reader = PeriodicExportingMetricReader(export_interval_millis=60_000)
+    meter_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
+    trace.set_tracer_provider(tracer_provider)
+    metrics.set_meter_provider(meter_provider)
+    return AgentOSTelemetry(service_name)
