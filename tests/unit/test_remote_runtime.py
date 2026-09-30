@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import sys
 from pathlib import Path
 
@@ -193,7 +192,9 @@ def test_filesystem_binding_is_root_confined(tmp_path: Path):
 
 
 def test_local_process_supervisor_applies_bounds_and_reaps(tmp_path: Path):
-    supervisor = LocalProcessSupervisor(ResourceLimits(cpu_seconds=5, memory_bytes=256 * 1024 * 1024))
+    supervisor = LocalProcessSupervisor(
+        ResourceLimits(cpu_seconds=5, memory_bytes=256 * 1024 * 1024)
+    )
     pid = supervisor.start(
         "p1",
         [sys.executable, "-c", "print('ok')"],
@@ -207,7 +208,6 @@ def test_local_process_supervisor_applies_bounds_and_reaps(tmp_path: Path):
 
 
 def test_mcp_transport_uses_mcp_method_surface(tmp_path: Path):
-    store = StateStore(tmp_path / "state.db")
     client = MCPClient()
     transport = MCPRemoteTransport(client)
     transport.assign(
