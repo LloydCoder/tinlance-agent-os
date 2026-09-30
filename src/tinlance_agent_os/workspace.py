@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 from .store import StateStore
 
@@ -89,7 +89,7 @@ class ChannelAdapter(Protocol):
 
 @dataclass(slots=True)
 class DurableChannelAdapter:
-    kind: ChannelKind
+    kind: ClassVar[ChannelKind]
     runtime: ChannelRuntime
     context: ChannelContext
 
