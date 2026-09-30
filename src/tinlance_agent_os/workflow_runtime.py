@@ -106,6 +106,83 @@ class WorkflowTrigger:
     trigger_id: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class AgentPlatformWorkflowExecutor:
+    """Maps workflow consequences to Platform runs; never grants authority locally."""
+
+    platform: Any
+    agent_id: str
+
+    def execute(
+        self,
+        *,
+        workspace_id: str,
+        workflow_instance_id: str,
+        step: WorkflowStep,
+        context: dict[str, Any],
+        idempotency_key: str,
+        timeout_seconds: float | None,
+    ) -> WorkflowStepResult:
+        run = self.platform.create_run(
+            task_id=workflow_instance_id,
+            agent_id=self.agent_id,
+            intent=step.intent,
+            idempotency_key=idempotency_key,
+        )
+        return WorkflowStepResult(
+            WorkflowStepState.COMPLETED,
+            output={"workflow_instance_id": workflow_instance_id},
+            platform_run_id=run.run_id,
+        )
+
+    def cancel(self, *, platform_run_id: str) -> None:
+        self.platform.cancel_run(run_id=platform_run_id)
+
+    def request_approval(
+        self,
+        *,
+        workspace_id: str,
+        workflow_instance_id: str,
+        step: WorkflowStep,
+        idempotency_key: str,
+    ) -> str:
+        anchor = self.platform.create_run(
+            task_id=workflow_instance_id,
+            agent_id=self.agent_id,
+            intent=step.approval_action or step.intent,
+            idempotency_key=idempotency_key,
+        )
+        approval = self.platform.request_approval(
+            run_id=anchor.run_id,
+            action=step.approval_action or step.intent,
+            resource=workflow_instance_id,
+            reason="Durable workflow approval gate",
+            idempotency_key=idempotency_key,
+        )
+        return approval.approval_id
+
+    def compensate(
+        self,
+        *,
+        workspace_id: str,
+        workflow_instance_id: str,
+        step: WorkflowStep,
+        context: dict[str, Any],
+        idempotency_key: str,
+    ) -> WorkflowStepResult:
+        run = self.platform.create_run(
+            task_id=workflow_instance_id,
+            agent_id=self.agent_id,
+            intent=f"compensate:{step.intent}",
+            idempotency_key=idempotency_key,
+        )
+        return WorkflowStepResult(
+            WorkflowStepState.COMPLETED,
+            output={"compensation": step.step_id},
+            platform_run_id=run.run_id,
+        )
+
+
 def _now() -> datetime:
     return datetime.now(UTC)
 
