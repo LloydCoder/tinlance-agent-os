@@ -43,6 +43,13 @@ class ReleaseArtifact:
         return len(data) == self.size and hashlib.sha256(data).hexdigest() == self.sha256.lower()
 
 
+def _version_key(version: str) -> tuple[int, ...]:
+    parts = version.split(".")
+    if not parts or any(not part.isdigit() for part in parts):
+        raise ValueError("release version must be numeric dot notation")
+    return tuple(int(part) for part in parts)
+
+
 @dataclass(slots=True)
 class UpdateManager:
     state: UpdateState = UpdateState.IDLE
@@ -51,6 +58,8 @@ class UpdateManager:
     staged_version: str | None = None
 
     def stage(self, artifact: ReleaseArtifact, data: bytes) -> None:
+        if _version_key(artifact.version) <= _version_key(self.active_version):
+            raise ValueError("downgrade or same-version update is forbidden")
         self.state = UpdateState.DOWNLOADING
         if not artifact.verify(data):
             self.state = UpdateState.FAILED
