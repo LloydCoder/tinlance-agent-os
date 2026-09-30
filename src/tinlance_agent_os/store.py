@@ -1105,9 +1105,7 @@ class StateStore:
 
     def upsert_remote_endpoint(
         self,
-        row: tuple[
-            str, str, str, str, str, str, str, str, str, str, str
-        ],
+        row: tuple[str, str, str, str, str, str, str, str, str, str, str],
     ) -> None:
         with sqlite3.connect(self.path) as db:
             db.execute("PRAGMA foreign_keys=ON")
