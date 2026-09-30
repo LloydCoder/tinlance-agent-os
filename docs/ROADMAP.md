@@ -23,6 +23,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M14 | Model Gateway + Model Router | COMPLETE |
 | M15 | Context + Trusted Memory | COMPLETE |
 | M16 | Real Workflow Runtime | COMPLETE |
+| M17 | Multi-Agent Runtime | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -320,3 +321,19 @@ A consequential step has one stable idempotency key for its entire lifetime. A p
 The M16 suite verifies sequential and parallel branches, conditions, retry behavior, approval/input pauses, cancellation, compensation, scheduling/event triggers, crash recovery, idempotency continuity and Platform-run mapping across Python 3.12–3.14.
 
 SQLite remains a local durable store. WAL improves reader/writer concurrency but still permits only one writer at a time, so the runtime uses short explicit transactions and optimistic workflow-instance versions rather than treating SQLite as a distributed workflow coordinator.
+
+
+## M17 — Multi-Agent Runtime
+
+M17 adds coordination primitives for supervisor/child-agent execution without creating a second authority plane.
+
+- authenticated agent principals with tenant/workspace binding;
+- durable parent/child task ownership;
+- delegation with explicit capability-subset verification;
+- signed, digest-bound agent messages;
+- monotonic per-task message sequencing;
+- trace continuity across delegation hops;
+- result aggregation limited to supervisor-owned children;
+- cancellation propagation through a task tree.
+
+Identity authentication and capability verification are adapter contracts; authoritative identity, capability grants and consequential execution remain Platform-owned.

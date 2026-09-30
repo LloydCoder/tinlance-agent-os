@@ -87,6 +87,13 @@ __all__ = [
     "WorkflowInstance",
     "WorkflowRuntimeError",
     "WorkflowTrigger",
+    "AgentMessage",
+    "AgentPrincipal",
+    "AgentTask",
+    "AgentTaskState",
+    "CoordinationError",
+    "HMACMessageAuthenticator",
+    "MultiAgentRuntime",
 ]
 
 from .sdk import (
@@ -164,4 +171,14 @@ from .workflow_runtime import (
     WorkflowInstance,
     WorkflowRuntimeError,
     WorkflowTrigger,
+)
+
+from .coordination import (
+    AgentMessage,
+    AgentPrincipal,
+    AgentTask,
+    AgentTaskState,
+    CoordinationError,
+    HMACMessageAuthenticator,
+    MultiAgentRuntime,
 )

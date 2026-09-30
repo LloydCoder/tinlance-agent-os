@@ -154,6 +154,44 @@ class StateStore:
                 );
                 CREATE INDEX IF NOT EXISTS idx_sdk_idempotency_subject
                     ON sdk_idempotency(operation, subject_id);
+                CREATE TABLE IF NOT EXISTS agent_tasks (
+                    task_id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    tenant_id TEXT NOT NULL,
+                    owner_agent_id TEXT NOT NULL,
+                    parent_task_id TEXT REFERENCES agent_tasks(task_id),
+                    trace_id TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    delegated_capabilities TEXT NOT NULL,
+                    intent TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS agent_message_sequences (
+                    parent_task_id TEXT PRIMARY KEY REFERENCES agent_tasks(task_id),
+                    next_sequence INTEGER NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS agent_messages (
+                    message_id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    tenant_id TEXT NOT NULL,
+                    sender_agent_id TEXT NOT NULL,
+                    recipient_agent_id TEXT NOT NULL,
+                    parent_task_id TEXT NOT NULL REFERENCES agent_tasks(task_id),
+                    trace_id TEXT NOT NULL,
+                    sequence INTEGER NOT NULL,
+                    nonce TEXT NOT NULL,
+                    payload TEXT NOT NULL,
+                    payload_digest TEXT NOT NULL,
+                    signature TEXT NOT NULL,
+                    key_id TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    UNIQUE(parent_task_id, sequence)
+                );
+                CREATE INDEX IF NOT EXISTS idx_agent_tasks_parent
+                    ON agent_tasks(parent_task_id, state);
+                CREATE INDEX IF NOT EXISTS idx_agent_messages_recipient
+                    ON agent_messages(recipient_agent_id, created_at);
                 CREATE TABLE IF NOT EXISTS workflow_instances (
                     instance_id TEXT PRIMARY KEY,
                     workflow_id TEXT NOT NULL,
@@ -571,6 +609,107 @@ class StateStore:
                 (next_run_at, last_run_at, last_run_at, schedule_id),
             )
             db.commit()
+
+    def create_agent_task(self, task: Any, *, intent: str) -> None:
+        from datetime import UTC, datetime
+
+        now = datetime.now(UTC).isoformat()
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO agent_tasks VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (
+                    task.task_id,
+                    task.workspace_id,
+                    task.tenant_id,
+                    task.owner_agent_id,
+                    task.parent_task_id,
+                    task.trace_id,
+                    task.state.value,
+                    json.dumps(sorted(task.delegated_capabilities)),
+                    intent,
+                    now,
+                    now,
+                ),
+            )
+            db.commit()
+
+    def get_agent_task(self, task_id: str) -> sqlite3.Row | None:
+        with sqlite3.connect(self.path) as db:
+            db.row_factory = sqlite3.Row
+            row = db.execute("SELECT * FROM agent_tasks WHERE task_id=?", (task_id,)).fetchone()
+            return cast(sqlite3.Row | None, row)
+
+    def next_agent_message_sequence(self, task_id: str) -> int:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute("BEGIN IMMEDIATE")
+            db.execute(
+                "INSERT OR IGNORE INTO agent_message_sequences VALUES (?,1)",
+                (task_id,),
+            )
+            row = db.execute(
+                "SELECT next_sequence FROM agent_message_sequences WHERE parent_task_id=?",
+                (task_id,),
+            ).fetchone()
+            sequence = int(row[0])
+            db.execute(
+                "UPDATE agent_message_sequences SET next_sequence=? WHERE parent_task_id=?",
+                (sequence + 1, task_id),
+            )
+            db.commit()
+            return sequence
+
+    def append_agent_message(self, message: Any) -> None:
+        from datetime import UTC, datetime
+
+        now = datetime.now(UTC).isoformat()
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO agent_messages VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (
+                    message.message_id,
+                    message.workspace_id,
+                    message.tenant_id,
+                    message.sender_agent_id,
+                    message.recipient_agent_id,
+                    message.parent_task_id,
+                    message.trace_id,
+                    message.sequence,
+                    message.nonce,
+                    json.dumps(message.payload, sort_keys=True),
+                    message.payload_digest,
+                    message.signature,
+                    message.key_id,
+                    now,
+                ),
+            )
+            db.commit()
+
+    def cancel_agent_task_tree(self, root_task_id: str, tenant_id: str) -> tuple[str, ...]:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute("BEGIN IMMEDIATE")
+            rows = db.execute(
+                "WITH RECURSIVE tree(task_id) AS ("
+                "SELECT task_id FROM agent_tasks WHERE task_id=? AND tenant_id=? "
+                "UNION ALL SELECT t.task_id FROM agent_tasks t JOIN tree p "
+                "ON t.parent_task_id=p.task_id WHERE t.tenant_id=?"
+                ") SELECT task_id FROM tree",
+                (root_task_id, tenant_id, tenant_id),
+            ).fetchall()
+            ids = tuple(row[0] for row in rows)
+            if ids:
+                placeholders = ",".join("?" for _ in ids)
+                db.execute(
+                    "UPDATE agent_tasks SET state='cancelled',updated_at=datetime('now') "
+                    f"WHERE task_id IN ({placeholders}) "
+                    "AND state NOT IN ('completed','failed','cancelled')",
+                    ids,
+                )
+            db.commit()
+            return ids
 
     def get_task(self, task_id: str) -> sqlite3.Row | None:
         rows = self.query(
