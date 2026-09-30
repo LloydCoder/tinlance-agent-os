@@ -183,7 +183,6 @@ def telemetry() -> AgentOSTelemetry:
     return _default
 
 
-
 def configure_telemetry(
     *,
     service_name: str = "tinlance-agent-os",
@@ -207,9 +206,7 @@ def configure_telemetry(
         tracer_provider.add_span_processor(
             BatchSpanProcessor(OTLPSpanExporter(endpoint=otlp_endpoint))
         )
-        metric_reader = PeriodicExportingMetricReader(
-            OTLPMetricExporter(endpoint=otlp_endpoint)
-        )
+        metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter(endpoint=otlp_endpoint))
     else:
         metric_reader = PeriodicExportingMetricReader(export_interval_millis=60_000)
     meter_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
