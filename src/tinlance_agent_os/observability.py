@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
+from importlib import import_module
 from contextlib import contextmanager
 import os
 from time import monotonic
