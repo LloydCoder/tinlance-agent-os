@@ -499,16 +499,18 @@ class ModelGateway:
                         "gen_ai.provider.name": model.provider_id,
                     },
                 ):
-                if not provider.health():
-                    raise ProviderUnavailable(f"provider is unhealthy: {provider.provider_id}")
-                if request.task in (ModelTask.CHAT, ModelTask.DECISION):
-                    response = provider.complete(request, model)
-                elif request.task == ModelTask.EMBEDDING:
-                    response = provider.embed(request, model)
-                elif request.task == ModelTask.RERANK:
-                    response = provider.rerank(request, model)
-                else:
-                    raise UnsupportedModelTask(request.task.value)
+                    if not provider.health():
+                        raise ProviderUnavailable(
+                            f"provider is unhealthy: {provider.provider_id}"
+                        )
+                    if request.task in (ModelTask.CHAT, ModelTask.DECISION):
+                        response = provider.complete(request, model)
+                    elif request.task == ModelTask.EMBEDDING:
+                        response = provider.embed(request, model)
+                    elif request.task == ModelTask.RERANK:
+                        response = provider.rerank(request, model)
+                    else:
+                        raise UnsupportedModelTask(request.task.value)
                 response.validate()
                 if response.model_id != model.model_id or response.provider_id != model.provider_id:
                     raise ModelContractError(
