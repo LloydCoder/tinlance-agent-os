@@ -323,19 +323,43 @@ def test_secret_like_content_is_not_recorded_in_default_model_span():
 
 
 def test_crash_recovery_reuses_workflow_idempotency_key(tmp_path):
-    from tests.test_m16_workflow_runtime import FakeExecutor, setup
+    from tinlance_agent_os.workflow import WorkflowStepResult, WorkflowStepState, WorkflowState
+    from tinlance_agent_os.workflow_runtime import DurableWorkflowRuntime
 
-    executor = FakeExecutor()
-    store, runtime = setup(tmp_path, executor)
+    class CrashExecutor:
+        def __init__(self):
+            self.calls = []
+            self.crash_key = None
+
+        def execute(self, *, workspace_id, workflow_instance_id, step, context, idempotency_key, timeout_seconds):
+            self.calls.append(idempotency_key)
+            if idempotency_key == self.crash_key:
+                self.crash_key = None
+                raise SystemExit("crash")
+            return WorkflowStepResult(WorkflowStepState.COMPLETED, platform_run_id="run")
+
+        def cancel(self, *, platform_run_id):
+            pass
+
+        def request_approval(self, *, workspace_id, workflow_instance_id, step, idempotency_key):
+            return "approval"
+
+        def compensate(self, *, workspace_id, workflow_instance_id, step, context, idempotency_key):
+            return WorkflowStepResult(WorkflowStepState.COMPLETED)
+
+    store = StateStore(tmp_path / "state.db")
+    store.upsert_workspace("ws", "owner", datetime.now(UTC).isoformat())
+    executor = CrashExecutor()
+    runtime = DurableWorkflowRuntime(store, executor)
     definition = WorkflowDefinition("wf", "ws", (WorkflowStep("a", "a"),))
     instance = runtime.start(definition)
     key = store.get_workflow_steps(instance.instance_id)[0]["idempotency_key"]
-    executor.crash_once.add(key)
+    executor.crash_key = key
     with pytest.raises(SystemExit):
         runtime.run(instance.instance_id, definition)
-    runtime.recover({"wf": definition})
-    assert executor.calls == [key]
-
+    recovered = runtime.recover({"wf": definition})
+    assert recovered[0].state is WorkflowState.COMPLETED
+    assert executor.calls == [key, key]
 
 def test_supply_chain_artifact_tampering_is_rejected(tmp_path):
     runtime = AgentEcosystemRuntime(Verifier())
