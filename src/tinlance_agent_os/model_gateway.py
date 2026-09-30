@@ -500,7 +500,7 @@ class ModelGateway:
                     },
                 ):
                     if not provider.health():
-                        raise ProviderUnavailable(f"provider is unhealthy: {provider.provider_id})
+                        raise ProviderUnavailable(f"provider is unhealthy: {provider.provider_id}")
                     if request.task in (ModelTask.CHAT, ModelTask.DECISION):
                         response = provider.complete(request, model)
                     elif request.task == ModelTask.EMBEDDING:
