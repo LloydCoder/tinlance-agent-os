@@ -24,6 +24,10 @@ M15 replaces the original six-column memory primitive with a durable security-aw
 - trust-separated context assembly;
 - SDK remember, recall and context-assembly helpers.
 
+## Backward compatibility
+
+The historical M0-M11 MemoryStore call shape remains available as a compatibility façade. New calls use the typed M15 contracts and security boundary.
+
 ## Security boundary
 
 Memory is not an authority channel. A memory record cannot create a Platform capability, approval, run, secret, evidence reference or policy decision.
