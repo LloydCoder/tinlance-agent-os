@@ -116,8 +116,7 @@ class ModelPricing:
         if self.input_usd_per_million is None or self.output_usd_per_million is None:
             return None
         return (
-            input_tokens * self.input_usd_per_million
-            + output_tokens * self.output_usd_per_million
+            input_tokens * self.input_usd_per_million + output_tokens * self.output_usd_per_million
         ) / 1_000_000
 
 
@@ -319,9 +318,7 @@ class ModelRegistry:
     def register_model(self, descriptor: ModelDescriptor) -> None:
         descriptor.validate()
         if descriptor.provider_id not in self._providers:
-            raise ModelContractError(
-                f"provider is not registered: {descriptor.provider_id}"
-            )
+            raise ModelContractError(f"provider is not registered: {descriptor.provider_id}")
         if descriptor.model_id in self._models:
             raise ModelContractError(f"model already registered: {descriptor.model_id}")
         self._models[descriptor.model_id] = descriptor
@@ -426,8 +423,7 @@ class ModelRouter:
             if model.capabilities.context_window < context_window:
                 continue
             if max_latency is not None and (
-                model.estimated_latency_ms is None
-                or model.estimated_latency_ms > max_latency
+                model.estimated_latency_ms is None or model.estimated_latency_ms > max_latency
             ):
                 continue
             estimate = model.pricing.estimate(
@@ -452,13 +448,12 @@ class ModelRouter:
                 0 if item.provider_id in preferred_providers else 1,
                 preferred_providers.get(item.provider_id, len(preferred_providers)),
                 item.pricing.estimate(
-                    request.estimated_input_tokens,
-                    request.max_output_tokens,
+                    request.estimated_input_tokens, request.max_output_tokens
                 )
                 if item.pricing.estimate(
-                    request.estimated_input_tokens,
-                    request.max_output_tokens,
-                ) is not None
+                    request.estimated_input_tokens, request.max_output_tokens
+                )
+                is not None
                 else float("inf"),
                 item.estimated_latency_ms
                 if item.estimated_latency_ms is not None
@@ -495,9 +490,7 @@ class ModelGateway:
             started = time.perf_counter()
             try:
                 if not provider.health():
-                    raise ProviderUnavailable(
-                        f"provider is unhealthy: {provider.provider_id}"
-                    )
+                    raise ProviderUnavailable(f"provider is unhealthy: {provider.provider_id}")
                 if request.task in (ModelTask.CHAT, ModelTask.DECISION):
                     response = provider.complete(request, model)
                 elif request.task == ModelTask.EMBEDDING:
@@ -507,10 +500,7 @@ class ModelGateway:
                 else:
                     raise UnsupportedModelTask(request.task.value)
                 response.validate()
-                if (
-                    response.model_id != model.model_id
-                    or response.provider_id != model.provider_id
-                ):
+                if response.model_id != model.model_id or response.provider_id != model.provider_id:
                     raise ModelContractError(
                         "provider returned a mismatched model/provider identity"
                     )
