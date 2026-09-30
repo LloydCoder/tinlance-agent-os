@@ -458,9 +458,7 @@ app = sdk.scaffold(
     name="Research Agent",
     version="1.0.0",
     entrypoint="research.main",
-    capabilities=(
-        CapabilityDeclaration("research.read", "Read approved research sources"),
-    ),
+    capabilities=(CapabilityDeclaration("research.read", "Read approved research sources"),),
 )
 
 runtime = app.runtime(store, handler)
