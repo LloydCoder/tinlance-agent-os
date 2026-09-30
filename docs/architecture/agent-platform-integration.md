@@ -30,9 +30,9 @@ The adapter propagates tenant and subject context but never treats those fields 
 - principal.get
 - agents.list
 - capabilities.list
-- runs.create
+- runs.create (supports idempotency_key)
 - runs.cancel
-- approvals.request
+- approvals.request (supports idempotency_key)
 - runs.events
 - runs.evidence
 - health
@@ -41,7 +41,7 @@ Agent OS converts responses into typed OS references only after strict schema an
 
 ## Reliability
 
-Only explicitly idempotent operations are automatically retried. Consequential run creation, cancellation and approval requests use deterministic request IDs so retries across transport attempts or OS restarts address the same logical request. Durable exactly-once side effects remain a Platform deployment responsibility.
+Only explicitly idempotent operations are automatically retried. The high-level SDK supplies a durable idempotency key for consequential run creation and approval requests. Consequential run creation, cancellation and approval requests use deterministic request IDs so retries across transport attempts or OS restarts address the same logical request. Durable exactly-once side effects remain a Platform deployment responsibility.
 
 The deployed Platform remains responsible for durable server-side idempotency and recovery; Agent OS does not claim exactly-once side effects from a request ID alone.
 
