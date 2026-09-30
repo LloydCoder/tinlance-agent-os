@@ -415,3 +415,8 @@ M21 uses OpenTelemetry Python tracing and metrics with OTLP export configuration
 ## M22 — Reference Agents
 
 M22 defines four canonical Tinlance reference agents: Research, Cybersecurity, FDE/Engineering and World Intelligence. Each uses the same governed Agent SDK execution path, Context/Memory, Model Gateway, Skill surface, Platform-backed execution, approvals, evidence/results, trace context and structured SDK error boundary. Reference agents do not implement a second authorization or execution plane.
+
+
+## M24 — Production Agent OS
+
+Production distribution is enforced through signed release artifacts, SBOM generation, SLSA/in-toto provenance attestations, staged release channels, health-gated rollout, automatic rollback, downgrade prevention, migration/backup boundaries, disaster-recovery procedures, security response, and release evidence. The production release workflow uses GitHub artifact attestations and Sigstore/Cosign rather than inventing a private signing protocol.
