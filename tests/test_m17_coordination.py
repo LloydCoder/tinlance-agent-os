@@ -186,6 +186,10 @@ def test_message_sequence_is_monotonic(tmp_path):
     sender = principal("sender")
     recipient = principal("recipient")
     root = runtime.create_supervisor_task(sender, task_id="root", intent="send")
-    first = runtime.send(sender, recipient_agent=recipient, parent_task_id="root", trace_id=root.trace_id, payload={"n": 1})
-    second = runtime.send(sender, recipient_agent=recipient, parent_task_id="root", trace_id=root.trace_id, payload={"n": 2})
+    first = runtime.send(
+        sender, recipient_agent=recipient, parent_task_id="root", trace_id=root.trace_id, payload={"n": 1}
+    )
+    second = runtime.send(
+        sender, recipient_agent=recipient, parent_task_id="root", trace_id=root.trace_id, payload={"n": 2}
+    )
     assert (first.sequence, second.sequence) == (1, 2)
