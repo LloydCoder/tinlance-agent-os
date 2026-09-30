@@ -15,7 +15,7 @@ import re
 import time
 from typing import Protocol
 
-from .observability import telemetry
+from .observability import extract_trace_context, telemetry
 
 
 _TRACEPARENT = re.compile(r"^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$")
@@ -498,6 +498,7 @@ class ModelGateway:
                         "gen_ai.request.model": model.model_id,
                         "gen_ai.provider.name": model.provider_id,
                     },
+                    context=extract_trace_context(request.traceparent),
                 ):
                     if not provider.health():
                         raise ProviderUnavailable(f"provider is unhealthy: {provider.provider_id}")
@@ -524,6 +525,10 @@ class ModelGateway:
                     provider=model.provider_id,
                     input_tokens=response.usage.input_tokens,
                     output_tokens=response.usage.output_tokens,
+                    cost_usd=model.pricing.estimate(
+                        response.usage.input_tokens,
+                        response.usage.output_tokens,
+                    ),
                 )
                 normalized = ModelResponse(
                     task=response.task,
