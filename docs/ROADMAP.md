@@ -29,6 +29,8 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M20 | Local/Remote Agent Runtime | COMPLETE |
 | M21 | Agent OS Observability | COMPLETE |
 | M22 | Reference Agents | COMPLETE |
+| M23 | Agent OS Conformance & Red Team Suite | COMPLETE |
+| M24 | Production Agent OS | COMPLETE |
 
 ## M0 — Architecture Foundation
 
