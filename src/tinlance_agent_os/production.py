@@ -71,7 +71,10 @@ class ReleaseManifest:
             raise ProductionReleaseError("unsupported SBOM format")
         if not self.signature.signer_identity.strip() or not self.signature.issuer.strip():
             raise ProductionReleaseError("release signature identity is required")
-        if not self.provenance.source_repository.strip() or not self.provenance.source_revision.strip():
+        if (
+            not self.provenance.source_repository.strip()
+            or not self.provenance.source_revision.strip()
+        ):
             raise ProductionReleaseError("release provenance is incomplete")
         if not self.provenance.predicate_type.startswith("https://"):
             raise ProductionReleaseError("release provenance predicate must be a URI")
@@ -132,8 +135,6 @@ class ProductionReleaseController:
     def deploy(self, manifest: ReleaseManifest, data: bytes) -> None:
         manifest.validate()
         self.policy.validate()
-        if manifest.channel is ReleaseChannel.STABLE and self.active_channel is ReleaseChannel.STABLE:
-            pass
         if not self.verifier.verify_signature(manifest, data):
             self.state = ReleaseState.FAILED
             raise ProductionReleaseError("release signature verification failed")
