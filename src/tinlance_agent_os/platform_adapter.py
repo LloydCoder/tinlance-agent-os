@@ -88,10 +88,24 @@ class AgentPlatformAdapter(AgentPlatformClient):
             for item in _sequence(payload, "agents")
         )
 
-    def create_run(self, *, task_id: str, agent_id: str, intent: str) -> PlatformRunRef:
+    def create_run(
+        self,
+        *,
+        task_id: str,
+        agent_id: str,
+        intent: str,
+        idempotency_key: str | None = None,
+    ) -> PlatformRunRef:
+        request_payload: dict[str, object] = {
+            "task_id": task_id,
+            "agent_id": agent_id,
+            "intent": intent,
+        }
+        if idempotency_key is not None:
+            request_payload["idempotency_key"] = idempotency_key
         payload = self._call(
             "runs.create",
-            {"task_id": task_id, "agent_id": agent_id, "intent": intent},
+            request_payload,
             idempotent=True,
         )
         return PlatformRunRef(
@@ -126,6 +140,7 @@ class AgentPlatformAdapter(AgentPlatformClient):
         action: str,
         resource: str | None = None,
         reason: str | None = None,
+        idempotency_key: str | None = None,
     ) -> ApprovalRef:
         payload = self._call(
             "approvals.request",
@@ -134,6 +149,7 @@ class AgentPlatformAdapter(AgentPlatformClient):
                 "action": action,
                 "resource": resource or action,
                 "reason": reason or "Agent OS requested governed approval",
+                **({"idempotency_key": idempotency_key} if idempotency_key is not None else {}),
             },
             idempotent=True,
         )
@@ -181,6 +197,10 @@ class AgentPlatformAdapter(AgentPlatformClient):
         payload = self._call("runs.evidence", {"run_id": run_id}, idempotent=True)
         items = _sequence(payload, "evidence")
         return tuple(EvidenceRef(_string(item, "evidence_id")) for item in items)
+
+    def with_trace_context(self, traceparent: str | None) -> "AgentPlatformAdapter":
+        """Return an adapter carrying the supplied trace context."""
+        return replace(self, context=replace(self.context, trace_id=traceparent))
 
     def health(self) -> bool:
         payload = self._call("health", {}, idempotent=True)
