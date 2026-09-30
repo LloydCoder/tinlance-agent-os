@@ -193,7 +193,7 @@ def test_manifest_validates_supply_chain_evidence_and_minimum_version():
         signature=incompatible.signature,
         provenance=incompatible.provenance,
         sbom=incompatible.sbom,
-        minimum_version="3.0.0",
+        minimum_version="1.5.0",
     )
     with pytest.raises(ProductionReleaseError, match="minimum_version"):
         controller().deploy(incompatible, data)
