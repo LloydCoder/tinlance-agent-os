@@ -78,7 +78,6 @@ class WorkspaceSnapshot:
     channels: tuple[str, ...]
 
 
-
 class ChannelAdapter(Protocol):
     kind: ChannelKind
 
@@ -388,15 +387,11 @@ class ChannelRuntime:
         )
 
     def _channel(self, channel_id: str):
-        rows = self.store.query(
-            "SELECT * FROM channels WHERE channel_id=?", (channel_id,)
-        )
+        rows = self.store.query("SELECT * FROM channels WHERE channel_id=?", (channel_id,))
         return rows[0] if rows else None
 
     def _session(self, session_id: str):
-        rows = self.store.query(
-            "SELECT * FROM sessions WHERE session_id=?", (session_id,)
-        )
+        rows = self.store.query("SELECT * FROM sessions WHERE session_id=?", (session_id,))
         return rows[0] if rows else None
 
     def _task(self, task_id: str):
