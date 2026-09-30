@@ -13,6 +13,7 @@ import re
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field, replace
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any, Callable, Iterator, Mapping, cast
 
@@ -46,6 +47,7 @@ class SDKPlatformError(SDKError):
         super().__init__(f"{operation} failed: {cause}")
         self.operation = operation
         self.cause = cause
+        self.retryable = isinstance(cause, (TimeoutError, ConnectionError))
 
 
 class IdempotencyError(SDKError, ValueError):
@@ -323,25 +325,44 @@ class AgentSDK:
         if not key.value:
             raise IdempotencyError("idempotency key is required")
         try:
-            from .daemon_service import LocalOSService
-
-            service = LocalOSService(self.store, self.platform)
             stored = self.store.get_task(task.task.task_id)
             if stored is None:
                 raise ContractValidationError("task is not durably registered")
             existing_ids = tuple(json.loads(stored["platform_run_ids"]))
+            platform = self._platform_for_context(task.context)
             if existing_ids:
                 run_id = existing_ids[0]
-                events = tuple(self.platform.get_events(run_id=run_id))
-                evidence = tuple(self.platform.get_evidence(run_id=run_id))
+                events = tuple(platform.get_events(run_id=run_id))
+                evidence = tuple(platform.get_evidence(run_id=run_id))
                 return ExecutionResult(
                     PlatformRunRef(run_id, task.task.task_id, stored["state"]),
                     events,
                     evidence,
                 )
-            run = service.dispatch(task.task)
-            events = tuple(self.platform.get_events(run_id=run.run_id))
-            evidence = tuple(self.platform.get_evidence(run_id=run.run_id))
+            completed, result_id = self.store.claim_idempotency(
+                idempotency_key=key.value,
+                operation="task.execute",
+                subject_id=task.task.task_id,
+                now=datetime.now(UTC).isoformat(),
+            )
+            if completed:
+                if not result_id:
+                    raise IdempotencyError("completed idempotency record has no result")
+                run = PlatformRunRef(result_id, task.task.task_id, stored["state"])
+            else:
+                run = platform.create_run(
+                    task_id=task.task.task_id,
+                    agent_id=task.task.agent_id,
+                    intent=task.task.intent,
+                    idempotency_key=key.value,
+                )
+                self.store.complete_idempotency(
+                    idempotency_key=key.value,
+                    result_id=run.run_id,
+                    now=datetime.now(UTC).isoformat(),
+                )
+            events = tuple(platform.get_events(run_id=run.run_id))
+            evidence = tuple(platform.get_evidence(run_id=run.run_id))
             return ExecutionResult(run, events, evidence)
         except SDKError:
             raise
@@ -365,15 +386,30 @@ class AgentSDK:
             subject=f"{execution.run.run_id}:{action}:{resource}",
         )
         try:
-            from .daemon_service import LocalOSService
-
-            service = LocalOSService(self.store, self.platform)
-            approval = service.request_approval(
-                execution.run.run_id,
-                action,
-                resource,
-                f"{reason} [idempotency:{key.value}]",
+            platform = self._platform_for_context(self._context())
+            completed, result_id = self.store.claim_idempotency(
+                idempotency_key=key.value,
+                operation="approval.request",
+                subject_id=execution.run.run_id,
+                now=datetime.now(UTC).isoformat(),
             )
+            if completed:
+                if not result_id:
+                    raise IdempotencyError("completed approval record has no result")
+                approval = ApprovalRef(result_id)
+            else:
+                approval = platform.request_approval(
+                    run_id=execution.run.run_id,
+                    action=action,
+                    resource=resource,
+                    reason=reason,
+                    idempotency_key=key.value,
+                )
+                self.store.complete_idempotency(
+                    idempotency_key=key.value,
+                    result_id=approval.approval_id,
+                    now=datetime.now(UTC).isoformat(),
+                )
             return ApprovalWorkflow(
                 approval,
                 ApprovalState.REQUESTED,
@@ -390,10 +426,11 @@ class AgentSDK:
         run: PlatformRunRef,
     ) -> ExecutionResult:
         try:
+            platform = self._platform_for_context(self._context())
             return ExecutionResult(
                 run,
-                tuple(self.platform.get_events(run_id=run.run_id)),
-                tuple(self.platform.get_evidence(run_id=run.run_id)),
+                tuple(platform.get_events(run_id=run.run_id)),
+                tuple(platform.get_evidence(run_id=run.run_id)),
             )
         except Exception as exc:
             raise self._wrap("execution.result", exc)
@@ -463,6 +500,15 @@ class AgentSDK:
 
     def _context(self) -> ExecutionContext:
         return _current_context.get() or ExecutionContext()
+
+    def _platform_for_context(self, context: ExecutionContext) -> AgentPlatformClient:
+        platform = self.platform
+        trace = context.trace
+        if trace is not None:
+            with_trace = getattr(platform, "with_trace_context", None)
+            if callable(with_trace):
+                return cast(AgentPlatformClient, with_trace(trace.traceparent))
+        return platform
 
     def _agent_for_run(self, run_id: str) -> str:
         row = self.store.find_task_by_platform_run(run_id)
