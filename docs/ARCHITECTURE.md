@@ -451,3 +451,77 @@ Channel bindings are workspace-scoped. A handoff can bind an unbound target chan
 Channel envelopes retain workspace, session, task, agent and trace identifiers and are persisted as presentation events. This allows Web -> CLI -> Desktop -> API or messaging/notification transitions without creating a second session/task lifecycle.
 
 The desktop channel is intentionally a protocol adapter, not a claim that a GUI toolkit is bundled. Concrete Web/API/messaging/desktop transports remain integration surfaces above this stable contract.
+
+## M20 Local + Remote Agent Runtime
+
+M20 adds a supervised compute/runtime plane beneath the OS lifecycle but above the Platform authority boundary.
+
+    Agent OS
+       |
+       +-- Local Process Supervisor
+       |      +-- resource limits
+       |      +-- filesystem binding
+       |      +-- process lifecycle
+       |
+       +-- Remote Endpoint
+              +-- enrollment/identity
+              +-- heartbeat/fleet state
+              +-- network policy
+              +-- MCP transport
+                       |
+                       v
+                Agent Platform adapter
+                       |
+                       v
+                Platform authority
+
+### Local supervision
+
+LocalProcessSupervisor is responsible for bounded process lifecycle. ResourceLimits are host-enforced where the operating system exposes the relevant controls. The OS never turns a resource limit into a Platform authorization decision.
+
+FilesystemBinding produces the existing root-confined LocalSystemBackend. It therefore reuses the established filesystem security boundary instead of creating a second path policy.
+
+NetworkPolicy admits only explicitly approved secure endpoint schemes/hosts and rejects private/loopback/link-local IP literals by default. It is a connection policy, not a substitute for Platform authorization.
+
+### Remote enrollment and identity
+
+Every endpoint has:
+
+- stable endpoint ID;
+- workspace and tenant binding;
+- endpoint fingerprint;
+- authenticated enrollment;
+- address/protocol metadata;
+- heartbeat timestamp;
+- lifecycle state.
+
+Heartbeat and reconnect re-authenticate the endpoint. Stale endpoints transition to OFFLINE; draining endpoints remain known but are excluded from new assignment; disconnect is explicit.
+
+### Fleet routing
+
+Routing is deterministic within a workspace: only authenticated HEALTHY endpoints are eligible, and candidates are ordered by latest heartbeat and stable endpoint ID. Cross-workspace assignment is rejected before remote transport.
+
+### Remote execution
+
+Remote assignment first obtains a Platform Run using the stable remote idempotency key remote:<task_id>. Only after the Platform has accepted the consequential operation is the remote transport invoked. This ordering prevents a remote endpoint from creating an independent authority path.
+
+Remote cancellation invokes both the remote transport cancellation and the authoritative Platform Run cancellation. Remote transport results are untrusted operational data.
+
+### MCP integration
+
+M20 deliberately does not define a Tinlance-specific JSON-RPC replacement for MCP. MCPRemoteTransport maps remote assignment/cancellation to MCP tools/call through an injected MCP client. Current MCP specifications are moving toward a stateless core and explicit extensions/handles for long-running work; therefore durable Agent OS state remains in the OS store rather than being hidden inside an MCP transport session. citeturn1search10turn1search12
+
+The transport adapter can later negotiate the MCP Tasks extension for servers that expose long-running task handles. That extension requires authentication/authorization checks on task operations and intentionally avoids an unscoped task list. citeturn1search1turn1search6
+
+### Authority invariant
+
+A remote agent is a worker/runtime endpoint, not an authority issuer:
+
+    Remote endpoint
+       -> OS remote runtime
+       -> Platform Run
+       -> Platform authorization/policy/approval
+       -> governed execution
+       -> Platform evidence
+
+The remote endpoint cannot mint capabilities, substitute an identity, approve itself, or create authoritative evidence.

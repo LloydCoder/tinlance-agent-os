@@ -192,6 +192,35 @@ class StateStore:
                     ON agent_tasks(parent_task_id, state);
                 CREATE INDEX IF NOT EXISTS idx_agent_messages_recipient
                     ON agent_messages(recipient_agent_id, created_at);
+                CREATE TABLE IF NOT EXISTS remote_endpoints (
+                    endpoint_id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    tenant_id TEXT NOT NULL,
+                    endpoint_fingerprint TEXT NOT NULL,
+                    address TEXT NOT NULL,
+                    protocol TEXT NOT NULL,
+                    protocol_version TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    last_heartbeat TEXT NOT NULL,
+                    enrolled_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    UNIQUE(workspace_id, endpoint_fingerprint)
+                );
+                CREATE TABLE IF NOT EXISTS remote_tasks (
+                    task_id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    endpoint_id TEXT NOT NULL REFERENCES remote_endpoints(endpoint_id),
+                    platform_task_id TEXT,
+                    idempotency_key TEXT NOT NULL UNIQUE,
+                    state TEXT NOT NULL,
+                    trace_id TEXT NOT NULL,
+                    assigned_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_remote_endpoints_health
+                    ON remote_endpoints(workspace_id, state, last_heartbeat);
+                CREATE INDEX IF NOT EXISTS idx_remote_tasks_endpoint
+                    ON remote_tasks(endpoint_id, state, updated_at);
                 CREATE TABLE IF NOT EXISTS channels (
                     channel_id TEXT PRIMARY KEY,
                     workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
@@ -1070,5 +1099,34 @@ class StateStore:
             db.execute("PRAGMA foreign_keys=ON")
             db.execute(
                 "INSERT INTO channel_messages VALUES (?,?,?,?,?,?,?,?,?,?)",
+                row,
+            )
+
+    def upsert_remote_endpoint(
+        self,
+        row: tuple[str, str, str, str, str, str, str, str, str, str, str],
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO remote_endpoints VALUES (?,?,?,?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(endpoint_id) DO UPDATE SET "
+                "address=excluded.address, protocol=excluded.protocol, "
+                "protocol_version=excluded.protocol_version, state=excluded.state, "
+                "last_heartbeat=excluded.last_heartbeat, updated_at=excluded.updated_at",
+                row,
+            )
+
+    def upsert_remote_task(
+        self,
+        row: tuple[str, str, str, str | None, str, str, str, str, str],
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO remote_tasks VALUES (?,?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(task_id) DO UPDATE SET "
+                "platform_task_id=excluded.platform_task_id, state=excluded.state, "
+                "trace_id=excluded.trace_id, updated_at=excluded.updated_at",
                 row,
             )

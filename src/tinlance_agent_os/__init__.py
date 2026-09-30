@@ -113,6 +113,18 @@ __all__ = [
     "WebChannel",
     "WorkspaceError",
     "WorkspaceSnapshot",
+    "EndpointIdentity",
+    "EndpointState",
+    "FilesystemBinding",
+    "LocalProcessSupervisor",
+    "MCPRemoteTransport",
+    "NetworkPolicy",
+    "RemoteEndpoint",
+    "RemoteRuntime",
+    "RemoteRuntimeError",
+    "RemoteTask",
+    "RemoteTaskState",
+    "ResourceLimits",
 ]
 
 from .sdk import (
@@ -225,4 +237,19 @@ from .workspace import (
     WebChannel,
     WorkspaceError,
     WorkspaceSnapshot,
+)
+
+from .remote_runtime import (
+    EndpointIdentity,
+    EndpointState,
+    FilesystemBinding,
+    LocalProcessSupervisor,
+    MCPRemoteTransport,
+    NetworkPolicy,
+    RemoteEndpoint,
+    RemoteRuntime,
+    RemoteRuntimeError,
+    RemoteTask,
+    RemoteTaskState,
+    ResourceLimits,
 )

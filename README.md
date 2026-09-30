@@ -128,6 +128,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M17 | Multi-Agent Runtime | Complete |
 | M18 | Agent Ecosystem Runtime | Complete |
 | M19 | Agent Workspace & Channels | Complete |
+| M20 | Local/Remote Agent Runtime | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -566,3 +567,23 @@ Workspace
  └── Events
 
 This milestone defines the protocol/runtime boundary; it does not pretend that a specific GUI framework, messaging provider or hosted web frontend is embedded in the Python core.
+
+### M20 — Local/Remote Agent Runtime
+
+M20 adds a supervised local/remote runtime layer:
+
+- process supervision;
+- resource limits;
+- root-bound filesystem bindings;
+- network endpoint policy;
+- authenticated remote enrollment;
+- endpoint identity and heartbeats;
+- reconnect/offline/draining/disconnect lifecycle;
+- deterministic workspace fleet routing;
+- remote task assignment and cancellation;
+- Platform Run mapping with stable idempotency;
+- MCP transport interoperability.
+
+The remote runtime is a worker plane, not an authority plane. Consequential work still enters through the Agent Platform, where identity, tenancy, capabilities, authorization, policy, approvals, execution and evidence remain authoritative.
+
+MCP is used as an interoperability transport rather than replaced by a Tinlance-specific remote protocol. The current MCP direction uses a stateless core with explicit mechanisms/extensions for stateful and long-running work, so Agent OS keeps its durable lifecycle state in its own store. citeturn1search10turn1search12
