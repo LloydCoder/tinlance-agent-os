@@ -125,6 +125,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M14 | Model Gateway + Model Router | Complete |
 | M15 | Context + Trusted Memory | Complete |
 | M16 | Real Workflow Runtime | Complete |
+| M17 | Multi-Agent Runtime | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -359,6 +360,7 @@ src/tinlance_agent_os/
 ├── store.py              # Durable SQLite state
 ├── workflow.py           # Workflow definition and deterministic DAG contracts
 ├── workflow_runtime.py   # M16 durable orchestration, recovery and Platform mapping
+├── coordination.py       # M17 authenticated multi-agent coordination
 ├── memory.py             # M15 trusted memory/context subsystem
 ├── applications.py       # Application manifests/lifecycle
 ├── system.py             # Filesystem/process/notification abstraction
@@ -521,3 +523,10 @@ M16 acceptance coverage includes sequential and parallel execution, conditions, 
 ## License
 
 Apache-2.0. See LICENSE.
+
+
+## Multi-Agent Runtime
+
+M17 provides supervisor/child-agent coordination with durable task ownership, authenticated identities, signed message envelopes, tenant/workspace isolation, delegated-capability subset checks, shared trace continuity, result aggregation and cancellation propagation.
+
+The coordinator is not an authority plane. Identity and capability verification are explicit integration contracts, while the Agent Platform remains authoritative for grants, policy, approvals, execution and evidence.
