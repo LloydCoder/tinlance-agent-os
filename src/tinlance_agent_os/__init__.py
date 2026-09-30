@@ -125,6 +125,8 @@ __all__ = [
     "RemoteTask",
     "RemoteTaskState",
     "ResourceLimits",
+    "AgentOSTelemetry",
+    "telemetry",
 ]
 
 from .sdk import (
