@@ -66,9 +66,7 @@ def test_untrusted_signature_is_rejected():
 def test_dependency_resolution_is_topological():
     runtime = AgentEcosystemRuntime(Verifier())
     base, base_artifact = manifest("base", "1.0.0")
-    app, app_artifact = manifest(
-        "app", "1.0.0", (PackageDependency("base", "1.0.0"),)
-    )
+    app, app_artifact = manifest("app", "1.0.0", (PackageDependency("base", "1.0.0"),))
     runtime.install(base, base_artifact)
     runtime.install(app, app_artifact)
     assert [item.package_id for item in runtime.resolve("app")] == ["base", "app"]
@@ -77,9 +75,7 @@ def test_dependency_resolution_is_topological():
 def test_dependency_version_confusion_is_rejected():
     runtime = AgentEcosystemRuntime(Verifier())
     base, base_artifact = manifest("base", "1.1.0")
-    app, app_artifact = manifest(
-        "app", "1.0.0", (PackageDependency("base", "1.0.0"),)
-    )
+    app, app_artifact = manifest("app", "1.0.0", (PackageDependency("base", "1.0.0"),))
     runtime.install(base, base_artifact)
     runtime.install(app, app_artifact)
     with pytest.raises(PackageError, match="version"):
@@ -92,9 +88,7 @@ def test_manifest_cannot_self_grant_capability():
     runtime.install(package, artifact)
     runtime.enable(package.package_id)
     with pytest.raises(PackageError, match="exceeds"):
-        runtime.apply_platform_grant(
-            CapabilityGrant(package.package_id, "admin", "grant-1", True)
-        )
+        runtime.apply_platform_grant(CapabilityGrant(package.package_id, "admin", "grant-1", True))
 
 
 def test_platform_authorization_is_required():
@@ -103,9 +97,7 @@ def test_platform_authorization_is_required():
     runtime.install(package, artifact)
     runtime.enable(package.package_id)
     with pytest.raises(PackageError, match="Platform"):
-        runtime.apply_platform_grant(
-            CapabilityGrant(package.package_id, "read", "grant-1", False)
-        )
+        runtime.apply_platform_grant(CapabilityGrant(package.package_id, "read", "grant-1", False))
 
 
 def test_rollback_uses_verified_previous_artifact():
