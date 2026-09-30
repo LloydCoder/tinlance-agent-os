@@ -120,7 +120,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M9 | Extensions | Complete |
 | M10 | Enterprise / Remote OS foundation | Complete |
 | M11 | Production / Distribution foundation | Complete |
-| M12 | Agent Lifecycle Runtime | Complete |
+| M12 | Agent Lifecycle Runtime | Complete |\n| M13 | Agent SDK / Application SDK | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -336,7 +336,7 @@ Those boundaries are deliberate.
 ~~~text
 src/tinlance_agent_os/
 ├── domain.py             # OS domain contracts
-├── agent_runtime.py      # M12 durable agent lifecycle runtime
+├── agent_runtime.py      # M12 durable agent lifecycle runtime\n├── sdk.py                # M13 official high-level Agent Developer SDK
 ├── contracts.py          # Platform-facing protocol
 ├── platform_adapter.py   # Platform mapping
 ├── transport.py          # Versioned transport
@@ -441,9 +441,41 @@ This separation prevents the repository from claiming security properties that o
 
 ---
 
+## Agent Developer SDK
+
+M13 provides the supported developer surface for building agents without manipulating low-level Platform HTTP contracts directly.
+
+Example shape:
+
+~~~python
+from tinlance_agent_os import AgentSDK, CapabilityDeclaration
+
+app = sdk.scaffold(
+    agent_id="research-agent",
+    workspace_id="workspace-1",
+    name="Research Agent",
+    version="1.0.0",
+    entrypoint="research.main",
+    capabilities=(
+        CapabilityDeclaration("research.read", "Read approved research sources"),
+    ),
+)
+
+runtime = app.runtime(store, handler)
+runtime.register()
+runtime.validate()
+runtime.start()
+
+session = sdk.session("workspace-1", user_id, app.scaffold.definition.agent_id)
+task = sdk.task(session, "Research the requested subject")
+result = sdk.execute(task)
+~~~
+
+The SDK provides typed scaffolding, lifecycle/session/task/workflow helpers, capability declarations, Platform-backed approval requests, execution/evidence results, structured errors, durable idempotency and execution-context propagation. It is deliberately not an authorization layer; the Agent Platform remains authoritative.
+
 ## Status
 
-**M0–M12 repository implementation: complete.**
+**M0–M13 repository implementation: complete.**
 
 "Complete" means the repository-owned contracts, implementation, tests, architecture constraints and documentation are implemented and verified by CI. External infrastructure is explicitly represented as an integration seam rather than being simulated or overstated.
 
