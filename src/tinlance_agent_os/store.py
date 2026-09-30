@@ -637,9 +637,7 @@ class StateStore:
     def get_agent_task(self, task_id: str) -> sqlite3.Row | None:
         with sqlite3.connect(self.path) as db:
             db.row_factory = sqlite3.Row
-            row = db.execute(
-                "SELECT * FROM agent_tasks WHERE task_id=?", (task_id,)
-            ).fetchone()
+            row = db.execute("SELECT * FROM agent_tasks WHERE task_id=?", (task_id,)).fetchone()
             return cast(sqlite3.Row | None, row)
 
     def next_agent_message_sequence(self, task_id: str) -> int:

@@ -273,9 +273,7 @@ class MultiAgentRuntime:
         envelope["payload_digest"] = payload_digest
         raw = json.dumps(envelope, sort_keys=True, separators=(",", ":")).encode()
         signature = self.authenticator.sign(raw, key_id)
-        message = AgentMessage(
-            **envelope, signature=signature, key_id=key_id
-        )
+        message = AgentMessage(**envelope, signature=signature, key_id=key_id)
         self.store.append_agent_message(message)
         return message
 
