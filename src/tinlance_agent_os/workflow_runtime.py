@@ -380,7 +380,26 @@ class DurableWorkflowRuntime:
                 (definition.workflow_id,),
             )
             for row in rows:
-                recovered.append(self.resume(row["instance_id"], definition))
+                instance_id = row["instance_id"]
+                for step_row in self.store.get_workflow_steps(instance_id):
+                    if step_row["state"] == WorkflowStepState.RUNNING.value:
+                        self.store.upsert_workflow_step(
+                            instance_id=instance_id,
+                            step_id=step_row["step_id"],
+                            state=WorkflowStepState.PENDING.value,
+                            attempt=int(step_row["attempt"]),
+                            next_attempt_at=None,
+                            idempotency_key=step_row["idempotency_key"],
+                            platform_run_id=step_row["platform_run_id"],
+                            approval_id=step_row["approval_id"],
+                            input_data=step_row["input_data"],
+                            output_data=step_row["output_data"],
+                            error="recovered after process interruption",
+                            started_at=None,
+                            completed_at=None,
+                            updated_at=_now().isoformat(),
+                        )
+                recovered.append(self.resume(instance_id, definition))
         return tuple(recovered)
 
     def trigger_event(
