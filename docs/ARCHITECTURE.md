@@ -412,3 +412,8 @@ A supervisor can delegate only to an authenticated child in the same tenant/work
 Child tasks retain the parent task ID and trace ID. Cancellation walks the durable task tree and marks active descendants cancelled. Result aggregation accepts only children owned by the requesting supervisor and tenant.
 
 No agent message, child task or delegated capability creates Platform authority.
+
+
+## M18 Agent Ecosystem Runtime
+
+Packages are treated as untrusted supply-chain inputs until artifact hash and signature verification succeed. Dependency resolution is deterministic and version-exact. A package can be quarantined independently of its manifest. Capability requests are metadata; a separate Platform-backed grant is required before a package can receive authority.

@@ -126,6 +126,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M15 | Context + Trusted Memory | Complete |
 | M16 | Real Workflow Runtime | Complete |
 | M17 | Multi-Agent Runtime | Complete |
+| M18 | Agent Ecosystem Runtime | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -530,3 +531,8 @@ Apache-2.0. See LICENSE.
 M17 provides supervisor/child-agent coordination with durable task ownership, authenticated identities, signed message envelopes, tenant/workspace isolation, delegated-capability subset checks, shared trace continuity, result aggregation and cancellation propagation.
 
 The coordinator is not an authority plane. Identity and capability verification are explicit integration contracts, while the Agent Platform remains authoritative for grants, policy, approvals, execution and evidence.
+
+
+## Agent Ecosystem Runtime
+
+M18 provides a verified package boundary for skills, applications, extensions, connectors and agents: artifact hashes, signatures, provenance, dependency resolution, quarantine, rollback and Platform-backed capability grants.

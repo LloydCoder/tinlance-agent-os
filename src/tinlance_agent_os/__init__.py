@@ -94,6 +94,13 @@ __all__ = [
     "CoordinationError",
     "HMACMessageAuthenticator",
     "MultiAgentRuntime",
+    "AgentEcosystemRuntime",
+    "CapabilityGrant",
+    "PackageDependency",
+    "PackageError",
+    "PackageManifest",
+    "PackageState",
+    "PackageType",
 ]
 
 from .sdk import (
@@ -181,4 +188,14 @@ from .coordination import (
     CoordinationError,
     HMACMessageAuthenticator,
     MultiAgentRuntime,
+)
+
+from .ecosystem import (
+    AgentEcosystemRuntime,
+    CapabilityGrant,
+    PackageDependency,
+    PackageError,
+    PackageManifest,
+    PackageState,
+    PackageType,
 )

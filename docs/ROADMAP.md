@@ -24,6 +24,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M15 | Context + Trusted Memory | COMPLETE |
 | M16 | Real Workflow Runtime | COMPLETE |
 | M17 | Multi-Agent Runtime | COMPLETE |
+| M18 | Agent Ecosystem Runtime | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -337,3 +338,8 @@ M17 adds coordination primitives for supervisor/child-agent execution without cr
 - cancellation propagation through a task tree.
 
 Identity authentication and capability verification are adapter contracts; authoritative identity, capability grants and consequential execution remain Platform-owned.
+
+
+## M18 — Agent Ecosystem Runtime
+
+M18 unifies skills, applications, extensions, connectors and agent packages behind a verified package boundary. Installation verifies the artifact digest and signature, dependency resolution is version-exact, quarantine blocks activation, rollback uses a previously verified artifact, and capability grants require an explicit Platform authorization result. Manifest claims never mint capabilities.
