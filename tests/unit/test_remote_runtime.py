@@ -133,9 +133,7 @@ def test_assign_uses_platform_authority_and_stable_idempotency(tmp_path: Path):
         trace_id="tr_123",
     )
     assert task.state is RemoteTaskState.ASSIGNED
-    assert platform.created == [
-        ("task-1", "agent-1", "run remote work", "remote:task-1")
-    ]
+    assert platform.created == [("task-1", "agent-1", "run remote work", "remote:task-1")]
 
 
 def test_cancel_propagates_to_remote_and_platform(tmp_path: Path):
