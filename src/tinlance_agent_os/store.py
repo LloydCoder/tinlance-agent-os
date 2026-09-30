@@ -253,9 +253,7 @@ class StateStore:
     def get_agent(self, agent_id: str) -> sqlite3.Row | None:
         with sqlite3.connect(self.path) as db:
             db.row_factory = sqlite3.Row
-            return db.execute(
-                "SELECT * FROM agents WHERE agent_id=?", (agent_id,)
-            ).fetchone()
+            return db.execute("SELECT * FROM agents WHERE agent_id=?", (agent_id,)).fetchone()
 
     def transition_agent(
         self,
@@ -269,9 +267,7 @@ class StateStore:
         with sqlite3.connect(self.path) as db:
             db.execute("PRAGMA foreign_keys=ON")
             db.execute("BEGIN IMMEDIATE")
-            row = db.execute(
-                "SELECT * FROM agents WHERE agent_id=?", (agent_id,)
-            ).fetchone()
+            row = db.execute("SELECT * FROM agents WHERE agent_id=?", (agent_id,)).fetchone()
             if row is None:
                 raise ValueError("agent is not registered")
             if row[9] != expected_state:
@@ -284,21 +280,31 @@ class StateStore:
             ).fetchone()
             sequence = int(sequence_row[0]) + 1
             state_version = int(row[11]) + 1
-            event_id = __import__("hashlib").sha256(
-                f"agent:{agent_id}:{sequence}:{event_type}".encode()
-            ).hexdigest()
+            event_id = (
+                __import__("hashlib")
+                .sha256(f"agent:{agent_id}:{sequence}:{event_type}".encode())
+                .hexdigest()
+            )
             health = (
-                "healthy" if new_state == "running"
-                else "crashed" if new_state == "crashed"
-                else "stopped" if new_state == "stopped"
+                "healthy"
+                if new_state == "running"
+                else "crashed"
+                if new_state == "crashed"
+                else "stopped"
+                if new_state == "stopped"
                 else row[10]
             )
             cursor = db.execute(
                 "UPDATE agents SET state=?,health_state=?,state_version=?,updated_at=? "
                 "WHERE agent_id=? AND state=? AND state_version=?",
                 (
-                    new_state, health, state_version, occurred_at,
-                    agent_id, expected_state, int(row[11]),
+                    new_state,
+                    health,
+                    state_version,
+                    occurred_at,
+                    agent_id,
+                    expected_state,
+                    int(row[11]),
                 ),
             )
             if cursor.rowcount != 1:
@@ -306,8 +312,15 @@ class StateStore:
             db.execute(
                 "INSERT INTO agent_lifecycle_events VALUES (?,?,?,?,?,?,?,?,?,?)",
                 (
-                    event_id, agent_id, row[1], sequence, event_type,
-                    expected_state, new_state, occurred_at, event_id,
+                    event_id,
+                    agent_id,
+                    row[1],
+                    sequence,
+                    event_type,
+                    expected_state,
+                    new_state,
+                    occurred_at,
+                    event_id,
                     json.dumps(payload, sort_keys=True),
                 ),
             )
@@ -327,6 +340,7 @@ class StateStore:
 
     def increment_agent_restart(self, agent_id: str) -> None:
         from datetime import UTC, datetime
+
         with sqlite3.connect(self.path) as db:
             cursor = db.execute(
                 "UPDATE agents SET restart_count=restart_count+1,updated_at=? WHERE agent_id=?",
@@ -343,7 +357,9 @@ class StateStore:
     def agent_events(self, agent_id: str) -> list[sqlite3.Row]:
         with sqlite3.connect(self.path) as db:
             db.row_factory = sqlite3.Row
-            return list(db.execute(
-                "SELECT * FROM agent_lifecycle_events WHERE agent_id=? ORDER BY sequence",
-                (agent_id,),
-            ))
+            return list(
+                db.execute(
+                    "SELECT * FROM agent_lifecycle_events WHERE agent_id=? ORDER BY sequence",
+                    (agent_id,),
+                )
+            )
