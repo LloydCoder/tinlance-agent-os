@@ -131,6 +131,9 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M20 | Local/Remote Agent Runtime | Complete |
 | M21 | Agent OS Observability | Complete |
 | M22 | Reference Agents | Complete |
+| M23 | Agent OS Conformance & Red Team Suite | Complete |
+| M24 | Production Agent OS | Complete |
+| M25 | Enterprise Forensic Hardening | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -371,8 +374,13 @@ src/tinlance_agent_os/
 ├── system.py             # Filesystem/process/notification abstraction
 ├── shell.py              # Toolkit-neutral shell model
 ├── extensions.py         # Capability-scoped extension SDK
-├── enterprise.py         # Remote/fleet integration seam
-└── distribution.py       # Release/update integrity
+├── ecosystem.py           # Package/skill/connector ecosystem boundary
+├── enterprise.py          # Remote/fleet integration seam
+├── remote_runtime.py      # Local/remote worker runtime
+├── observability.py       # OpenTelemetry traces and metrics
+├── reference_agents.py    # Canonical governed reference agents
+├── production.py          # Production release control plane
+└── distribution.py        # Release/update integrity
 ~~~
 
 ---
@@ -521,7 +529,9 @@ M16 acceptance coverage includes sequential and parallel execution, conditions, 
 
 ## Status
 
-**M0–M16 repository implementation: complete.**
+**M0–M25 repository implementation: complete.**
+
+M23 adds an independent adversarial conformance suite. M24 adds the production release controller and signed distribution workflow. M25 closes the forensic-hardening gaps found after M24: release minimum-version enforcement and safe staging failure handling, trusted-memory provenance promotion controls, supervised-process environment hardening, Unix fleet endpoint validation, and immutable GitHub Action pin enforcement.
 
 "Complete" means the repository-owned contracts, implementation, tests, architecture constraints and documentation are implemented and verified by CI. External infrastructure is explicitly represented as an integration seam rather than being simulated or overstated.
 
