@@ -80,6 +80,7 @@ def descriptor(
     input_price: float | None = 1.0,
     output_price: float | None = 2.0,
     latency: int | None = 100,
+    features: frozenset[str] = frozenset(),
 ) -> ModelDescriptor:
     return ModelDescriptor(
         model_id=model_id,
@@ -87,6 +88,7 @@ def descriptor(
         capabilities=ModelCapabilities(
             tasks=tasks or frozenset({ModelTask.CHAT, ModelTask.DECISION}),
             context_window=context_window,
+            features=features,
             structured_output=True,
         ),
         privacy=privacy,
@@ -217,3 +219,52 @@ def test_model_gateway_propagates_immutable_sdk_trace_context(tmp_path) -> None:
     with sdk.context(context):
         result = sdk.model(ModelRequest(ModelTask.CHAT, "trace me"))
     assert result.traceparent == context.trace.traceparent
+
+
+def test_request_constraints_cannot_loosen_application_policy() -> None:
+    registry = ModelRegistry()
+    registry.register_provider(FakeProvider("p"))
+    registry.register_model(
+        descriptor(
+            "m",
+            "p",
+            context_window=8192,
+            latency=100,
+            input_price=1.0,
+            output_price=1.0,
+            features=frozenset({"reasoning", "structured-output"}),
+        )
+    )
+    request = ModelRequest(
+        ModelTask.DECISION,
+        "x" * 100,
+        estimated_input_tokens=8000,
+        max_output_tokens=1024,
+        max_cost_usd=100.0,
+        required_capabilities=frozenset({"reasoning"}),
+    )
+    policy = RoutingPolicy(
+        max_cost_usd=0.001,
+        max_latency_ms=50,
+        required_context_window=4096,
+        required_privacy=PrivacyLevel.PRIVATE,
+    )
+    assert ModelRouter(registry).route(request, policy) == ()
+
+
+def test_capability_matching_is_explicit() -> None:
+    registry = ModelRegistry()
+    registry.register_provider(FakeProvider("p"))
+    registry.register_model(descriptor("m", "p", features=frozenset({"reasoning"})))
+    gateway = ModelGateway(registry)
+    request = ModelRequest(
+        ModelTask.CHAT,
+        "hello",
+        required_capabilities=frozenset({"vision"}),
+    )
+    try:
+        gateway.invoke(request)
+    except Exception as exc:
+        assert "no registered model" in str(exc)
+    else:
+        raise AssertionError("gateway selected a model without required capabilities")
