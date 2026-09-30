@@ -207,7 +207,7 @@ def test_local_process_supervisor_applies_bounds_and_reaps(tmp_path: Path):
 
 def test_supervised_process_rejects_environment_escape(tmp_path: Path):
     supervisor = LocalProcessSupervisor(ResourceLimits())
-    with pytest.raises(PermissionError, match="allowlisted"):
+    with pytest.raises(PermissionError, match="unsafe"):
         supervisor.start(
             "p1",
             [sys.executable, "-c", "print('ok')"],
