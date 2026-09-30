@@ -124,6 +124,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M13 | Agent SDK / Application SDK | Complete |
 | M14 | Model Gateway + Model Router | Complete |
 | M15 | Context + Trusted Memory | Complete |
+| M16 | Real Workflow Runtime | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -356,7 +357,8 @@ src/tinlance_agent_os/
 ├── daemon.py             # Local Unix-socket daemon
 ├── daemon_service.py     # OS lifecycle service
 ├── store.py              # Durable SQLite state
-├── workflow.py           # Workflow definition/execution
+├── workflow.py           # Workflow definition and deterministic DAG contracts
+├── workflow_runtime.py   # M16 durable orchestration, recovery and Platform mapping
 ├── memory.py             # M15 trusted memory/context subsystem
 ├── applications.py       # Application manifests/lifecycle
 ├── system.py             # Filesystem/process/notification abstraction
@@ -442,6 +444,7 @@ This separation prevents the repository from claiming security properties that o
 - Architecture: docs/ARCHITECTURE.md
 - Agent Platform integration contract: docs/architecture/agent-platform-integration.md
 - Roadmap: docs/ROADMAP.md
+- M16 status: docs/M16-STATUS.md
 - M1 status: docs/M1-STATUS.md
 - M2-M11 status: docs/M2-M11-STATUS.md
 - M2-M11 architecture: docs/ARCHITECTURE-M2-M11.md
@@ -501,9 +504,17 @@ The gateway supports provider abstraction, model registration, capability matchi
 
 A reference agent calls `sdk.model(ModelRequest(...))`; switching the registered provider/model changes routing configuration rather than agent logic. Model output remains untrusted data and cannot grant Platform authority.
 
+## Real Workflow Runtime
+
+M16 turns the workflow DAG into a durable runtime. It persists workflow instances, step attempts, checkpoints, approvals, human-input pauses, retries, schedules and events. Independently ready branches can execute in parallel while retaining deterministic dependency semantics.
+
+A consequential step receives one stable idempotency key for its lifetime. If the process crashes after the Platform side effect but before the OS checkpoint commits, recovery resumes the same logical step with the same key. The Agent Platform remains authoritative for execution and exactly-once/idempotency semantics; Agent OS never creates a second authority plane.
+
+M16 acceptance coverage includes sequential and parallel execution, conditions, retries/backoff, deadlines, cancellation, approval and human-input pauses, compensation, crash recovery, event/schedule triggers and Platform Run mapping.
+
 ## Status
 
-**M0–M15 repository implementation: complete.**
+**M0–M16 repository implementation: complete.**
 
 "Complete" means the repository-owned contracts, implementation, tests, architecture constraints and documentation are implemented and verified by CI. External infrastructure is explicitly represented as an integration seam rather than being simulated or overstated.
 
