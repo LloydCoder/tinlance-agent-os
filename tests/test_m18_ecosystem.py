@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from dataclasses import replace
 
 import pytest
 
@@ -57,10 +58,9 @@ def test_tampered_artifact_is_rejected():
 def test_untrusted_signature_is_rejected():
     runtime = AgentEcosystemRuntime(Verifier())
     package, artifact = manifest()
-    bad = package.__class__(**{**package.__dict__, "signature": "bad"}) if hasattr(package, "__dict__") else None
-    if bad:
-        with pytest.raises(PackageError):
-            runtime.install(bad, artifact)
+    bad = replace(package, signature="bad")
+    with pytest.raises(PackageError):
+        runtime.install(bad, artifact)
 
 
 def test_dependency_resolution_is_topological():
