@@ -118,6 +118,17 @@ class StateStore:
                     ON agents(state, lease_expires_at);
                 CREATE INDEX IF NOT EXISTS idx_agent_events_agent_sequence
                     ON agent_lifecycle_events(agent_id, sequence);
+                CREATE TABLE IF NOT EXISTS sdk_idempotency (
+                    idempotency_key TEXT PRIMARY KEY,
+                    operation TEXT NOT NULL,
+                    subject_id TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    result_id TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_sdk_idempotency_subject
+                    ON sdk_idempotency(operation, subject_id);
                 """
             )
 
@@ -267,6 +278,51 @@ class StateStore:
                         "{}",
                     ),
                 )
+
+    def claim_idempotency(
+        self,
+        *,
+        idempotency_key: str,
+        operation: str,
+        subject_id: str,
+        now: str,
+    ) -> tuple[bool, str | None]:
+        """Atomically claim an SDK operation or return its completed result."""
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute(
+                "SELECT operation,subject_id,state,result_id FROM sdk_idempotency "
+                "WHERE idempotency_key=?",
+                (idempotency_key,),
+            ).fetchone()
+            if row is not None:
+                if row[0] != operation or row[1] != subject_id:
+                    raise ValueError("idempotency key is already bound to another operation")
+                return row[2] != "claimed", row[3]
+            db.execute(
+                "INSERT INTO sdk_idempotency VALUES (?,?,?,?,?,?,?)",
+                (idempotency_key, operation, subject_id, "claimed", None, now, now),
+            )
+            db.commit()
+            return False, None
+
+    def complete_idempotency(
+        self,
+        *,
+        idempotency_key: str,
+        result_id: str,
+        now: str,
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            cursor = db.execute(
+                "UPDATE sdk_idempotency SET state='completed',result_id=?,updated_at=? "
+                "WHERE idempotency_key=? AND state='claimed'",
+                (result_id, now, idempotency_key),
+            )
+            if cursor.rowcount != 1:
+                raise ValueError("idempotency operation is not claimed")
+            db.commit()
 
     def get_agent(self, agent_id: str) -> sqlite3.Row | None:
         with sqlite3.connect(self.path) as db:
