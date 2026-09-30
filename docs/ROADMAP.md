@@ -25,6 +25,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M16 | Real Workflow Runtime | COMPLETE |
 | M17 | Multi-Agent Runtime | COMPLETE |
 | M18 | Agent Ecosystem Runtime | COMPLETE |
+| M19 | Agent Workspace & Channels | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -343,3 +344,19 @@ Identity authentication and capability verification are adapter contracts; autho
 ## M18 — Agent Ecosystem Runtime
 
 M18 unifies skills, applications, extensions, connectors and agent packages behind a verified package boundary. Installation verifies the artifact digest and signature, dependency resolution is version-exact, quarantine blocks activation, rollback uses a previously verified artifact, and capability grants require an explicit Platform authorization result. Manifest claims never mint capabilities.
+
+## M19 — Agent Workspace & Channels
+
+M19 makes workspace presentation channel-neutral. Web, CLI, Desktop, API, Messaging and Notifications are represented by one durable channel contract rather than separate lifecycle systems.
+
+### Workspace surface
+
+A workspace exposes agents, applications, skills, sessions, tasks, workflows, memory, integrations, events and channels.
+
+### Channel invariants
+
+A channel is bound to exactly one workspace. A bound channel may carry session, task and agent identity plus a stable trace identity. Cross-workspace bindings and forged agent/session/task combinations fail closed. Channel handoff preserves lifecycle identity and trace continuity; it does not create Platform authority.
+
+### Acceptance
+
+The same agent/session/task can move between Web, CLI, Desktop, API, Messaging and Notification channels without changing lifecycle identifiers or trace continuity. Channel envelopes are durable and remain presentation-plane data.
