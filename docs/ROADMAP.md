@@ -18,7 +18,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M9 | Extensions | COMPLETE |
 | M10 | Enterprise / Remote OS foundation | COMPLETE |
 | M11 | Production / Distribution foundation | COMPLETE |
-| M12 | Agent Lifecycle Runtime | COMPLETE |
+| M12 | Agent Lifecycle Runtime | COMPLETE |\n| M13 | Agent SDK / Application SDK | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -143,3 +143,64 @@ M12 preserves all existing M0-M11 gates and adds:
 - heartbeat leases are durable;
 - restart exhaustion fails closed;
 - lifecycle telemetry contains no model/tool/secret authority;
+
+
+## M13 — Agent SDK / Application SDK
+
+M13 is the official high-level developer surface above the existing Agent Platform client and M12 lifecycle runtime.
+
+### Scope
+
+- agent scaffolding and validated application manifests;
+- lifecycle/runtime construction without low-level Platform HTTP;
+- session and task helpers;
+- typed workflow helpers;
+- declarative capability requirements;
+- Platform-backed approval requests;
+- typed execution results, events and opaque evidence references;
+- structured SDK errors;
+- durable idempotency claims and replay-safe consequential operations;
+- immutable execution context with W3C trace-context validation and adapter propagation;
+- contract validation at the public SDK boundary.
+
+### Authority rule
+
+The SDK is a composition layer. It does not implement authorization, capability grants, policy evaluation, approval validity, secrets, sandboxing, budgets or authoritative evidence. Capability declarations are requests; approval objects and evidence references are opaque Platform outputs.
+
+### Golden path
+
+```text
+AgentSDK.scaffold()
+    -> AgentApplication
+    -> M12 AgentRuntime
+    -> SDK.session()
+    -> SDK.task()
+    -> SDK.execute()
+    -> Platform create_run
+    -> SDK.result()
+```
+
+A developer can build a reference agent entirely through the SDK surface without constructing Platform HTTP envelopes.
+
+### Reliability
+
+SDK consequential operations use explicit or deterministic idempotency keys. A durable SQLite idempotency ledger claims an operation before the Platform call and records its result afterward. The Platform request carries the same key, allowing recovery after an OS process failure. Exactly-once side effects remain a Platform responsibility.
+
+### Tracing
+
+SDK execution contexts are immutable and validate W3C traceparent values. When the concrete Platform adapter supports trace binding, the SDK propagates the trace context into the Platform request. This follows OpenTelemetry's context-propagation model. citeturn1search0turn1search1
+
+### Acceptance
+
+The M13 reference test proves:
+
+- scaffold → validate manifest/capabilities;
+- construct and register an M12 runtime;
+- create a workspace/session/task;
+- execute through the high-level SDK;
+- retrieve typed execution/evidence results;
+- request an opaque approval;
+- replay execution/approval safely with the same idempotency key;
+- preserve execution context and trace metadata;
+- compose and complete a typed workflow;
+- reject invalid public contracts.
