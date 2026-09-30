@@ -78,6 +78,15 @@ __all__ = [
     "RouteAttempt",
     "RoutingPolicy",
     "UnsupportedModelTask",
+    "AgentPlatformWorkflowExecutor",
+    "DurableWorkflowRuntime",
+    "RetryableWorkflowError",
+    "WorkflowCancelled",
+    "WorkflowDeadlineExceeded",
+    "WorkflowExecutor",
+    "WorkflowInstance",
+    "WorkflowRuntimeError",
+    "WorkflowTrigger",
 ]
 
 from .sdk import (
@@ -143,4 +152,16 @@ from .model_gateway import (
     RouteAttempt,
     RoutingPolicy,
     UnsupportedModelTask,
+)
+
+from .workflow_runtime import (
+    AgentPlatformWorkflowExecutor,
+    DurableWorkflowRuntime,
+    RetryableWorkflowError,
+    WorkflowCancelled,
+    WorkflowDeadlineExceeded,
+    WorkflowExecutor,
+    WorkflowInstance,
+    WorkflowRuntimeError,
+    WorkflowTrigger,
 )
