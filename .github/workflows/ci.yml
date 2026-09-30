@@ -58,3 +58,17 @@ jobs:
           python -m pip install -e ".[dev]"
       - name: Architecture tests
         run: pytest tests/architecture tests/contract -q
+      - name: Verify workflow action pinning
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          pattern = re.compile(r"^\s*-\s*uses:\s*([^\s]+)@([^\s#]+)")
+          for path in Path(".github/workflows").glob("*.yml"):
+              for line_number, line in enumerate(path.read_text().splitlines(), 1):
+                  match = pattern.match(line)
+                  if match and not re.fullmatch(r"[0-9a-f]{40}", match.group(2)):
+                      raise SystemExit(
+                          f"{path}:{line_number}: action reference is not immutable: {match.group(1)}"
+                      )
+          PY
