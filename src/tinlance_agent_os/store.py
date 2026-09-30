@@ -211,17 +211,30 @@ class StateStore:
             definition.entrypoint,
             json.dumps(tuple(definition.capabilities), sort_keys=True),
             json.dumps(dict(definition.configuration), sort_keys=True),
-            json.dumps({
-                "enabled": definition.restart_policy.enabled,
-                "max_restarts": definition.restart_policy.max_restarts,
-                "backoff_seconds": definition.restart_policy.backoff_seconds,
-            }, sort_keys=True),
-            json.dumps({
-                "heartbeat_interval_seconds": definition.runtime.heartbeat_interval_seconds,
-                "heartbeat_timeout_seconds": definition.runtime.heartbeat_timeout_seconds,
-                "shutdown_timeout_seconds": definition.runtime.shutdown_timeout_seconds,
-            }, sort_keys=True),
-            "registered", "unknown", 0, 0, None, None, registered_at, registered_at,
+            json.dumps(
+                {
+                    "enabled": definition.restart_policy.enabled,
+                    "max_restarts": definition.restart_policy.max_restarts,
+                    "backoff_seconds": definition.restart_policy.backoff_seconds,
+                },
+                sort_keys=True,
+            ),
+            json.dumps(
+                {
+                    "heartbeat_interval_seconds": definition.runtime.heartbeat_interval_seconds,
+                    "heartbeat_timeout_seconds": definition.runtime.heartbeat_timeout_seconds,
+                    "shutdown_timeout_seconds": definition.runtime.shutdown_timeout_seconds,
+                },
+                sort_keys=True,
+            ),
+            "registered",
+            "unknown",
+            0,
+            0,
+            None,
+            None,
+            registered_at,
+            registered_at,
         )
         with sqlite3.connect(self.path) as db:
             db.execute("PRAGMA foreign_keys=ON")
@@ -229,9 +242,7 @@ class StateStore:
                 "SELECT version FROM agents WHERE agent_id=?", (definition.agent_id,)
             ).fetchone()
             if existing is not None and existing[0] != definition.version:
-                raise ValueError(
-                    "agent version is already bound to a different registered version"
-                )
+                raise ValueError("agent version is already bound to a different registered version")
             db.execute(
                 "INSERT OR IGNORE INTO agents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 values,
@@ -244,9 +255,16 @@ class StateStore:
                 db.execute(
                     "INSERT INTO agent_lifecycle_events VALUES (?,?,?,?,?,?,?,?,?,?)",
                     (
-                        event_id, definition.agent_id, definition.workspace_id, 1,
-                        "agent.registered", None, "registered", registered_at,
-                        event_id, "{}",
+                        event_id,
+                        definition.agent_id,
+                        definition.workspace_id,
+                        1,
+                        "agent.registered",
+                        None,
+                        "registered",
+                        registered_at,
+                        event_id,
+                        "{}",
                     ),
                 )
 
