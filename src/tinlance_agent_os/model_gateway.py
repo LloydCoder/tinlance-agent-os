@@ -511,7 +511,9 @@ class ModelGateway:
                     response.model_id != model.model_id
                     or response.provider_id != model.provider_id
                 ):
-                    raise ModelContractError("provider returned a mismatched model/provider identity")
+                    raise ModelContractError(
+                        "provider returned a mismatched model/provider identity"
+                    )
                 if response.task != request.task:
                     raise ModelContractError("provider returned a mismatched model task")
                 elapsed_ms = int((time.perf_counter() - started) * 1000)
