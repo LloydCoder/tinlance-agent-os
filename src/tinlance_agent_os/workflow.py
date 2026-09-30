@@ -44,7 +44,12 @@ class WorkflowStepKind(StrEnum):
 class RetryPolicy:
     __slots__ = ("max_attempts", "backoff_seconds", "max_backoff_seconds")
 
-    def __init__(self, max_attempts: int = 1, backoff_seconds: float = 0.0, max_backoff_seconds: float = 300.0) -> None:
+    def __init__(
+        self,
+        max_attempts: int = 1,
+        backoff_seconds: float = 0.0,
+        max_backoff_seconds: float = 300.0,
+    ) -> None:
         if max_attempts < 1:
             raise ValueError("max_attempts must be positive")
         if backoff_seconds < 0 or max_backoff_seconds < 0:
@@ -182,7 +187,11 @@ class WorkflowEngine:
         if step_id not in {step.step_id for step in ready}:
             raise ValueError("workflow step is not ready")
         completed = frozenset((*execution.completed, step_id))
-        state = WorkflowState.COMPLETED if len(completed) == len(definition.steps) else WorkflowState.RUNNING
+        state = (
+            WorkflowState.COMPLETED
+            if len(completed) == len(definition.steps)
+            else WorkflowState.RUNNING
+        )
         return WorkflowExecution(
             definition.workflow_id, state, completed, outputs=execution.outputs
         )
@@ -200,7 +209,9 @@ class WorkflowEngine:
             failed_step=step_id, checkpoint=execution.checkpoint, outputs=execution.outputs
         )
 
-    def cancel(self, definition: WorkflowDefinition, execution: WorkflowExecution) -> WorkflowExecution:
+    def cancel(
+        self, definition: WorkflowDefinition, execution: WorkflowExecution
+    ) -> WorkflowExecution:
         self.validate(definition)
         if execution.workflow_id != definition.workflow_id:
             raise ValueError("execution does not belong to workflow")
