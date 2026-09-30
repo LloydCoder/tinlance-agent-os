@@ -297,8 +297,6 @@ def _effective_expiry(write: MemoryWrite, now: datetime) -> datetime:
     return now + timedelta(seconds=defaults[write.scope])
 
 
-
-
 # Backward-compatible M0-M11 name. New code should use MemoryClassification.
 DataClassification = MemoryClassification
 
