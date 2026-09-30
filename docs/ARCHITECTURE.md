@@ -314,3 +314,61 @@ The detector is deliberately conservative and deterministic; it is a security si
 ### Context assembly
 
 The assembler preserves trust distinctions instead of concatenating all retrieved text. Downstream model prompting must explicitly choose how to render each channel. No retrieved memory is automatically converted into an instruction, Platform authorization, approval, secret or evidence reference.
+
+
+## M16 Durable Workflow Runtime
+
+M16 is the OS control-plane workflow runtime. It owns workflow state, scheduling, dependency readiness, checkpoints and recovery; it does not become an execution authority.
+
+### State model
+
+```text
+CREATED -> RUNNING
+RUNNING -> CHECKPOINTED -> RUNNING
+RUNNING -> WAITING_APPROVAL -> RUNNING
+RUNNING -> WAITING_INPUT -> RUNNING
+RUNNING -> RETRY_WAIT -> RUNNING
+RUNNING -> COMPENSATING -> FAILED
+RUNNING -> COMPLETED
+RUNNING -> CANCELLING -> CANCELLED
+RUNNING -> FAILED
+```
+
+Workflow definitions are validated for duplicate IDs, unknown dependencies and cycles before an instance can start. Independently ready steps may execute in parallel; dependency readiness remains deterministic.
+
+### Consequential-action invariant
+
+Each instance/step receives a deterministic idempotency key. The key is persisted before the executor is called and never changes across retries or crash recovery. The Platform adapter receives that same key when creating the Platform Run. This closes the common crash window between an external side effect and local checkpoint commit without pretending that the OS can provide exactly-once semantics on its own.
+
+### Pause/resume
+
+Approval and human-input gates are durable state transitions. The process can exit while a workflow is waiting; a later process reads the persisted instance and resumes from the checkpoint. Approval validity and authorization remain Platform-owned.
+
+### Recovery
+
+A process interruption can leave a step marked RUNNING. Recovery treats that state as an interrupted attempt, returns it to PENDING while retaining its original idempotency key, and resumes the workflow. Completed steps are never selected again.
+
+### Triggers
+
+The runtime supports manual, event and schedule triggers. Schedules are durable records with a next-run timestamp; a scheduler integration calls the runtime to materialize due instances. Cron interpretation and fleet scheduling remain deployment seams.
+
+### Authority boundary
+
+```text
+Workflow Runtime
+  | state / dependency / retry / checkpoint / recovery
+  v
+Agent Platform adapter
+  | create/cancel/request-approval with stable idempotency key
+  v
+Platform authority
+  | identity / tenancy / policy / capability / approval / execution
+  v
+Run / tool / evidence
+```
+
+The workflow runtime never mints capabilities, approves itself, bypasses Platform policy, or treats workflow metadata as authorization.
+
+### Local durability
+
+The current repository implementation uses SQLite with WAL and short transactions. SQLite permits concurrent readers but serializes writers; the runtime therefore uses optimistic workflow-instance versions and keeps each state transition small. A production multi-node scheduler remains an external deployment concern.
