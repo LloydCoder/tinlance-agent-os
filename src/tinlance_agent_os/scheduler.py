@@ -241,9 +241,10 @@ class Scheduler:
         for row in rows:
             schedule = self._schedule_from_row(row)
             occurrences = self._due_occurrences(schedule, current)
-            due = datetime.fromisoformat(
-                str(self.store.get_scheduler_schedule(schedule.schedule_id)["next_run_at"])
-            ).astimezone(UTC)
+            persisted = self.store.get_scheduler_schedule(schedule.schedule_id)
+            if persisted is None:
+                raise KeyError(schedule.schedule_id)
+            due = datetime.fromisoformat(str(persisted["next_run_at"])).astimezone(UTC)
             if schedule.kind in {ScheduleKind.ONE_SHOT, ScheduleKind.CALENDAR}:
                 occurrences = (due,)
             elif schedule.misfire_policy is MisfirePolicy.SKIP:
@@ -381,9 +382,10 @@ class Scheduler:
         return CronExpression(schedule.expression).next_after(local).astimezone(UTC)
 
     def _due_occurrences(self, schedule: Schedule, now: datetime) -> tuple[datetime, ...]:
-        due = datetime.fromisoformat(
-            self.store.get_scheduler_schedule(schedule.schedule_id)["next_run_at"]
-        ).astimezone(UTC)
+        persisted = self.store.get_scheduler_schedule(schedule.schedule_id)
+        if persisted is None:
+            raise KeyError(schedule.schedule_id)
+        due = datetime.fromisoformat(str(persisted["next_run_at"])).astimezone(UTC)
         if due > now.astimezone(UTC):
             return ()
         if schedule.misfire_policy is not MisfirePolicy.CATCH_UP:
@@ -394,9 +396,10 @@ class Scheduler:
             if cursor > now.astimezone(UTC):
                 break
             occurrences.append(cursor)
-            cursor = self._next_after(schedule, cursor)
-            if cursor is None:
+            next_cursor = self._next_after(schedule, cursor)
+            if next_cursor is None:
                 break
+            cursor = next_cursor
         return tuple(occurrences)
 
     @staticmethod
