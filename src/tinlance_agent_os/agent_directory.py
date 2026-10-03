@@ -331,9 +331,7 @@ class AgentDirectory:
             (workspace_id,),
         )
         return tuple(
-            item
-            for row in rows
-            if (item := self.get_desired(row["agent_id"])) is not None
+            item for row in rows if (item := self.get_desired(row["agent_id"])) is not None
         )
 
     def _ensure_schema(self) -> None:
