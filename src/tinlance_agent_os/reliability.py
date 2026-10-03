@@ -23,7 +23,7 @@ _SCHEMA: Final[str] = """
 CREATE TABLE IF NOT EXISTS reliability_profiles (
     profile_id TEXT PRIMARY KEY,
     workspace_id TEXT NOT NULL,
-    persistence_mode TEXT NOT NULL CHECK(persistence_mode IN ('sqlite-local','postgres-distributed')),
+    persistence_mode TEXT NOT NULL CHECK(\n        persistence_mode IN ('sqlite-local','postgres-distributed')\n    ),
     regions INTEGER NOT NULL CHECK(regions >= 1),
     rpo_seconds INTEGER NOT NULL CHECK(rpo_seconds >= 0),
     rto_seconds INTEGER NOT NULL CHECK(rto_seconds >= 0),
@@ -150,7 +150,7 @@ class ReliabilityRuntime:
         return profile
 
     def acquire_lease(self, lease: WorkerLease) -> WorkerLease:
-        if not lease.lease_id or not lease.workspace_id or not lease.worker_id or not lease.resource:
+        if (\n            not lease.lease_id\n            or not lease.workspace_id\n            or not lease.worker_id\n            or not lease.resource\n        ):
             raise ValueError("lease identity is required")
         expires_at = self._timestamp(lease.expires_at)
         if expires_at <= datetime.now(UTC):
@@ -274,11 +274,13 @@ class ReliabilityRuntime:
         with sqlite3.connect(self.store.path) as db:
             profile = db.execute(
                 """SELECT persistence_mode,regions,rpo_seconds,rto_seconds,backups_required
-                   FROM reliability_profiles WHERE workspace_id=? ORDER BY generation DESC LIMIT 1""",
+                   FROM reliability_profiles
+                   WHERE workspace_id=? ORDER BY generation DESC LIMIT 1""",
                 (workspace_id,),
             ).fetchone()
             dr = db.execute(
-                "SELECT COUNT(*) FROM dr_plans WHERE workspace_id=? AND state IN ('tested','ready')",
+                "SELECT COUNT(*) FROM dr_plans "
+                "WHERE workspace_id=? AND state IN ('tested','ready')",
                 (workspace_id,),
             ).fetchone()
             chaos = db.execute(
