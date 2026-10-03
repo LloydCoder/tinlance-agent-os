@@ -8,7 +8,6 @@ still cross the Agent Platform boundary.
 from __future__ import annotations
 
 import json
-import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
