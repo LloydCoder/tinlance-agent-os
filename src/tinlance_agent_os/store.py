@@ -373,6 +373,52 @@ class StateStore:
                     ON scheduler_jobs(workspace_id, state, scheduled_for);
                 CREATE INDEX IF NOT EXISTS idx_scheduler_jobs_lease
                     ON scheduler_jobs(state, lease_expires_at);
+                CREATE TABLE IF NOT EXISTS knowledge_sources (
+                    source_id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    name TEXT NOT NULL,
+                    authority_rank INTEGER NOT NULL,
+                    freshness_seconds INTEGER NOT NULL,
+                    metadata TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    UNIQUE(workspace_id, name)
+                );
+                CREATE TABLE IF NOT EXISTS knowledge_documents (
+                    document_id TEXT PRIMARY KEY,
+                    source_id TEXT NOT NULL REFERENCES knowledge_sources(source_id),
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    uri TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    content_digest TEXT NOT NULL,
+                    source_version TEXT,
+                    collected_at TEXT NOT NULL,
+                    valid_from TEXT,
+                    valid_until TEXT,
+                    classification TEXT NOT NULL,
+                    trust TEXT NOT NULL,
+                    metadata TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    UNIQUE(workspace_id, uri, content_digest)
+                );
+                CREATE INDEX IF NOT EXISTS idx_knowledge_documents_source
+                    ON knowledge_documents(workspace_id, source_id, collected_at);
+                CREATE INDEX IF NOT EXISTS idx_knowledge_documents_validity
+                    ON knowledge_documents(workspace_id, valid_from, valid_until);
+                CREATE TABLE IF NOT EXISTS knowledge_chunks (
+                    chunk_id TEXT PRIMARY KEY,
+                    document_id TEXT NOT NULL REFERENCES knowledge_documents(document_id),
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    ordinal INTEGER NOT NULL,
+                    content TEXT NOT NULL,
+                    content_digest TEXT NOT NULL,
+                    metadata TEXT NOT NULL,
+                    UNIQUE(document_id, ordinal)
+                );
+                CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_document
+                    ON knowledge_chunks(document_id, ordinal);
                 """
             )
 
@@ -729,6 +775,65 @@ class StateStore:
                 (next_run_at, last_run_at, last_run_at, schedule_id),
             )
             db.commit()
+
+    def put_knowledge_source(self, row: tuple[Any, ...]) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO knowledge_sources VALUES (?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(source_id) DO UPDATE SET name=excluded.name,"
+                "authority_rank=excluded.authority_rank,freshness_seconds=excluded.freshness_seconds,"
+                "metadata=excluded.metadata,updated_at=excluded.updated_at",
+                row,
+            )
+            db.commit()
+
+    def get_knowledge_source(self, source_id: str) -> sqlite3.Row | None:
+        rows = self.query("SELECT * FROM knowledge_sources WHERE source_id=?", (source_id,))
+        return rows[0] if rows else None
+
+    def put_knowledge_document(self, row: tuple[Any, ...]) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO knowledge_documents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                row,
+            )
+            db.commit()
+
+    def get_knowledge_document(self, document_id: str) -> sqlite3.Row | None:
+        rows = self.query("SELECT * FROM knowledge_documents WHERE document_id=?", (document_id,))
+        return rows[0] if rows else None
+
+    def put_knowledge_chunk(self, row: tuple[Any, ...]) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO knowledge_chunks VALUES (?,?,?,?,?,?,?) "
+                "ON CONFLICT(document_id, ordinal) DO UPDATE SET content=excluded.content,"
+                "content_digest=excluded.content_digest,metadata=excluded.metadata",
+                row,
+            )
+            db.commit()
+
+    def search_knowledge_chunks(
+        self, workspace_id: str, terms: tuple[str, ...], limit: int
+    ) -> list[sqlite3.Row]:
+        if not terms:
+            return []
+        if limit < 1 or limit > 200:
+            raise ValueError("knowledge search limit must be between 1 and 200")
+        pattern = "%" + "%".join(terms) + "%"
+        return self.query(
+            "SELECT c.*,d.document_id,d.source_id,d.uri,d.title,d.collected_at,"
+            "d.valid_from,d.valid_until,d.classification,d.trust,d.metadata AS document_metadata,"
+            "s.authority_rank,s.freshness_seconds,s.name AS source_name "
+            "FROM knowledge_chunks c JOIN knowledge_documents d ON d.document_id=c.document_id "
+            "JOIN knowledge_sources s ON s.source_id=d.source_id "
+            "WHERE c.workspace_id=? AND lower(c.content) LIKE lower(?) "
+            "ORDER BY s.authority_rank DESC,d.collected_at DESC,c.ordinal LIMIT ?",
+            (workspace_id, pattern, limit),
+        )
 
     def put_scheduler_schedule(self, row: tuple[Any, ...]) -> None:
         with sqlite3.connect(self.path) as db:
