@@ -661,3 +661,33 @@ M35 does not implement a kernel, bootloader, TPM service, encryption engine, pac
 - update state transitions are generation protected;
 - recovery image references remain explicit;
 - no Platform authority is introduced.
+
+
+## M36 — Agent Marketplace & Enterprise Registry
+
+M36 defines the OS-owned registry lifecycle around agents, skills, applications, extensions and connectors.
+
+### Scope
+
+- publisher identity metadata and trust state;
+- package identity and type;
+- versioned artifact digests;
+- signature, provenance and SBOM references;
+- compatibility metadata;
+- published/quarantined/revoked/deprecated states;
+- generation-protected state changes;
+- duplicate/version identity protection.
+
+### Boundary
+
+The registry is metadata and distribution state. It does not execute packages, create capabilities, approve installation, or replace Agent Platform policy. External artifact stores, signing authorities, vulnerability scanners and public/private marketplace frontends remain integrations.
+
+### Acceptance
+
+- blocked publishers cannot register packages;
+- published versions require signature references;
+- artifact digests require strict SHA-256 shape;
+- package versions are unique;
+- lifecycle changes require generation checks;
+- quarantine/revocation remain explicit state transitions;
+- no Platform authority is introduced.
