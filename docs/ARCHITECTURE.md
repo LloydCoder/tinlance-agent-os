@@ -655,3 +655,18 @@ Scheduler
 ```
 
 The scheduler cannot mint capabilities, approve work, create authoritative evidence or bypass the Platform adapter. This keeps temporal orchestration separate from consequential authority.
+
+
+## M30 Context + Knowledge Fabric
+
+M30 sits beside trusted memory and below the agent/workflow lifecycle. It turns external and application information into provenance-bearing context without turning that information into authority.
+
+```text
+Source -> Document -> Chunk -> Retrieval -> Context Budget -> Agent/Workflow
+                                      |
+                                      +-> provenance
+                                      +-> trust/classification
+                                      +-> freshness/authority
+```
+
+The repository implementation is intentionally backend-neutral. Local deterministic lexical retrieval is the baseline; semantic/vector retrieval can be introduced behind the same contract. The OS remains responsible for lifecycle and context assembly, while the Agent Platform remains responsible for identity, authorization, policy, approvals and governed execution.
