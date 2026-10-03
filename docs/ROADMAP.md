@@ -771,3 +771,34 @@ M39 does not implement an IdP, SCIM server, KMS/HSM, audit authority, legal-hold
 - incident records are unique and workspace scoped;
 - external security/compliance systems remain authoritative for their domains;
 - no Platform authority is duplicated.
+
+
+## M40 — Agent OS Intelligence & Adaptive Runtime
+
+M40 adds the adaptive feedback layer above the deterministic OS runtimes.
+
+### Scope
+
+- workload-aware optimization recommendations;
+- model-selection feedback;
+- context optimization intents;
+- resource/capacity routing recommendations;
+- workflow/retry tuning;
+- fleet placement recommendations;
+- failure-pattern/remediation proposals;
+- durable observations and recommendation lifecycle;
+- generation-protected operator decisions.
+
+### Boundary
+
+M40 is an optimization and recommendation plane, not an authority plane. It may observe metrics and propose changes, but it does not grant capabilities, authorize actions, enforce Platform budgets, approve requests, execute customer work or create authoritative evidence. Consequential changes continue through their owning OS runtime and the Agent Platform.
+
+### Acceptance
+
+- observations are workspace and policy scoped;
+- metric units and sample counts are explicit;
+- recommendations are deterministic and explainable from stored observations;
+- cross-workspace policy use fails closed;
+- recommendation decisions require generation matching;
+- no adaptive recommendation creates Platform authority;
+- adaptive behavior remains inspectable and reversible through durable state.
