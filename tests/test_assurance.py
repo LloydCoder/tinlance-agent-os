@@ -23,8 +23,8 @@ def test_ga_readiness_requires_all_non_waived_checks_to_pass(tmp_path: Path) -> 
     runtime.record_check(GACheck("ci-1", "r1", "ci", "CI", "passed", "run-1"))
     runtime.record_check(GACheck("security-1", "r1", "security", "security review", "pending"))
     assert runtime.readiness("r1").ready is False
-    runtime.record_check(
-        GACheck("security-2", "r1", "security", "security review", "passed", "report-1")
+    runtime.transition_check(
+        "security-1", state="passed", evidence_ref="report-1", expected_generation=0
     )
     assert runtime.readiness("r1").ready is True
 
