@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -53,7 +53,7 @@ class Schedule:
     max_concurrency: int = 1
     next_run_at: datetime | None = None
     generation: int = 1
-    metadata: Mapping[str, object] = None  # type: ignore[assignment]
+    metadata: Mapping[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.schedule_id or not self.workspace_id or not self.name:
@@ -104,7 +104,7 @@ class CronExpression:
         self._hour = self._field(fields[1], 0, 23)
         self._day = self._field(fields[2], 1, 31)
         self._month = self._field(fields[3], 1, 12)
-        self._weekday = self._field(fields[4], 0, 6)
+        self._weekday = self._weekday_field(fields[4])
         self._day_restricted = fields[2] != "*"
         self._weekday_restricted = fields[4] != "*"
 
@@ -129,6 +129,12 @@ class CronExpression:
         if not result:
             raise ValueError("cron field cannot be empty")
         return frozenset(result)
+
+    @classmethod
+    def _weekday_field(cls, value: str) -> frozenset[int]:
+        raw = cls._field(value, 0, 7)
+        # Cron uses Sunday=0/7, Monday=1, ... Saturday=6.
+        return frozenset((day - 1) % 7 for day in raw)
 
     def matches(self, value: datetime) -> bool:
         if value.minute not in self._minute or value.hour not in self._hour:
