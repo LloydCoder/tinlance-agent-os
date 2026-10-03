@@ -46,3 +46,6 @@ The current repository implementation provides deterministic lexical retrieval w
 ## Research alignment
 
 NIST's 2026 agent identity/authorization work emphasizes identification, least privilege, auditing/non-repudiation and controls for direct/indirect prompt injection. M30 therefore keeps knowledge provenance and trust separate from authority. citeturn6search4turn6search36
+
+
+CI refresh: knowledge fixtures are lint-clean and bounded.
