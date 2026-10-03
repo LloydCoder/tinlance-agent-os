@@ -453,3 +453,22 @@ M25 is the post-M24 forensic hardening pass. It addresses concrete residual gaps
 - CI fails if any workflow action is referenced by a mutable tag or branch.
 
 M25 does not claim that external signing services, telemetry collectors, enterprise identity, fleet control planes, operating-system sandboxing or disaster-recovery environments are implemented inside this repository.
+
+## M26 — Agent Directory & Desired-State Management
+
+M26 extends the existing M12 lifecycle registry into an explicit desired-state control surface. The directory records what an Agent OS workspace intends to run, while M12 remains the observed lifecycle runtime.
+
+### Scope
+
+- durable desired agent definitions;
+- generation-based compare-and-swap updates;
+- version, capability, configuration and rollout-channel metadata;
+- explicit OS/Platform compatibility metadata;
+- desired states for running, paused and stopped agents;
+- deterministic desired-vs-observed reconciliation plans;
+- blocked plans for missing or cross-workspace observations;
+- read-only reconciliation planning so planning cannot create execution authority.
+
+### Acceptance
+
+A desired agent definition is durably persisted, can be updated only with the expected generation, and produces a deterministic reconciliation plan against M12 observed state. Version/configuration/capability drift is surfaced explicitly. No directory record grants a Platform capability or executes an agent.
