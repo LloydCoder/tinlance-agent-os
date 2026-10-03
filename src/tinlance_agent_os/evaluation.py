@@ -180,6 +180,7 @@ class EvaluationRuntime:
             started_at,
             run.completed_at,
         )
+        completed = normalized.completed_at
         with sqlite3.connect(self.store.path) as db:
             db.execute(
                 """INSERT INTO evaluation_runs
@@ -194,7 +195,7 @@ class EvaluationRuntime:
                     normalized.model,
                     normalized.status,
                     normalized.started_at.isoformat(),
-                    normalized.completed_at.isoformat() if normalized.completed_at else None,
+                    completed.isoformat() if completed else None,
                 ),
             )
         return normalized
@@ -246,6 +247,7 @@ class EvaluationRuntime:
                 raise KeyError(f"unknown evaluation case: {normalized.case_id}")
             if str(run[0]) != str(case[0]):
                 raise ValueError("evaluation case and run must belong to the same suite")
+            observed = normalized.observed_at
             db.execute(
                 """INSERT INTO evaluation_measurements
                 (measurement_id,run_id,case_id,metric,value,unit,observed_at,evidence_ref)
@@ -257,7 +259,7 @@ class EvaluationRuntime:
                     normalized.metric,
                     normalized.value,
                     normalized.unit,
-                    normalized.observed_at.isoformat(),
+                    observed.isoformat(),
                     normalized.evidence_ref,
                 ),
             )
