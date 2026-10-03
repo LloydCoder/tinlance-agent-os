@@ -139,7 +139,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M28 | Event, Signal & Reactive Runtime | Complete |
 | M29 | Scheduler & Job Runtime | Complete |
 | M30 | Context & Knowledge Fabric | Complete |
-| M31 | Connectors & Data Spaces | Complete |\n| M32 | Resource, Cost & Capacity Runtime | Complete |\n| M33 | Evaluation & Agent Quality Runtime | Complete |\n| M34 | Enterprise Fleet & Remote Control Plane | Complete |\n| M35 | Device / Desktop Operating Environment | Complete |\n| M36 | Agent Marketplace & Enterprise Registry | Complete |\n| M37 | Enterprise Admin & Operator Plane | Complete |\n| M38 | Reliability, HA, DR & Chaos | Complete |\n| M39 | Enterprise Security, Compliance & Governance Integration | Complete |
+| M31 | Connectors & Data Spaces | Complete |\n| M32 | Resource, Cost & Capacity Runtime | Complete |\n| M33 | Evaluation & Agent Quality Runtime | Complete |\n| M34 | Enterprise Fleet & Remote Control Plane | Complete |\n| M35 | Device / Desktop Operating Environment | Complete |\n| M36 | Agent Marketplace & Enterprise Registry | Complete |\n| M37 | Enterprise Admin & Operator Plane | Complete |\n| M38 | Reliability, HA, DR & Chaos | Complete |\n| M39 | Enterprise Security, Compliance & Governance Integration | Complete |\n| M40 | Agent OS Intelligence & Adaptive Runtime | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -704,3 +704,17 @@ M38 adds enterprise reliability contracts for deployment profiles, worker leases
 ### M39 — Enterprise Security, Compliance & Governance Integration
 
 M39 adds durable integration contracts for enterprise identity providers, KMS/HSM providers, audit export, data residency/retention/legal hold and incident response. These are integration states and evidence-oriented control records; Agent Platform remains the authoritative identity, authorization and governance plane.
+
+### M40 — Agent OS Intelligence & Adaptive Runtime
+
+M40 adds a durable adaptive layer that converts observed runtime metrics into explainable optimization recommendations for model routing, workflow routing, context optimization, resource routing, fleet placement, retry tuning and remediation.
+
+The adaptive layer is deliberately **non-authoritative**:
+
+- observations are workspace-scoped and unit-explicit;
+- recommendations carry the policy, observed value, target and evidence-oriented reason;
+- recommendations use generation checks for operator decisions;
+- no recommendation grants a capability, changes a Platform budget, approves an action or executes customer work;
+- accepted recommendations remain intents for the owning runtime to validate and dispatch through the normal governed path.
+
+This gives Agent OS a controlled feedback loop without turning optimization into a second policy or execution kernel.
