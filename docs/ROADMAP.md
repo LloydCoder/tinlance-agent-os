@@ -37,6 +37,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M28 | Event, Signal & Reactive Runtime | COMPLETE |
 | M29 | Scheduler & Job Runtime | COMPLETE |
 | M30 | Context & Knowledge Fabric | COMPLETE |
+| M31 | Connectors & Data Spaces | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -553,3 +554,8 @@ M29 is the durable single-node scheduler contract. Distributed workers, queue ba
 ## M30 — Context & Knowledge Fabric
 
 Durable sources, documents and chunks with provenance, freshness, authority, classification and trust metadata; deterministic lexical retrieval; bounded context assembly; and a stable seam for future semantic/vector retrieval backends. Retrieval remains data and never becomes Platform authority.
+
+
+## M31 — Connectors & Data Spaces
+
+Connector lifecycle, endpoint validation, capabilities metadata and durable synchronization cursors across filesystem, Git, databases, object storage, HTTP/SaaS, messaging, knowledge and MCP data spaces. MCP remains the interoperability protocol; OS owns lifecycle around it.
