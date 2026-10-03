@@ -168,6 +168,46 @@ class EnterpriseGARuntime:
             )
         return check
 
+    def transition_check(
+        self,
+        check_id: str,
+        *,
+        state: CheckState,
+        evidence_ref: str | None,
+        expected_generation: int,
+    ) -> GACheck:
+        self._required(check_id, "check_id")
+        if state in {"passed", "failed"} and not evidence_ref:
+            raise ValueError("completed assurance checks require evidence_ref")
+        with sqlite3.connect(self.store.path) as db:
+            row = db.execute(
+                """SELECT check_id,release_id,kind,name,state,evidence_ref,generation
+                   FROM ga_checks WHERE check_id=?""",
+                (check_id,),
+            ).fetchone()
+            if row is None:
+                raise KeyError(f"unknown check: {check_id}")
+            actual = int(row[6])
+            if actual != expected_generation:
+                raise ValueError(
+                    f"generation conflict: expected {expected_generation}, actual {actual}"
+                )
+            next_generation = actual + 1
+            db.execute(
+                """UPDATE ga_checks SET state=?,evidence_ref=?,generation=?
+                   WHERE check_id=? AND generation=?""",
+                (state, evidence_ref, next_generation, check_id, actual),
+            )
+        return GACheck(
+            str(row[0]),
+            str(row[1]),
+            str(row[2]),
+            str(row[3]),
+            state,
+            evidence_ref,
+            next_generation,
+        )
+
     def register_compatibility(self, entry: GACompatibility) -> GACompatibility:
         self._required(entry.compatibility_id, "compatibility_id")
         self._required(entry.release_id, "release_id")
