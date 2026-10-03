@@ -619,3 +619,7 @@ M24 adds signed release artifacts, CycloneDX SBOMs, Sigstore signing, GitHub art
 M27 adds durable organizational context above the existing workspace/session/task runtime. It models organization → project → environment → workspace relationships, workspace configuration inheritance, templates, lifecycle state and generation-protected workspace binding. It does not implement authorization; Agent Platform remains authoritative for identity and access.
 
 The configuration model follows a layered approach: organization defaults → project overrides → environment overrides → workspace overrides. Effective configuration is deterministic and exportable. Cross-organization/project/environment bindings fail closed, and concurrent workspace changes use generation checks.
+
+### M28 — Event, Signal & Reactive Runtime
+
+M28 adds durable workspace-scoped event publication, subscriptions, delivery state, deduplication, bounded retry/dead-letter handling and replay. Events are lifecycle/data signals; they never grant authority or execute consequential actions.

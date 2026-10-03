@@ -151,6 +151,12 @@ __all__ = [
     "CybersecurityAgent",
     "FDEEngineeringAgent",
     "WorldIntelligenceAgent",
+    "Delivery",
+    "DeliveryState",
+    "EventEnvelope",
+    "EventRuntimeError",
+    "EventSignalRuntime",
+    "Subscription",
     "Environment",
     "EnvironmentKind",
     "Organization",
@@ -290,6 +296,15 @@ from .remote_runtime import (
 )
 
 from .observability import AgentOSTelemetry, configure_telemetry, telemetry
+
+from .event_runtime import (
+    Delivery,
+    DeliveryState,
+    EventEnvelope,
+    EventRuntimeError,
+    EventSignalRuntime,
+    Subscription,
+)
 
 from .workspace_fabric import (
     Environment,

@@ -593,3 +593,25 @@ The workspace fabric owns lifecycle and configuration context. Configuration is 
 The fabric validates that projects belong to their organization, environments belong to their project, and workspace profiles point into the same hierarchy. These are OS consistency checks, not authorization decisions. Agent Platform remains authoritative for identity, tenancy membership, authorization, policy, approvals, budgets, execution and evidence.
 
 Workspace templates are declarative metadata and do not install code or grant capabilities. Export produces a portable workspace profile plus its effective configuration; import/deployment remains a higher-level integration concern.
+
+
+## M28 Event, Signal & Reactive Runtime
+
+```text
+OS lifecycle / external adapter
+            |
+            v
+     EventSignalRuntime
+       |       |       |
+    dedupe  routing  delivery
+       |       |       |
+       +--> subscriber/trigger
+                 |
+                 v
+          Task / Workflow
+                 |
+                 v
+          Agent Platform
+```
+
+The event runtime owns durable signal state and routing metadata. It does not execute handlers, authorize actions, mint capabilities, or write authoritative evidence. Workspace identity is part of every event and delivery query, so cross-workspace signals cannot be consumed accidentally.

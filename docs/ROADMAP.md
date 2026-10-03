@@ -496,3 +496,15 @@ M27 describes OS context and desired configuration. It does not authorize users/
 ### Acceptance
 
 An existing OS workspace can be bound to exactly one organization/project/environment hierarchy, effective configuration resolves deterministically from parent to workspace scope, stale writers are rejected by generation checks, lifecycle changes are durable, and invalid cross-hierarchy bindings fail closed.
+
+## M28 — Event, Signal & Reactive Runtime
+
+- durable workspace-scoped events;
+- typed subscription metadata;
+- deterministic deduplication keys;
+- delivery attempts and bounded retries;
+- dead-letter and explicit replay;
+- correlation IDs for causal routing;
+- read/write lifecycle separated from Platform authority.
+
+Acceptance: duplicate publications with the same workspace/dedupe key resolve to one event, deliveries remain workspace-isolated, failed deliveries dead-letter at the configured limit, and replay returns dead letters to pending without executing handlers.
