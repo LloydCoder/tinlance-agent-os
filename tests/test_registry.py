@@ -21,9 +21,7 @@ def make_registry(tmp_path: Path) -> AgentRegistry:
 def test_registry_publisher_package_and_signed_version(tmp_path: Path) -> None:
     registry = make_registry(tmp_path)
     registry.register_publisher(RegistryPublisher("pub-1", "Tinlance", "oidc:tinlance", "trusted"))
-    registry.register_package(
-        RegistryPackage("pkg-1", "pub-1", "research-agent", "agent")
-    )
+    registry.register_package(RegistryPackage("pkg-1", "pub-1", "research-agent", "agent"))
     version = registry.register_version(
         RegistryVersion(
             "pkg-1",
