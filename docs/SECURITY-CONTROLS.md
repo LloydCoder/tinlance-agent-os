@@ -280,3 +280,18 @@ The scheduler is an OS lifecycle mechanism. It is not an authorization engine, a
 | Time integrity | Naive timestamps are rejected | OperatorPlane |
 | Authority boundary | Commands are intents only; no local execution or authorization | Architecture boundary |
 | Source of truth | Operator data is a projection of owning runtimes | M37 design |
+
+
+## M38 reliability controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Persistence | Deployment mode explicitly distinguishes local SQLite from distributed PostgreSQL | ReliabilityProfile |
+| Regional resilience | Distributed mode requires at least two regions | Profile validation |
+| Worker coordination | Active worker/resource leases are unique | Lease schema |
+| Lease safety | Lease release uses generation checks | release_lease |
+| Temporal safety | Lease expiry must be future and timezone-aware | _timestamp + validation |
+| DR | Backup and restore targets are explicit with RPO/RTO | DRPlan |
+| Chaos | Scenario kind and blast radius are explicit | ChaosScenario |
+| Readiness | Reliability readiness is derived from durable state | readiness |
+| Authority | Reliability controls do not grant capabilities or execute customer work | Architecture boundary |
