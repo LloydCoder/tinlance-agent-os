@@ -744,3 +744,30 @@ M38 records reliability requirements and coordination intent. It does not embed 
 - DR and chaos state are durable;
 - readiness is deterministic;
 - no Platform authority is introduced.
+
+
+## M39 — Enterprise Security, Compliance & Governance Integration
+
+M39 connects Agent OS to enterprise security/compliance infrastructure without recreating authority services.
+
+### Scope
+
+- OIDC, SAML and SCIM identity-provider integration metadata;
+- KMS/HSM key-provider references and lifecycle state;
+- audit export requests with destination/scope/retention metadata;
+- workspace data residency, retention, deletion-window and legal-hold policies;
+- security incident records and evidence-export references;
+- generation-aware policy revisions.
+
+### Boundary
+
+M39 does not implement an IdP, SCIM server, KMS/HSM, audit authority, legal-hold engine or authorization kernel. It integrates external enterprise controls and makes their operational state inspectable.
+
+### Acceptance
+
+- identity and key integrations are explicit and durable;
+- audit export retention is non-negative;
+- data policies are revisioned and generation tracked;
+- incident records are unique and workspace scoped;
+- external security/compliance systems remain authoritative for their domains;
+- no Platform authority is duplicated.
