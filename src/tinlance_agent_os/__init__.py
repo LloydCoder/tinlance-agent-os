@@ -208,6 +208,9 @@ __all__ = [
     "RegistryPackage",
     "RegistryPublisher",
     "RegistryVersion",
+    "OperatorCommand",
+    "OperatorEntity",
+    "OperatorPlane",
 ]
 
 from .sdk import (
@@ -404,6 +407,8 @@ from .fleet import FleetControlPlane, FleetDeployment, FleetDevice, FleetGroup, 
 from .device_os import DeviceOSDesired, DeviceOSRuntime, DeviceSecurityProfile, OSImage, OSUpdate
 
 from .registry import AgentRegistry, RegistryPackage, RegistryPublisher, RegistryVersion
+
+from .operator import OperatorCommand, OperatorEntity, OperatorPlane
 
 from .reference_agents import (
     CybersecurityAgent,
