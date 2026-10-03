@@ -332,6 +332,47 @@ class StateStore:
                     ON workflow_events(instance_id, sequence);
                 CREATE INDEX IF NOT EXISTS idx_workflow_schedules_due
                     ON workflow_schedules(enabled, next_run_at);
+                CREATE TABLE IF NOT EXISTS scheduler_schedules (
+                    schedule_id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    name TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    expression TEXT NOT NULL,
+                    timezone TEXT NOT NULL,
+                    enabled INTEGER NOT NULL,
+                    misfire_policy TEXT NOT NULL,
+                    max_concurrency INTEGER NOT NULL,
+                    next_run_at TEXT NOT NULL,
+                    last_run_at TEXT,
+                    generation INTEGER NOT NULL,
+                    metadata TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    UNIQUE(workspace_id, name)
+                );
+                CREATE TABLE IF NOT EXISTS scheduler_jobs (
+                    job_id TEXT PRIMARY KEY,
+                    schedule_id TEXT NOT NULL REFERENCES scheduler_schedules(schedule_id),
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    scheduled_for TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    attempt INTEGER NOT NULL,
+                    lease_owner TEXT,
+                    lease_expires_at TEXT,
+                    started_at TEXT,
+                    finished_at TEXT,
+                    error TEXT,
+                    payload TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    UNIQUE(schedule_id, scheduled_for)
+                );
+                CREATE INDEX IF NOT EXISTS idx_scheduler_schedules_due
+                    ON scheduler_schedules(enabled, next_run_at);
+                CREATE INDEX IF NOT EXISTS idx_scheduler_jobs_due
+                    ON scheduler_jobs(workspace_id, state, scheduled_for);
+                CREATE INDEX IF NOT EXISTS idx_scheduler_jobs_lease
+                    ON scheduler_jobs(state, lease_expires_at);
                 """
             )
 
@@ -688,6 +729,168 @@ class StateStore:
                 (next_run_at, last_run_at, last_run_at, schedule_id),
             )
             db.commit()
+
+    def put_scheduler_schedule(self, row: tuple[Any, ...]) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO scheduler_schedules VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                row,
+            )
+            db.commit()
+
+    def update_scheduler_schedule(
+        self,
+        schedule_id: str,
+        *,
+        expected_generation: int,
+        enabled: bool,
+        next_run_at: str,
+        last_run_at: str | None,
+        generation: int,
+        expression: str,
+        timezone: str,
+        misfire_policy: str,
+        max_concurrency: int,
+        metadata: str,
+        updated_at: str,
+    ) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute("BEGIN IMMEDIATE")
+            result = db.execute(
+                "UPDATE scheduler_schedules SET enabled=?,next_run_at=?,last_run_at=?,"
+                "generation=?,expression=?,timezone=?,misfire_policy=?,max_concurrency=?,"
+                "metadata=?,updated_at=? WHERE schedule_id=? AND generation=?",
+                (
+                    int(enabled),
+                    next_run_at,
+                    last_run_at,
+                    generation,
+                    expression,
+                    timezone,
+                    misfire_policy,
+                    max_concurrency,
+                    metadata,
+                    updated_at,
+                    schedule_id,
+                    expected_generation,
+                ),
+            )
+            if result.rowcount != 1:
+                raise ValueError("scheduler generation conflict")
+            db.commit()
+
+    def get_scheduler_schedule(self, schedule_id: str) -> sqlite3.Row | None:
+        rows = self.query(
+            "SELECT * FROM scheduler_schedules WHERE schedule_id=?",
+            (schedule_id,),
+        )
+        return rows[0] if rows else None
+
+    def due_scheduler_schedules(self, now: str) -> list[sqlite3.Row]:
+        return self.query(
+            "SELECT * FROM scheduler_schedules WHERE enabled=1 AND next_run_at<=? "
+            "ORDER BY next_run_at,schedule_id",
+            (now,),
+        )
+
+    def create_scheduler_job(
+        self,
+        *,
+        job_id: str,
+        schedule_id: str,
+        workspace_id: str,
+        scheduled_for: str,
+        payload: str,
+        created_at: str,
+    ) -> bool:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            try:
+                db.execute(
+                    "INSERT INTO scheduler_jobs VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (
+                        job_id,
+                        schedule_id,
+                        workspace_id,
+                        scheduled_for,
+                        "queued",
+                        0,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        payload,
+                        created_at,
+                        created_at,
+                    ),
+                )
+            except sqlite3.IntegrityError as exc:
+                if "scheduler_jobs.schedule_id, scheduler_jobs.scheduled_for" not in str(exc):
+                    raise
+                return False
+            db.commit()
+            return True
+
+    def get_scheduler_job(self, job_id: str) -> sqlite3.Row | None:
+        rows = self.query("SELECT * FROM scheduler_jobs WHERE job_id=?", (job_id,))
+        return rows[0] if rows else None
+
+    def due_scheduler_jobs(self, now: str, limit: int = 100) -> list[sqlite3.Row]:
+        if limit < 1 or limit > 1000:
+            raise ValueError("scheduler job limit must be between 1 and 1000")
+        return self.query(
+            "SELECT * FROM scheduler_jobs WHERE state='queued' AND scheduled_for<=? "
+            "ORDER BY scheduled_for,job_id LIMIT ?",
+            (now, limit),
+        )
+
+    def lease_scheduler_job(
+        self, job_id: str, owner: str, lease_expires_at: str, now: str
+    ) -> bool:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute("BEGIN IMMEDIATE")
+            result = db.execute(
+                "UPDATE scheduler_jobs SET state='running',attempt=attempt+1,"
+                "lease_owner=?,lease_expires_at=?,started_at=COALESCE(started_at,?),"
+                "updated_at=? WHERE job_id=? AND state='queued'",
+                (owner, lease_expires_at, now, now, job_id),
+            )
+            db.commit()
+            return result.rowcount == 1
+
+    def finish_scheduler_job(
+        self,
+        job_id: str,
+        *,
+        state: str,
+        error: str | None,
+        finished_at: str | None,
+        now: str,
+    ) -> None:
+        if state not in {"succeeded", "failed", "cancelled", "dead_letter"}:
+            raise ValueError("invalid scheduler job terminal state")
+        with sqlite3.connect(self.path) as db:
+            db.execute(
+                "UPDATE scheduler_jobs SET state=?,error=?,finished_at=?,"
+                "lease_owner=NULL,lease_expires_at=NULL,updated_at=? WHERE job_id=?",
+                (state, error, finished_at, now, job_id),
+            )
+            db.commit()
+
+    def release_expired_scheduler_jobs(self, now: str) -> int:
+        with sqlite3.connect(self.path) as db:
+            result = db.execute(
+                "UPDATE scheduler_jobs SET state='queued',lease_owner=NULL,"
+                "lease_expires_at=NULL,updated_at=? "
+                "WHERE state='running' AND lease_expires_at IS NOT NULL AND lease_expires_at<=?",
+                (now, now),
+            )
+            db.commit()
+            return result.rowcount
 
     def create_agent_task(self, task: Any, *, intent: str) -> None:
         from datetime import UTC, datetime
