@@ -151,6 +151,15 @@ __all__ = [
     "CybersecurityAgent",
     "FDEEngineeringAgent",
     "WorldIntelligenceAgent",
+    "Environment",
+    "EnvironmentKind",
+    "Organization",
+    "Project",
+    "WorkspaceFabric",
+    "WorkspaceFabricError",
+    "WorkspaceProfile",
+    "WorkspaceState",
+    "WorkspaceTemplate",
 ]
 
 from .sdk import (
@@ -281,6 +290,18 @@ from .remote_runtime import (
 )
 
 from .observability import AgentOSTelemetry, configure_telemetry, telemetry
+
+from .workspace_fabric import (
+    Environment,
+    EnvironmentKind,
+    Organization,
+    Project,
+    WorkspaceFabric,
+    WorkspaceFabricError,
+    WorkspaceProfile,
+    WorkspaceState,
+    WorkspaceTemplate,
+)
 
 from .reference_agents import (
     CybersecurityAgent,
