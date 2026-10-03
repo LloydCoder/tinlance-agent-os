@@ -139,7 +139,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M28 | Event, Signal & Reactive Runtime | Complete |
 | M29 | Scheduler & Job Runtime | Complete |
 | M30 | Context & Knowledge Fabric | Complete |
-| M31 | Connectors & Data Spaces | Complete |\n| M32 | Resource, Cost & Capacity Runtime | Complete |\n| M33 | Evaluation & Agent Quality Runtime | Complete |\n| M34 | Enterprise Fleet & Remote Control Plane | Complete |\n| M35 | Device / Desktop Operating Environment | Complete |\n| M36 | Agent Marketplace & Enterprise Registry | Complete |\n| M37 | Enterprise Admin & Operator Plane | Complete |\n| M38 | Reliability, HA, DR & Chaos | Complete |
+| M31 | Connectors & Data Spaces | Complete |\n| M32 | Resource, Cost & Capacity Runtime | Complete |\n| M33 | Evaluation & Agent Quality Runtime | Complete |\n| M34 | Enterprise Fleet & Remote Control Plane | Complete |\n| M35 | Device / Desktop Operating Environment | Complete |\n| M36 | Agent Marketplace & Enterprise Registry | Complete |\n| M37 | Enterprise Admin & Operator Plane | Complete |\n| M38 | Reliability, HA, DR & Chaos | Complete |\n| M39 | Enterprise Security, Compliance & Governance Integration | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -699,3 +699,8 @@ M37 adds a durable operational projection and command-intent surface for the Age
 ### M38 — Reliability, HA, DR & Chaos
 
 M38 adds enterprise reliability contracts for deployment profiles, worker leases, disaster-recovery plans and controlled chaos scenarios. Local SQLite remains a valid single-node profile; distributed PostgreSQL, durable queues, worker orchestration, regional failover and backup infrastructure remain deployment implementations rather than duplicated kernel services.
+
+
+### M39 — Enterprise Security, Compliance & Governance Integration
+
+M39 adds durable integration contracts for enterprise identity providers, KMS/HSM providers, audit export, data residency/retention/legal hold and incident response. These are integration states and evidence-oriented control records; Agent Platform remains the authoritative identity, authorization and governance plane.
