@@ -155,7 +155,10 @@ class CronExpression:
         return day_match
 
     def next_after(self, value: datetime) -> datetime:
-        candidate = value.astimezone(value.tzinfo).replace(second=0, microsecond=0) + timedelta(minutes=1)
+        candidate = (
+            value.astimezone(value.tzinfo).replace(second=0, microsecond=0)
+            + timedelta(minutes=1)
+        )
         limit = candidate + timedelta(days=366 * 2)
         while candidate <= limit:
             if self.matches(candidate):
