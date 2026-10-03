@@ -158,6 +158,13 @@ __all__ = [
     "ScheduleKind",
     "Scheduler",
     "SchedulerRun",
+    "KnowledgeClassification",
+    "KnowledgeContext",
+    "KnowledgeDocument",
+    "KnowledgeFabric",
+    "KnowledgeHit",
+    "KnowledgeSource",
+    "KnowledgeTrust",
     "Delivery",
     "DeliveryState",
     "EventEnvelope",
@@ -323,6 +330,16 @@ from .workspace_fabric import (
     WorkspaceProfile,
     WorkspaceState,
     WorkspaceTemplate,
+)
+
+from .knowledge import (
+    KnowledgeClassification,
+    KnowledgeContext,
+    KnowledgeDocument,
+    KnowledgeFabric,
+    KnowledgeHit,
+    KnowledgeSource,
+    KnowledgeTrust,
 )
 
 from .scheduler import (
