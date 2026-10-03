@@ -68,5 +68,5 @@ def test_duplicate_usage_id_is_rejected(tmp_path: Path) -> None:
     ledger = make_ledger(tmp_path)
     record = UsageRecord("u1", "workspace-1", "storage", 1, "bytes")
     ledger.record(record)
-    with pytest.raises(Exception):
+    with pytest.raises(sqlite3.IntegrityError):
         ledger.record(record)
