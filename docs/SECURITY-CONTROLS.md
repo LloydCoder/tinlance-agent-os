@@ -192,3 +192,16 @@ The hardening layer preserves the same authority boundary: these controls constr
 | Distributed boundary | Local leases are not claimed as distributed exactly-once | M29/M38 separation |
 
 The scheduler is an OS lifecycle mechanism. It is not an authorization engine, approval engine or execution authority. A scheduled job must still traverse the normal Task/Workflow path and Agent Platform authority boundary before consequential work occurs.
+
+
+## M30 knowledge controls
+
+- knowledge sources are workspace-bound;
+- documents carry content digests, source versions, collection times and validity windows;
+- classification and trust are explicit retrieval filters;
+- quarantined content cannot enter the active fabric;
+- provenance is returned with every retrieved hit;
+- context assembly has a deterministic size budget;
+- retrieval never creates capabilities, approvals or authorization;
+- semantic/vector backends must preserve the same provenance/trust contract;
+- external content is treated as data and must not be interpreted as an authority-bearing instruction.
