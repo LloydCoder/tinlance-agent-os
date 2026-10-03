@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -95,9 +96,7 @@ def test_reconciliation_detects_version_and_configuration_drift(tmp_path: Path) 
     runtime.start()
     directory.set_desired(desired())
 
-    changed = DesiredAgent(
-        **{**desired().__dict__, "version": "2.0.0"}  # type: ignore[attr-defined]
-    )
+    changed = replace(desired(), version="2.0.0")
     directory.set_desired(changed, expected_generation=1)
     assert directory.plan("agent-1").action is ReconciliationAction.UPGRADE
 
