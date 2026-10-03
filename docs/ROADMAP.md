@@ -36,6 +36,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M27 | Enterprise Workspace & Organization Fabric | COMPLETE |
 | M28 | Event, Signal & Reactive Runtime | COMPLETE |
 | M29 | Scheduler & Job Runtime | COMPLETE |
+| M30 | Context & Knowledge Fabric | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -547,3 +548,8 @@ The M29 suite verifies cadence, cron/timezone behavior, catch-up, generation con
 ### Distributed boundary
 
 M29 is the durable single-node scheduler contract. Distributed workers, queue backends, leader election/fencing, regional scheduling and failover remain M38. This prevents SQLite from being presented as a distributed scheduler while preserving a replaceable scheduler persistence boundary.
+
+
+## M30 — Context & Knowledge Fabric
+
+Durable sources, documents and chunks with provenance, freshness, authority, classification and trust metadata; deterministic lexical retrieval; bounded context assembly; and a stable seam for future semantic/vector retrieval backends. Retrieval remains data and never becomes Platform authority.
