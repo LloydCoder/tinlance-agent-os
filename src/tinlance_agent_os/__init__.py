@@ -2,7 +2,7 @@
 
 __version__ = "0.1.0"
 
-from .agent_runtime import (
+from .agent_directory import (\n    AgentDirectory,\n    AgentObservation,\n    Compatibility,\n    DesiredAgent,\n    DesiredAgentState,\n    ReconciliationAction,\n    ReconciliationPlan,\n)\n\nfrom .agent_runtime import (
     AgentDefinition,
     AgentLifecycleState,
     AgentRuntime,
@@ -14,7 +14,7 @@ from .agent_runtime import (
 )
 
 __all__ = [
-    "AgentDefinition",
+    "AgentDirectory",\n    "AgentObservation",\n    "Compatibility",\n    "DesiredAgent",\n    "DesiredAgentState",\n    "ReconciliationAction",\n    "ReconciliationPlan",\n    "AgentDefinition",
     "AgentLifecycleState",
     "AgentRuntime",
     "AgentSnapshot",
