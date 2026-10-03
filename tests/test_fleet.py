@@ -72,7 +72,7 @@ def test_deployment_requires_matching_group_and_duplicate_ids_fail(tmp_path: Pat
     fleet.create_deployment(deployment)
     with pytest.raises(sqlite3.IntegrityError):
         fleet.create_deployment(deployment)
-    with pytest.raises(KeyError):
+    with pytest.raises(ValueError, match="workspace"):
         fleet.create_deployment(
             FleetDeployment("deployment-2", "workspace-2", "group-1", "agent-1", "1.2.0")
         )
