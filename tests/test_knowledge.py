@@ -33,11 +33,11 @@ def test_ingest_persists_provenance_and_chunks(tmp_path: Path) -> None:
             "workspace-1",
             "wiki://agent-os",
             "Agent OS",
-            "Agent OS owns lifecycle composition while Platform owns consequential authority.",
+            "Agent OS owns lifecycle composition while Platform owns consequential authority. " * 12,
             datetime(2026, 10, 3, tzinfo=UTC),
             trust=KnowledgeTrust.VERIFIED,
         ),
-        chunk_size=60,
+        chunk_size=200,
     )
     assert len(chunks) >= 2
     context = fabric.retrieve("workspace-1", "Platform authority", limit=5)
