@@ -802,3 +802,36 @@ M40 is an optimization and recommendation plane, not an authority plane. It may 
 - recommendation decisions require generation matching;
 - no adaptive recommendation creates Platform authority;
 - adaptive behavior remains inspectable and reversible through durable state.
+
+
+## M41 — Enterprise GA & Certification
+
+M41 is the final repository milestone: an auditable release-assurance and compatibility surface.
+
+### Scope
+
+- release/API/schema compatibility records;
+- artifact digest, SBOM and provenance references;
+- evidence-backed CI, security, performance, chaos, DR, compliance and supply-chain checks;
+- compatibility entries and lifecycle states;
+- deterministic GA readiness derived from durable checks;
+- operational/SRE runbook and support-lifecycle requirements.
+
+### Boundary
+
+M41 does not claim external certification. SOC 2, ISO 27001, penetration testing, customer audits, legal attestations and deployment-specific risk acceptance remain external assurance activities.
+
+### Research alignment
+
+- NIST CSF 2.0 provides six concurrent cybersecurity functions: Govern, Identify, Protect, Detect, Respond and Recover.
+- SLSA 1.1 describes provenance requirements around output digests, build process information and provenance authenticity/integrity; current SLSA documentation should be checked when selecting an exact production level.
+- OpenSSF Scorecard provides supply-chain security checks including dependency management and workflow/build hygiene.
+
+### Acceptance
+
+- releases require explicit artifact, SBOM and provenance references;
+- completed assurance checks require evidence references;
+- readiness is false while required checks are pending or failed;
+- compatibility is explicit and versioned;
+- external certification is represented as evidence, not asserted as a repository property;
+- no new authority plane is introduced.

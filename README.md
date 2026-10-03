@@ -139,7 +139,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M28 | Event, Signal & Reactive Runtime | Complete |
 | M29 | Scheduler & Job Runtime | Complete |
 | M30 | Context & Knowledge Fabric | Complete |
-| M31 | Connectors & Data Spaces | Complete |\n| M32 | Resource, Cost & Capacity Runtime | Complete |\n| M33 | Evaluation & Agent Quality Runtime | Complete |\n| M34 | Enterprise Fleet & Remote Control Plane | Complete |\n| M35 | Device / Desktop Operating Environment | Complete |\n| M36 | Agent Marketplace & Enterprise Registry | Complete |\n| M37 | Enterprise Admin & Operator Plane | Complete |\n| M38 | Reliability, HA, DR & Chaos | Complete |\n| M39 | Enterprise Security, Compliance & Governance Integration | Complete |\n| M40 | Agent OS Intelligence & Adaptive Runtime | Complete |
+| M31 | Connectors & Data Spaces | Complete |\n| M32 | Resource, Cost & Capacity Runtime | Complete |\n| M33 | Evaluation & Agent Quality Runtime | Complete |\n| M34 | Enterprise Fleet & Remote Control Plane | Complete |\n| M35 | Device / Desktop Operating Environment | Complete |\n| M36 | Agent Marketplace & Enterprise Registry | Complete |\n| M37 | Enterprise Admin & Operator Plane | Complete |\n| M38 | Reliability, HA, DR & Chaos | Complete |\n| M39 | Enterprise Security, Compliance & Governance Integration | Complete |\n| M40 | Agent OS Intelligence & Adaptive Runtime | Complete |\n| M41 | Enterprise GA & Certification | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -718,3 +718,12 @@ The adaptive layer is deliberately **non-authoritative**:
 - accepted recommendations remain intents for the owning runtime to validate and dispatch through the normal governed path.
 
 This gives Agent OS a controlled feedback loop without turning optimization into a second policy or execution kernel.
+
+
+### M41 — Enterprise GA & Certification
+
+M41 closes the repository roadmap with a release-assurance contract rather than a claim of external certification. It records release identity, API/schema compatibility, artifact/SBOM/provenance references and evidence-backed CI, security, performance, chaos, disaster-recovery, compliance and supply-chain checks.
+
+External certification and assurance activities remain external: a repository record cannot itself establish SOC 2, ISO 27001, penetration-test completion or customer-specific compliance. SLSA requires provenance to identify build outputs by cryptographic digest and describes increasing guarantees for provenance authenticity and integrity; the release pipeline therefore keeps provenance and SBOM references explicit. NIST CSF 2.0 is used as an organizational mapping reference across Govern, Identify, Protect, Detect, Respond and Recover.
+
+M41 is complete when the repository can express and evaluate these release gates deterministically; production organizations must still execute their own external assurance program.
