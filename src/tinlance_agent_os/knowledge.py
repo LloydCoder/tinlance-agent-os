@@ -152,6 +152,7 @@ class KnowledgeFabric:
                 document.trust.value,
                 json.dumps(dict(document.metadata or {}), sort_keys=True),
                 current.isoformat(),
+                current.isoformat(),
             )
         )
         chunks = tuple(
