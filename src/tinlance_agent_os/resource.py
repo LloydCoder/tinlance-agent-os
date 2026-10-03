@@ -79,7 +79,7 @@ class ResourceLedger:
             raise ValueError("quantity must be non-negative")
         if record.cost_micros is not None and record.cost_micros < 0:
             raise ValueError("cost_micros must be non-negative")
-        occurred_at = record.occurred_at or datetime.now(UTC)
+        occurred_at: datetime = record.occurred_at or datetime.now(UTC)
         if occurred_at.tzinfo is None:
             raise ValueError("occurred_at must be timezone-aware")
         normalized = UsageRecord(
