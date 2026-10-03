@@ -21,9 +21,7 @@ def test_adaptive_recommendation_is_deterministic_and_workspace_scoped(tmp_path:
     runtime.register_policy(
         AdaptivePolicy("latency-1", "workspace-1", "latency", "p95_latency_ms", 500, 25)
     )
-    observation = AdaptiveObservation(
-        "obs-1", "workspace-1", "latency-1", 650, "ms", 100
-    )
+    observation = AdaptiveObservation("obs-1", "workspace-1", "latency-1", 650, "ms", 100)
     runtime.record_observation(observation)
     recommendation = runtime.recommend(
         observation,
@@ -34,19 +32,20 @@ def test_adaptive_recommendation_is_deterministic_and_workspace_scoped(tmp_path:
     assert recommendation is not None
     assert recommendation.state == "proposed"
     assert "above target" in recommendation.reason
-    assert runtime.recommend(
-        AdaptiveObservation("obs-2", "workspace-1", "latency-1", 510, "ms", 100),
-        recommendation_id="rec-2",
-        strategy="model_route",
-        action_ref="model-router/profile-b",
-    ) is None
+    assert (
+        runtime.recommend(
+            AdaptiveObservation("obs-2", "workspace-1", "latency-1", 510, "ms", 100),
+            recommendation_id="rec-2",
+            strategy="model_route",
+            action_ref="model-router/profile-b",
+        )
+        is None
+    )
 
 
 def test_adaptive_decision_requires_generation(tmp_path: Path) -> None:
     runtime = make_runtime(tmp_path)
-    runtime.register_policy(
-        AdaptivePolicy("cost-1", "workspace-1", "cost", "cost_micro", 100, 0)
-    )
+    runtime.register_policy(AdaptivePolicy("cost-1", "workspace-1", "cost", "cost_micro", 100, 0))
     observation = AdaptiveObservation("obs-1", "workspace-1", "cost-1", 125, "micro", 10)
     runtime.record_observation(observation)
     runtime.recommend(
