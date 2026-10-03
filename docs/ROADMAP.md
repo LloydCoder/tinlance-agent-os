@@ -598,3 +598,33 @@ The runtime records and evaluates quality signals; it does not execute customer 
 - baseline/candidate comparisons are deterministic;
 - naive timestamps and invalid identities fail closed;
 - no Platform authority is introduced.
+
+
+## M34 — Enterprise Fleet & Remote Control Plane
+
+M34 turns the M20 remote runtime seam into an explicit fleet control-plane contract.
+
+### Scope
+
+- durable device enrollment and inventory;
+- endpoint identity metadata and attestation references;
+- workspace-scoped fleet groups;
+- deployment desired state with version and rollout cohort;
+- device lifecycle states: enrolled, online, draining, offline, quarantined;
+- generation-protected device updates;
+- workspace-safe group membership;
+- deterministic capacity-aware placement planning;
+- rollout state records that can be consumed by external deployment workers.
+
+### Boundary
+
+M34 owns fleet composition and desired state. It does not implement a second identity/authorization system, grant capabilities, approve actions, execute customer code, or create authoritative evidence. Device attestation, hosted control-plane persistence, certificate lifecycle and remote management are integration seams.
+
+### Acceptance
+
+- devices and groups are durable and workspace isolated;
+- stale device updates fail by generation conflict;
+- group membership rejects workspace mismatch;
+- deployment targets must belong to the same workspace as their group;
+- placement excludes offline/draining/quarantined devices and respects capacity;
+- no Platform authority is introduced.
