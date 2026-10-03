@@ -174,3 +174,21 @@ OWASP's 2026 Agentic Applications material identifies memory/context poisoning a
 | CI supply chain | All workflow action references must resolve to immutable 40-hex commit SHAs | CI workflow pinning gate |
 
 The hardening layer preserves the same authority boundary: these controls constrain local composition and release integrity; they do not replace Agent Platform authorization, enterprise identity, sandboxing, signing infrastructure or centralized evidence.
+
+
+## M29 scheduler controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Schedule identity | Schedule IDs and workspace IDs are persisted together | Scheduler schema + workspace foreign key |
+| Time handling | Persisted times are UTC-normalized; cron/calendar timezones must be valid IANA zones | Scheduler |
+| Replay/deduplication | Job IDs are deterministic from schedule + scheduled occurrence | SHA-256 job identity |
+| Misfires | Missed schedules use explicit skip/run-once/catch-up semantics | Scheduler policy |
+| Concurrency | A schedule cannot exceed its configured running-job limit | Lease admission query |
+| Worker recovery | Expired leases return jobs to queued state | Durable lease expiry |
+| Generation safety | Schedule updates require the expected generation | Store CAS update |
+| Failure durability | Dispatcher failures become terminal job failures | Job state transition |
+| Authority | Scheduling never grants capability or authorization | Architecture boundary |
+| Distributed boundary | Local leases are not claimed as distributed exactly-once | M29/M38 separation |
+
+The scheduler is an OS lifecycle mechanism. It is not an authorization engine, approval engine or execution authority. A scheduled job must still traverse the normal Task/Workflow path and Agent Platform authority boundary before consequential work occurs.
