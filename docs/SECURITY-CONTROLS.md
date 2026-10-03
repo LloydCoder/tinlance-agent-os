@@ -309,3 +309,19 @@ The scheduler is an OS lifecycle mechanism. It is not an authorization engine, a
 | Revision safety | Data-policy generations advance deterministically | set_data_policy |
 | Tenant isolation | All records are workspace scoped | Security schema |
 | Authority | External IdP/KMS/audit services and Agent Platform retain authority | M39 boundary |
+
+
+## M40 adaptive-runtime controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Observation identity | Observation, workspace and policy IDs are required | AdaptiveObservation validation |
+| Metric safety | Unit and sample size are explicit; empty units and non-positive samples fail | AdaptiveObservation validation |
+| Workspace isolation | Observations must match their policy workspace | AdaptiveRuntime |
+| Recommendation explainability | Recommendation stores objective, metric, target, observed value and reason | AdaptiveRecommendation |
+| Recommendation lifecycle | Proposed/accepted/rejected/expired state is durable | Adaptive schema |
+| Decision safety | Accepted/rejected transitions require expected generation | decide |
+| Adaptive authority | Recommendations cannot grant capabilities, approve actions or execute work | Architecture boundary |
+| Reversibility | Recommendations remain intents until an owning runtime validates and dispatches them | M40 boundary |
+| Telemetry integrity | Adaptive inputs should come from validated OS/Platform telemetry, not model assertions | Integration boundary |
+| Sensitive data | Recommendation reasons should reference metric metadata rather than raw prompts, secrets or confidential memory | Observability/data-minimization policy |
