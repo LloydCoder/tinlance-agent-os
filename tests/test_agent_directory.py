@@ -12,7 +12,12 @@ from tinlance_agent_os.agent_directory import (
     DesiredAgentState,
     ReconciliationAction,
 )
-from tinlance_agent_os.agent_runtime import AgentDefinition, AgentRuntime, RestartPolicy, RuntimeConfig
+from tinlance_agent_os.agent_runtime import (
+    AgentDefinition,
+    AgentRuntime,
+    RestartPolicy,
+    RuntimeConfig,
+)
 from tinlance_agent_os.store import StateStore
 
 
@@ -21,7 +26,9 @@ def make_directory(tmp_path: Path) -> tuple[StateStore, AgentDirectory]:
     return store, AgentDirectory(store)
 
 
-def desired(*, generation: int = 1, state: DesiredAgentState = DesiredAgentState.RUNNING) -> DesiredAgent:
+def desired(
+    *, generation: int = 1, state: DesiredAgentState = DesiredAgentState.RUNNING
+) -> DesiredAgent:
     return DesiredAgent(
         agent_id="agent-1",
         workspace_id="workspace-1",
