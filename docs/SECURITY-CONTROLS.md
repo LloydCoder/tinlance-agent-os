@@ -325,3 +325,19 @@ The scheduler is an OS lifecycle mechanism. It is not an authorization engine, a
 | Reversibility | Recommendations remain intents until an owning runtime validates and dispatches them | M40 boundary |
 | Telemetry integrity | Adaptive inputs should come from validated OS/Platform telemetry, not model assertions | Integration boundary |
 | Sensitive data | Recommendation reasons should reference metric metadata rather than raw prompts, secrets or confidential memory | Observability/data-minimization policy |
+
+
+## M41 enterprise GA and assurance controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Release identity | Version/API/schema identity is explicit | GARelease |
+| Artifact integrity | Artifact digest is required | GARelease |
+| Supply-chain evidence | SBOM and provenance references are required | GARelease |
+| Assurance evidence | Passed/failed checks require evidence references | GACheck |
+| Readiness | Pending or failed checks block GA readiness | EnterpriseGARuntime |
+| Compatibility | Component support ranges are durable | GACompatibility |
+| External certification | Repository does not self-assert SOC 2/ISO/pentest completion | M41 boundary |
+| Governance mapping | NIST CSF 2.0 functions are treated as assurance mapping, not implementation claims | Documentation |
+| Provenance | Production release must preserve verifiable provenance references | Release pipeline |
+| Authority | GA readiness cannot grant capabilities or authorize execution | Architecture boundary |
