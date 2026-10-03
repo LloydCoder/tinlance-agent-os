@@ -691,3 +691,29 @@ The registry is metadata and distribution state. It does not execute packages, c
 - lifecycle changes require generation checks;
 - quarantine/revocation remain explicit state transitions;
 - no Platform authority is introduced.
+
+
+## M37 — Enterprise Admin & Operator Plane
+
+M37 provides the operational control-center contract above the runtime modules.
+
+### Scope
+
+- durable operator projections for agents, workflows, fleet entities and other runtime resources;
+- workspace-scoped status/health/version summaries;
+- deterministic filtering and generation tracking;
+- operator command intents with parameter digests;
+- source-runtime projection model so the control center is not a second system of record.
+
+### Boundary
+
+M37 is presentation, operations and intent capture. It does not become the source of truth for agent state, fleet state, memory, policy, approvals or execution. Command intents must dispatch through the owning runtime and Agent Platform authority.
+
+### Acceptance
+
+- projections are durable and workspace scoped;
+- projection generations advance deterministically;
+- commands are unique durable intents, not direct execution;
+- naive timestamps fail closed;
+- source-of-truth ownership remains with runtime modules;
+- no Platform authority is introduced.
