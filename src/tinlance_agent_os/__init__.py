@@ -185,6 +185,9 @@ __all__ = [
     "WorkspaceProfile",
     "WorkspaceState",
     "WorkspaceTemplate",
+    "ResourceLedger",
+    "UsageRecord",
+    "UsageSummary",
 ]
 
 from .sdk import (
