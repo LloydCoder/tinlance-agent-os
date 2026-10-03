@@ -236,3 +236,18 @@ The scheduler is an OS lifecycle mechanism. It is not an authorization engine, a
 | Attestation | Attestation is an opaque reference, not a local trust decision | FleetDevice |
 | Authority | Fleet planning cannot grant capabilities or execute consequential actions | Architecture boundary |
 | Hosted seam | Centralized control plane and device-management services remain deployment integrations | M34 boundary |
+
+
+## M35 device operating-environment controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Image integrity | OS images require lowercase 64-hex SHA-256 digests | OSImage validation |
+| Boot posture | Secure Boot, TPM and disk-encryption requirements are explicit profile fields | DeviceSecurityProfile |
+| Desired-state safety | Device image changes use generation checks | DeviceOSRuntime |
+| Update identity | Update IDs are unique and source/target no-op updates are rejected | Durable schema + validation |
+| Recovery | Recovery image is modeled separately from target image | OSUpdate |
+| Provenance | Image provenance is represented as an opaque reference | OSImage |
+| Rollback | Update lifecycle includes explicit rolled-back state | UpdateState |
+| Distribution boundary | Kernel, bootloader, firmware, TPM and encryption services remain external | M35 deployment seam |
+| Authority | Device update metadata cannot grant capabilities or authorize agent work | Architecture boundary |
