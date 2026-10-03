@@ -165,6 +165,11 @@ __all__ = [
     "KnowledgeHit",
     "KnowledgeSource",
     "KnowledgeTrust",
+    "ConnectorKind",
+    "ConnectorManifest",
+    "ConnectorRegistry",
+    "ConnectorState",
+    "DataCursor",
     "Delivery",
     "DeliveryState",
     "EventEnvelope",
@@ -330,6 +335,14 @@ from .workspace_fabric import (
     WorkspaceProfile,
     WorkspaceState,
     WorkspaceTemplate,
+)
+
+from .connectors import (
+    ConnectorKind,
+    ConnectorManifest,
+    ConnectorRegistry,
+    ConnectorState,
+    DataCursor,
 )
 
 from .knowledge import (
