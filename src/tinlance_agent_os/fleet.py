@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 from .store import StateStore
 
@@ -192,12 +192,13 @@ class FleetControlPlane:
                     device_id,
                 ),
             )
+            next_state = state or cast(DeviceState, str(row[4]))
             return FleetDevice(
                 str(row[0]),
                 str(row[1]),
                 str(row[2]),
                 str(row[3]),
-                state or str(row[4]),
+                next_state,
                 platform_version or str(row[5]),
                 next_capacity,
                 next_used,
