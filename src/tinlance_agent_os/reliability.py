@@ -150,7 +150,12 @@ class ReliabilityRuntime:
         return profile
 
     def acquire_lease(self, lease: WorkerLease) -> WorkerLease:
-        if (\n            not lease.lease_id\n            or not lease.workspace_id\n            or not lease.worker_id\n            or not lease.resource\n        ):
+        if (
+            not lease.lease_id
+            or not lease.workspace_id
+            or not lease.worker_id
+            or not lease.resource
+        ):
             raise ValueError("lease identity is required")
         expires_at = self._timestamp(lease.expires_at)
         if expires_at <= datetime.now(UTC):
