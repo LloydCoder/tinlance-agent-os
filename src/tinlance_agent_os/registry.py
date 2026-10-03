@@ -204,7 +204,8 @@ class AgentRegistry:
                 )
             next_generation = int(row[8]) + 1
             db.execute(
-                "UPDATE registry_versions SET state=?,generation=? WHERE package_id=? AND version=?",
+                "UPDATE registry_versions SET state=?,generation=? "
+                "WHERE package_id=? AND version=?",
                 (state, next_generation, package_id, version),
             )
         return RegistryVersion(
