@@ -37,7 +37,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M28 | Event, Signal & Reactive Runtime | COMPLETE |
 | M29 | Scheduler & Job Runtime | COMPLETE |
 | M30 | Context & Knowledge Fabric | COMPLETE |
-| M31 | Connectors & Data Spaces | COMPLETE |\n| M32 | Resource, Cost & Capacity Runtime | COMPLETE |
+| M31 | Connectors & Data Spaces | COMPLETE |\n| M32 | Resource, Cost & Capacity Runtime | COMPLETE |\n| M33 | Evaluation & Agent Quality Runtime | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -574,4 +574,27 @@ M32 is accounting and telemetry, not an authorization or quota engine. Agent Pla
 - cost attribution works at agent/task/workflow scope;
 - invalid negative quantities/costs and naive timestamps fail closed;
 - duplicate usage identifiers are rejected;
+- no Platform authority is introduced.
+
+
+## M33 — Evaluation & Agent Quality Runtime
+
+M33 provides the repository-owned evaluation lifecycle above agent/workflow execution:
+
+- versioned evaluation cases and suite identity;
+- durable evaluation runs with workspace/agent/workflow/model attribution;
+- integer metric measurements with explicit units and evidence references;
+- deterministic regression gates with fail-closed missing/unit-mismatch behavior;
+- baseline/candidate metric comparison;
+- durable run completion state.
+
+The runtime records and evaluates quality signals; it does not execute customer workloads, grant capabilities, authorize actions, enforce Platform budgets, or create authoritative evidence. FAS/FAS-Bench and future external benchmark providers can integrate through these contracts without becoming kernel dependencies.
+
+### Acceptance
+
+- evaluation cases and runs survive process restart;
+- measurements are workspace/run/case attributable and duplicate-safe;
+- gates pass only when an observed metric exists with the expected unit and threshold relation;
+- baseline/candidate comparisons are deterministic;
+- naive timestamps and invalid identities fail closed;
 - no Platform authority is introduced.

@@ -188,6 +188,12 @@ __all__ = [
     "ResourceLedger",
     "UsageRecord",
     "UsageSummary",
+    "EvaluationCase",
+    "EvaluationGate",
+    "EvaluationMeasurement",
+    "EvaluationRun",
+    "EvaluationRuntime",
+    "GateResult",
 ]
 
 from .sdk import (
@@ -369,6 +375,15 @@ from .scheduler import (
 )
 
 from .resource import ResourceLedger, UsageRecord, UsageSummary
+
+from .evaluation import (
+    EvaluationCase,
+    EvaluationGate,
+    EvaluationMeasurement,
+    EvaluationRun,
+    EvaluationRuntime,
+    GateResult,
+)
 
 from .reference_agents import (
     CybersecurityAgent,

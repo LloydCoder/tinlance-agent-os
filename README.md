@@ -139,7 +139,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M28 | Event, Signal & Reactive Runtime | Complete |
 | M29 | Scheduler & Job Runtime | Complete |
 | M30 | Context & Knowledge Fabric | Complete |
-| M31 | Connectors & Data Spaces | Complete |\n| M32 | Resource, Cost & Capacity Runtime | Complete |
+| M31 | Connectors & Data Spaces | Complete |\n| M32 | Resource, Cost & Capacity Runtime | Complete |\n| M33 | Evaluation & Agent Quality Runtime | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -669,3 +669,8 @@ M31 provides durable connector registration, endpoint validation, connector life
 ### M32 — Resource, Cost & Capacity Runtime
 
 The resource ledger records OS-observed usage and attributable cost metadata for workspace, agent, task and workflow reporting. It uses durable SQLite state, explicit units and integer micro-costs. It does not enforce or replace Agent Platform budgets, quotas or authorization.
+
+
+### M33 — Evaluation & Agent Quality Runtime
+
+M33 provides a durable evaluation surface for agent and workflow quality: versioned cases, run records, metric measurements, deterministic regression gates and baseline/candidate comparisons. Measurements use explicit units and integer values; missing or mismatched units fail gates closed. Evaluation results are evidence for engineering decisions, not authorization, billing, policy or Platform authority. External benchmark suites such as FAS/FAS-Bench can integrate through these contracts without becoming Agent OS kernel dependencies.
