@@ -717,3 +717,30 @@ M37 is presentation, operations and intent capture. It does not become the sourc
 - naive timestamps fail closed;
 - source-of-truth ownership remains with runtime modules;
 - no Platform authority is introduced.
+
+
+## M38 — Reliability, HA, DR & Chaos
+
+M38 establishes the reliability contract required for enterprise operation.
+
+### Scope
+
+- single-node SQLite and distributed PostgreSQL deployment profiles;
+- regional topology and explicit RPO/RTO targets;
+- worker lease lifecycle with generation safety;
+- disaster-recovery plan metadata and test/readiness state;
+- controlled chaos scenario definitions and blast-radius metadata;
+- deterministic readiness reporting.
+
+### Boundary
+
+M38 records reliability requirements and coordination intent. It does not embed PostgreSQL, a distributed queue, leader-election service, fencing implementation, backup engine or regional failover controller in the local core. Those are production deployment components.
+
+### Acceptance
+
+- distributed persistence requires a multi-region profile;
+- leases cannot be duplicated while active and stale release attempts fail;
+- RPO/RTO are explicit and non-negative;
+- DR and chaos state are durable;
+- readiness is deterministic;
+- no Platform authority is introduced.
