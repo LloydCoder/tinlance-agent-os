@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Callable, Mapping
+from typing import Any
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
@@ -208,6 +209,9 @@ class Scheduler:
         now: datetime | None = None,
     ) -> Schedule:
         current = self._now(now)
+        existing = self.store.get_scheduler_schedule(schedule.schedule_id)
+        if existing is None:
+            raise KeyError(schedule.schedule_id)
         next_run = schedule.next_run_at or self._first_occurrence(schedule, current)
         updated = self._with_next(
             schedule, next_run.astimezone(UTC), generation=expected_generation + 1
@@ -217,7 +221,7 @@ class Scheduler:
             expected_generation=expected_generation,
             enabled=updated.enabled,
             next_run_at=updated.next_run_at.isoformat() if updated.next_run_at else "",
-            last_run_at=None,
+            last_run_at=existing["last_run_at"],
             generation=updated.generation,
             expression=updated.expression,
             timezone=updated.timezone,
@@ -434,7 +438,7 @@ class Scheduler:
         return current.astimezone(UTC)
 
     @staticmethod
-    def _schedule_from_row(row: Mapping[str, object]) -> Schedule:
+    def _schedule_from_row(row: Any) -> Schedule:
         return Schedule(
             schedule_id=str(row["schedule_id"]),
             workspace_id=str(row["workspace_id"]),
@@ -451,7 +455,7 @@ class Scheduler:
         )
 
     @staticmethod
-    def _job_from_row(row: Mapping[str, object] | None) -> Job:
+    def _job_from_row(row: Any) -> Job:
         if row is None:
             raise KeyError("scheduler job disappeared during lease")
         return Job(
