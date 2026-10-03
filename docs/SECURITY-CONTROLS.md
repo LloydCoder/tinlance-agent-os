@@ -251,3 +251,18 @@ The scheduler is an OS lifecycle mechanism. It is not an authorization engine, a
 | Rollback | Update lifecycle includes explicit rolled-back state | UpdateState |
 | Distribution boundary | Kernel, bootloader, firmware, TPM and encryption services remain external | M35 deployment seam |
 | Authority | Device update metadata cannot grant capabilities or authorize agent work | Architecture boundary |
+
+
+## M36 marketplace and registry controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Publisher trust | Blocked publishers cannot register packages | AgentRegistry |
+| Artifact integrity | Versions require strict SHA-256 digests | RegistryVersion validation |
+| Signature | Published versions require a signature reference | RegistryVersion validation |
+| Provenance | Provenance and SBOM are explicit opaque references | RegistryVersion |
+| Lifecycle | Quarantine/revocation/deprecation are durable states | Registry schema |
+| Generation safety | Version state changes require expected generation | set_version_state |
+| Identity | Package/version duplicates are rejected | Unique constraints |
+| Execution boundary | Registry never executes package code | Architecture boundary |
+| Authority | Installation/capability grants remain Platform-governed | Platform integration |
