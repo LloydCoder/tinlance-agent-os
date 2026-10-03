@@ -60,9 +60,7 @@ def test_skip_misfire_discards_backlog_and_reanchors_cadence(tmp_path: Path) -> 
     )
 
     assert scheduler.reconcile(now=datetime(2026, 10, 3, 0, 3, tzinfo=UTC)) == ()
-    assert scheduler.get("schedule-skip").next_run_at == datetime(
-        2026, 10, 3, 0, 1, tzinfo=UTC
-    )
+    assert scheduler.get("schedule-skip").next_run_at == datetime(2026, 10, 3, 0, 1, tzinfo=UTC)
 
 
 def test_catch_up_preserves_each_interval_occurrence(tmp_path: Path) -> None:
