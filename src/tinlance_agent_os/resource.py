@@ -83,7 +83,18 @@ class ResourceLedger:
         if occurred_at.tzinfo is None:
             raise ValueError("occurred_at must be timezone-aware")
         normalized = UsageRecord(
-            **{**record.__dict__, "occurred_at": occurred_at.astimezone(UTC)}
+            usage_id=record.usage_id,
+            workspace_id=record.workspace_id,
+            resource=record.resource,
+            quantity=record.quantity,
+            unit=record.unit,
+            cost_micros=record.cost_micros,
+            agent_id=record.agent_id,
+            task_id=record.task_id,
+            workflow_id=record.workflow_id,
+            model=record.model,
+            provider=record.provider,
+            occurred_at=occurred_at.astimezone(UTC),
         )
         with sqlite3.connect(self.store.path) as db:
             db.execute(
