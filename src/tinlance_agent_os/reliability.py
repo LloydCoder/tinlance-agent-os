@@ -23,7 +23,9 @@ _SCHEMA: Final[str] = """
 CREATE TABLE IF NOT EXISTS reliability_profiles (
     profile_id TEXT PRIMARY KEY,
     workspace_id TEXT NOT NULL,
-    persistence_mode TEXT NOT NULL CHECK(\n        persistence_mode IN ('sqlite-local','postgres-distributed')\n    ),
+    persistence_mode TEXT NOT NULL CHECK(
+        persistence_mode IN ('sqlite-local','postgres-distributed')
+    ),
     regions INTEGER NOT NULL CHECK(regions >= 1),
     rpo_seconds INTEGER NOT NULL CHECK(rpo_seconds >= 0),
     rto_seconds INTEGER NOT NULL CHECK(rto_seconds >= 0),
