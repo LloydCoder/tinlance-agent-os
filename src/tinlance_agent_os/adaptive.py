@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 from .store import StateStore
 
@@ -270,7 +270,7 @@ class AdaptiveRuntime:
             str(row[0]),
             str(row[1]),
             str(row[2]),
-            str(row[3]),
+            cast(Strategy, str(row[3])),
             str(row[4]),
             str(row[5]),
             float(row[6]),
@@ -294,12 +294,12 @@ class AdaptiveRuntime:
                 str(r[0]),
                 str(r[1]),
                 str(r[2]),
-                str(r[3]),
+                cast(Strategy, str(r[3])),
                 str(r[4]),
                 str(r[5]),
                 float(r[6]),
                 float(r[7]),
-                str(r[8]),
+                cast(RecommendationState, str(r[8])),
                 int(r[9]),
             )
             for r in rows
