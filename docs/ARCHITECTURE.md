@@ -542,3 +542,31 @@ The production distribution layer verifies external supply-chain evidence before
 The post-M24 hardening pass closes concrete residual integrity gaps without creating a new authority plane. Release compatibility is enforced against manifest minimum versions; failed staging cannot strand a staged artifact; rollback is only attempted after activation; memory trust promotion is constrained by provenance; supervised process environments are allowlisted; Unix fleet endpoints are validated as local socket paths; and CI enforces immutable action references.
 
 These controls strengthen local composition and supply-chain boundaries while Agent Platform remains the sole authority for consequential execution.
+
+
+## M26 Agent Directory & Desired State
+
+M26 separates **desired state** from the M12 **observed lifecycle state**:
+
+```text
+Workspace intent
+      |
+      v
+Agent Directory
+  desired version/config/capabilities/state
+      |
+      v
+Reconciliation Plan  ---- read-only ---->  Agent Runtime
+                                              |
+                                              v
+                                      observed lifecycle/health
+                                              |
+                                              v
+                                      Agent Platform authority
+```
+
+The directory owns the declarative answer to "what agent should exist and in what lifecycle state." M12 owns the answer to "what the local OS currently observes." A reconciliation plan describes drift but does not execute it.
+
+Each desired definition has a monotonic generation. Updates use compare-and-swap semantics so concurrent operators cannot silently overwrite a newer deployment intent. Compatibility metadata describes minimum Agent OS version, Platform contract version and runtime requirements; it is deployment metadata, not authorization.
+
+Version, configuration and capability drift are explicit reconciliation conditions. A missing observed agent produces a BLOCKED plan rather than implicitly installing or launching code. Cross-workspace observations are blocked. The directory never mints capabilities, validates Platform approvals, creates Platform runs, or writes authoritative evidence.
