@@ -628,3 +628,36 @@ M34 owns fleet composition and desired state. It does not implement a second ide
 - deployment targets must belong to the same workspace as their group;
 - placement excludes offline/draining/quarantined devices and respects capacity;
 - no Platform authority is introduced.
+
+
+## M35 — Device / Desktop Operating Environment
+
+M35 defines the Tinlance-managed device deployment profile without turning the Agent OS repository into a Linux distribution.
+
+### Scope
+
+- device security profiles for Secure Boot, TPM, disk encryption and offline policy;
+- verified OS image metadata with lowercase SHA-256 digests;
+- architecture and boot-chain metadata;
+- desired OS image state with generation protection;
+- staged/active/failed/rollback update lifecycle;
+- recovery-image references;
+- durable device-local OS deployment state.
+
+### Deployment model
+
+The reference deployment is an image-based Linux environment with signed/verified boot artifacts, hardware-backed device identity and rollback-capable updates. Current atomic Linux ecosystems demonstrate the operational value of image-based updates and rollback, while newer sealed-image approaches combine Secure Boot, UKIs, composefs/fs-verity and TPM-backed disk unlock. M35 keeps those mechanisms as deployment implementations rather than hard-coding a distribution or boot stack.
+
+### Boundary
+
+M35 does not implement a kernel, bootloader, TPM service, encryption engine, package manager, fleet authorization system or remote execution authority. M34 handles fleet desired state; Agent Platform remains authoritative for identity, authorization, approvals and consequential execution.
+
+### Acceptance
+
+- device security profiles and image metadata are durable;
+- image digests are strictly validated;
+- desired image updates are generation protected;
+- duplicate/no-op updates fail closed;
+- update state transitions are generation protected;
+- recovery image references remain explicit;
+- no Platform authority is introduced.

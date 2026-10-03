@@ -139,7 +139,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M28 | Event, Signal & Reactive Runtime | Complete |
 | M29 | Scheduler & Job Runtime | Complete |
 | M30 | Context & Knowledge Fabric | Complete |
-| M31 | Connectors & Data Spaces | Complete |\n| M32 | Resource, Cost & Capacity Runtime | Complete |\n| M33 | Evaluation & Agent Quality Runtime | Complete |\n| M34 | Enterprise Fleet & Remote Control Plane | Complete |
+| M31 | Connectors & Data Spaces | Complete |\n| M32 | Resource, Cost & Capacity Runtime | Complete |\n| M33 | Evaluation & Agent Quality Runtime | Complete |\n| M34 | Enterprise Fleet & Remote Control Plane | Complete |\n| M35 | Device / Desktop Operating Environment | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -679,3 +679,8 @@ M33 provides a durable evaluation surface for agent and workflow quality: versio
 ### M34 — Enterprise Fleet & Remote Control Plane
 
 M34 adds the repository-owned fleet control-plane contract: durable device inventory, workspace-scoped fleet groups, desired agent deployment records, rollout cohorts, device health/draining/quarantine states and deterministic capacity-aware placement planning. It is a control-plane seam, not a replacement for Agent Platform authorization, identity or governed execution. Hosted control-plane services, attestation providers and device-management infrastructure remain deployment integrations.
+
+
+### M35 — Device / Desktop Operating Environment
+
+M35 defines the device-side deployment profile for Tinlance-managed Linux systems: security posture, verified OS image metadata, desired image state and staged/active/rollback lifecycle. The repository owns the contract and local state model; boot firmware, Secure Boot keys, TPM, disk encryption, image builders and device-management services remain deployment integrations. Atomic/image-based Linux approaches provide a useful reference for rollback-oriented device updates, but M35 does not embed a distribution in the Python core.
