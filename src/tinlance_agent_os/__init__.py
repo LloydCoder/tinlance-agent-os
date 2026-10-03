@@ -211,6 +211,11 @@ __all__ = [
     "OperatorCommand",
     "OperatorEntity",
     "OperatorPlane",
+    "ChaosScenario",
+    "DRPlan",
+    "ReliabilityProfile",
+    "ReliabilityRuntime",
+    "WorkerLease",
 ]
 
 from .sdk import (
@@ -409,6 +414,8 @@ from .device_os import DeviceOSDesired, DeviceOSRuntime, DeviceSecurityProfile, 
 from .registry import AgentRegistry, RegistryPackage, RegistryPublisher, RegistryVersion
 
 from .operator import OperatorCommand, OperatorEntity, OperatorPlane
+
+from .reliability import ChaosScenario, DRPlan, ReliabilityProfile, ReliabilityRuntime, WorkerLease
 
 from .reference_agents import (
     CybersecurityAgent,
