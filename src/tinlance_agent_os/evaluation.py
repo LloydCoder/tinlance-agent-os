@@ -194,9 +194,7 @@ class EvaluationRuntime:
                     normalized.model,
                     normalized.status,
                     normalized.started_at.isoformat(),
-                    normalized.completed_at.isoformat()
-                    if normalized.completed_at
-                    else None,
+                    normalized.completed_at.isoformat() if normalized.completed_at else None,
                 ),
             )
         return normalized
@@ -219,9 +217,7 @@ class EvaluationRuntime:
         if updated != 1:
             raise KeyError(f"unknown evaluation run: {run_id}")
 
-    def record_measurement(
-        self, measurement: EvaluationMeasurement
-    ) -> EvaluationMeasurement:
+    def record_measurement(self, measurement: EvaluationMeasurement) -> EvaluationMeasurement:
         if not measurement.measurement_id or not measurement.metric:
             raise ValueError("measurement identity is required")
         if measurement.unit == "":
@@ -314,19 +310,11 @@ class EvaluationRuntime:
                 observed = None if row[0] is None else int(row[0])
                 unit_count = int(row[1] or 0)
                 observed_unit = None if row[2] is None else str(row[2])
-                unit_matches = (
-                    observed is not None
-                    and unit_count == 1
-                    and observed_unit == unit
-                )
+                unit_matches = observed is not None and unit_count == 1 and observed_unit == unit
                 passed = (
                     observed is not None
                     and unit_matches
-                    and (
-                        observed >= threshold
-                        if direction == "min"
-                        else observed <= threshold
-                    )
+                    and (observed >= threshold if direction == "min" else observed <= threshold)
                 )
                 results.append(
                     GateResult(
