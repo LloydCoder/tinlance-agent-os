@@ -13,7 +13,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Mapping
+from collections.abc import Mapping
 
 from .agent_runtime import AgentLifecycleState, HealthState
 from .store import StateStore
