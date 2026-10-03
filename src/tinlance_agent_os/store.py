@@ -796,7 +796,7 @@ class StateStore:
         with sqlite3.connect(self.path) as db:
             db.execute("PRAGMA foreign_keys=ON")
             db.execute(
-                "INSERT INTO knowledge_documents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO knowledge_documents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 row,
             )
             db.commit()
