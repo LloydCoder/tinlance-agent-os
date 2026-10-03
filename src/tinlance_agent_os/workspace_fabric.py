@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
 
 
 def _now() -> str:
