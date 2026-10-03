@@ -111,11 +111,7 @@ class OperatorPlane:
                    WHERE entity_type=? AND entity_id=?""",
                 (normalized.entity_type, normalized.entity_id),
             ).fetchone()
-            generation = (
-                normalized.generation
-                if current is None
-                else int(current[0]) + 1
-            )
+            generation = normalized.generation if current is None else int(current[0]) + 1
             db.execute(
                 """INSERT INTO operator_entities
                 (entity_type,entity_id,workspace_id,status,health,version,summary,
