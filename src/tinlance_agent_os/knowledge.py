@@ -250,11 +250,21 @@ class KnowledgeFabric:
         query: str,
         *,
         max_characters: int = 6000,
-        **kwargs: object,
+        maximum_classification: KnowledgeClassification = KnowledgeClassification.INTERNAL,
+        include_untrusted: bool = True,
+        now: datetime | None = None,
+        limit: int = 10,
     ) -> KnowledgeContext:
         if max_characters < 1:
             raise ValueError("max_characters must be positive")
-        context = self.retrieve(workspace_id, query, **kwargs)
+        context = self.retrieve(
+            workspace_id,
+            query,
+            maximum_classification=maximum_classification,
+            include_untrusted=include_untrusted,
+            now=now,
+            limit=limit,
+        )
         selected: list[KnowledgeHit] = []
         total = 0
         for hit in context.hits:
