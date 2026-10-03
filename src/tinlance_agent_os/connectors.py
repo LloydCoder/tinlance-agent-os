@@ -125,7 +125,7 @@ class ConnectorRegistry:
         parsed = urlparse(endpoint)
         if parsed.scheme not in {"https", "git", "s3", "mcp"}:
             raise ValueError("connector endpoint scheme is not allowed")
-        if "\\n" in endpoint or "\\r" in endpoint:
+        if any(ord(char) < 32 for char in endpoint):
             raise ValueError("connector endpoint contains control characters")
 
     @staticmethod
