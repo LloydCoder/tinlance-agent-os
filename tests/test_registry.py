@@ -73,9 +73,7 @@ def test_duplicate_version_ids_are_rejected(tmp_path: Path) -> None:
     registry = make_registry(tmp_path)
     registry.register_publisher(RegistryPublisher("pub-1", "Tinlance", "identity", "trusted"))
     registry.register_package(RegistryPackage("pkg-1", "pub-1", "agent", "agent"))
-    version = RegistryVersion(
-        "pkg-1", "1.0.0", "d" * 64, "sig", "prov", "sbom", ">=0.1"
-    )
+    version = RegistryVersion("pkg-1", "1.0.0", "d" * 64, "sig", "prov", "sbom", ">=0.1")
     registry.register_version(version)
     with pytest.raises(sqlite3.IntegrityError):
         registry.register_version(version)
