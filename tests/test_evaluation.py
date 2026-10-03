@@ -90,6 +90,13 @@ def test_run_comparison_is_deterministic(tmp_path: Path) -> None:
     for run_id, value in (("baseline", 9000), ("candidate", 9400)):
         runtime.start_run(EvaluationRun(run_id, "suite-1", "workspace-1"))
         runtime.record_measurement(
-            EvaluationMeasurement(f"{run_id}-measurement", run_id, "case-1", "success_rate_bps", value, "bps")
+            EvaluationMeasurement(
+                f"{run_id}-measurement",
+                run_id,
+                "case-1",
+                "success_rate_bps",
+                value,
+                "bps",
+            )
         )
     assert runtime.compare_runs("baseline", "candidate") == {"success_rate_bps": 400}
