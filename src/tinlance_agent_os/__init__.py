@@ -222,6 +222,10 @@ __all__ = [
     "KeyProvider",
     "SecurityIncident",
     "SecurityIntegration",
+    "AdaptiveObservation",
+    "AdaptivePolicy",
+    "AdaptiveRecommendation",
+    "AdaptiveRuntime",
 ]
 
 from .sdk import (
@@ -431,6 +435,8 @@ from .enterprise_security import (
     SecurityIncident,
     SecurityIntegration,
 )
+
+from .adaptive import AdaptiveObservation, AdaptivePolicy, AdaptiveRecommendation, AdaptiveRuntime
 
 from .reference_agents import (
     CybersecurityAgent,
