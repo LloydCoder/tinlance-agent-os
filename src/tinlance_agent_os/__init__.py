@@ -216,6 +216,12 @@ __all__ = [
     "ReliabilityProfile",
     "ReliabilityRuntime",
     "WorkerLease",
+    "AuditExport",
+    "DataPolicy",
+    "EnterpriseSecurityRuntime",
+    "KeyProvider",
+    "SecurityIncident",
+    "SecurityIntegration",
 ]
 
 from .sdk import (
@@ -416,6 +422,15 @@ from .registry import AgentRegistry, RegistryPackage, RegistryPublisher, Registr
 from .operator import OperatorCommand, OperatorEntity, OperatorPlane
 
 from .reliability import ChaosScenario, DRPlan, ReliabilityProfile, ReliabilityRuntime, WorkerLease
+
+from .enterprise_security import (
+    AuditExport,
+    DataPolicy,
+    EnterpriseSecurityRuntime,
+    KeyProvider,
+    SecurityIncident,
+    SecurityIntegration,
+)
 
 from .reference_agents import (
     CybersecurityAgent,
