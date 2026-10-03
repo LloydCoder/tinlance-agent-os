@@ -114,7 +114,7 @@ class ResourceLedger:
                     normalized.workflow_id,
                     normalized.model,
                     normalized.provider,
-                    normalized.occurred_at.isoformat(),
+                    occurred_at.astimezone(UTC).isoformat(),
                 ),
             )
         return normalized
