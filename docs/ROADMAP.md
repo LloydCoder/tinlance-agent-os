@@ -472,3 +472,27 @@ M26 extends the existing M12 lifecycle registry into an explicit desired-state c
 ### Acceptance
 
 A desired agent definition is durably persisted, can be updated only with the expected generation, and produces a deterministic reconciliation plan against M12 observed state. Version/configuration/capability drift is surfaced explicitly. No directory record grants a Platform capability or executes an agent.
+
+## M27 — Enterprise Workspace & Organization Fabric
+
+M27 introduces an OS-owned organizational and workspace composition layer.
+
+### Scope
+
+- organization, project and environment hierarchy;
+- development/staging/production environment semantics;
+- workspace-to-hierarchy binding;
+- layered configuration inheritance;
+- workspace templates;
+- active/archived lifecycle;
+- generation-protected workspace updates;
+- deterministic workspace export;
+- cross-hierarchy integrity checks.
+
+### Boundary
+
+M27 describes OS context and desired configuration. It does not authorize users/agents, grant capabilities, enforce Platform policy, or create execution authority.
+
+### Acceptance
+
+An existing OS workspace can be bound to exactly one organization/project/environment hierarchy, effective configuration resolves deterministically from parent to workspace scope, stale writers are rejected by generation checks, lifecycle changes are durable, and invalid cross-hierarchy bindings fail closed.
