@@ -847,9 +847,7 @@ class StateStore:
             (now, limit),
         )
 
-    def lease_scheduler_job(
-        self, job_id: str, owner: str, lease_expires_at: str, now: str
-    ) -> bool:
+    def lease_scheduler_job(self, job_id: str, owner: str, lease_expires_at: str, now: str) -> bool:
         with sqlite3.connect(self.path) as db:
             db.execute("PRAGMA foreign_keys=ON")
             db.execute("BEGIN IMMEDIATE")
