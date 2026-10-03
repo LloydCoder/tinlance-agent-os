@@ -832,9 +832,7 @@ class StateStore:
             db.commit()
 
     def get_connector_cursor(self, connector_id: str) -> sqlite3.Row | None:
-        rows = self.query(
-            "SELECT * FROM connector_cursors WHERE connector_id=?", (connector_id,)
-        )
+        rows = self.query("SELECT * FROM connector_cursors WHERE connector_id=?", (connector_id,))
         return rows[0] if rows else None
 
     def put_knowledge_source(self, row: tuple[Any, ...]) -> None:
