@@ -46,9 +46,7 @@ def test_image_digest_and_generation_fail_closed(tmp_path: Path) -> None:
     runtime.register_profile(DeviceSecurityProfile("device-1", "workspace-1"))
     with pytest.raises(ValueError, match="SHA-256"):
         runtime.register_image(OSImage("image-1", "1", "stable", "bad", "x86_64", "uki"))
-    runtime.register_image(
-        OSImage("image-1", "1", "stable", "b" * 64, "x86_64", "uki")
-    )
+    runtime.register_image(OSImage("image-1", "1", "stable", "b" * 64, "x86_64", "uki"))
     runtime.set_desired(DeviceOSDesired("device-1", "image-1"))
     with pytest.raises(ValueError, match="generation"):
         runtime.set_desired(DeviceOSDesired("device-1", "image-1"), expected_generation=1)
