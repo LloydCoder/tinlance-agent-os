@@ -151,6 +151,13 @@ __all__ = [
     "CybersecurityAgent",
     "FDEEngineeringAgent",
     "WorldIntelligenceAgent",
+    "Job",
+    "JobState",
+    "MisfirePolicy",
+    "Schedule",
+    "ScheduleKind",
+    "Scheduler",
+    "SchedulerRun",
     "Delivery",
     "DeliveryState",
     "EventEnvelope",
@@ -316,6 +323,16 @@ from .workspace_fabric import (
     WorkspaceProfile,
     WorkspaceState,
     WorkspaceTemplate,
+)
+
+from .scheduler import (
+    Job,
+    JobState,
+    MisfirePolicy,
+    Schedule,
+    ScheduleKind,
+    Scheduler,
+    SchedulerRun,
 )
 
 from .reference_agents import (
