@@ -235,10 +235,15 @@ class Scheduler:
         for row in rows:
             schedule = self._schedule_from_row(row)
             occurrences = self._due_occurrences(schedule, current)
-            if schedule.misfire_policy is MisfirePolicy.SKIP:
-                occurrences = (current.astimezone(UTC),)
+            due = datetime.fromisoformat(
+                str(self.store.get_scheduler_schedule(schedule.schedule_id)["next_run_at"])
+            ).astimezone(UTC)
+            if schedule.kind in {ScheduleKind.ONE_SHOT, ScheduleKind.CALENDAR}:
+                occurrences = (due,)
+            elif schedule.misfire_policy is MisfirePolicy.SKIP:
+                occurrences = ()
             elif schedule.misfire_policy is MisfirePolicy.RUN_ONCE:
-                occurrences = (occurrences[-1] if occurrences else current.astimezone(UTC),)
+                occurrences = (occurrences[-1] if occurrences else due,)
             for occurrence in occurrences:
                 job_id = hashlib.sha256(
                     f"{schedule.schedule_id}:{occurrence.isoformat()}".encode()
@@ -262,7 +267,8 @@ class Scheduler:
                             dict(schedule.metadata or {}),
                         )
                     )
-            next_run = self._next_after(schedule, current)
+            anchor = occurrences[-1] if occurrences else due
+            next_run = self._next_after(schedule, anchor)
             self.store.update_scheduler_schedule(
                 schedule.schedule_id,
                 expected_generation=schedule.generation,
