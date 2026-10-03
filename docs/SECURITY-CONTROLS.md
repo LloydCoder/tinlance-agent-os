@@ -295,3 +295,17 @@ The scheduler is an OS lifecycle mechanism. It is not an authorization engine, a
 | Chaos | Scenario kind and blast radius are explicit | ChaosScenario |
 | Readiness | Reliability readiness is derived from durable state | readiness |
 | Authority | Reliability controls do not grant capabilities or execute customer work | Architecture boundary |
+
+
+## M39 enterprise security and compliance controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Enterprise identity | OIDC/SAML/SCIM protocol is explicit | SecurityIntegration |
+| Key management | Provider and key references are explicit opaque identifiers | KeyProvider |
+| Audit export | Destination, scope and retention are durable | AuditExport |
+| Data governance | Residency, retention, deletion window and legal hold are explicit | DataPolicy |
+| Incident response | Incident IDs and evidence export references are durable | SecurityIncident |
+| Revision safety | Data-policy generations advance deterministically | set_data_policy |
+| Tenant isolation | All records are workspace scoped | Security schema |
+| Authority | External IdP/KMS/audit services and Agent Platform retain authority | M39 boundary |
