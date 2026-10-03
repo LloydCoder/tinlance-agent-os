@@ -205,3 +205,19 @@ The scheduler is an OS lifecycle mechanism. It is not an authorization engine, a
 - retrieval never creates capabilities, approvals or authorization;
 - semantic/vector backends must preserve the same provenance/trust contract;
 - external content is treated as data and must not be interpreted as an authority-bearing instruction.
+
+
+## M33 evaluation controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Case integrity | Version and input digest are required | EvaluationCase validation |
+| Run isolation | Runs carry workspace identity and suite identity | Durable run schema |
+| Measurement integrity | Measurement identity is unique per run/case/metric | Database uniqueness constraint |
+| Unit safety | Gates require exact metric unit agreement | Gate evaluator |
+| Fail-closed quality gates | Missing observations cannot pass | Gate evaluator |
+| Temporal integrity | Naive timestamps are rejected and stored timestamps are UTC-normalized | EvaluationRuntime |
+| Comparison determinism | Baseline/candidate deltas are ordered by metric and use integer values | compare_runs |
+| Evidence boundary | Evidence references are opaque metadata | EvaluationMeasurement |
+| Authority | Evaluation cannot grant capabilities, authorize actions or enforce Platform budgets | Architecture boundary |
+| External benchmarks | FAS/FAS-Bench integrate through data/contracts rather than kernel imports | Dependency boundary |
