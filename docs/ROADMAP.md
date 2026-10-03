@@ -32,6 +32,10 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M23 | Agent OS Conformance & Red Team Suite | COMPLETE |
 | M24 | Production Agent OS | COMPLETE |
 | M25 | Enterprise Forensic Hardening | COMPLETE |
+| M26 | Agent Directory & Desired-State Management | COMPLETE |
+| M27 | Enterprise Workspace & Organization Fabric | COMPLETE |
+| M28 | Event, Signal & Reactive Runtime | COMPLETE |
+| M29 | Scheduler & Job Runtime | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -508,3 +512,38 @@ An existing OS workspace can be bound to exactly one organization/project/enviro
 - read/write lifecycle separated from Platform authority.
 
 Acceptance: duplicate publications with the same workspace/dedupe key resolve to one event, deliveries remain workspace-isolated, failed deliveries dead-letter at the configured limit, and replay returns dead letters to pending without executing handlers.
+
+
+## M29 — Scheduler & Job Runtime
+
+M29 adds the durable temporal runtime above the event/signal layer and below tasks/workflows.
+
+### Scope
+
+- cron, interval, one-shot and calendar schedules;
+- IANA timezone validation and UTC-normalized persistence;
+- deterministic schedule generation;
+- generation-protected schedule updates;
+- skip, run-once and bounded catch-up misfire policies;
+- durable job records;
+- deterministic job IDs;
+- worker leases and expired-lease recovery;
+- per-schedule maximum concurrency;
+- bounded due-job queries;
+- dispatcher failure persistence.
+
+### Runtime model
+
+```text
+Schedule -> Job -> Task -> Workflow / Agent -> Platform Run
+```
+
+The scheduler owns temporal lifecycle and job state. It does not authorize consequential actions or create Platform authority. Dispatched work enters the existing OS lifecycle and governed Platform path.
+
+### Acceptance
+
+The M29 suite verifies cadence, cron/timezone behavior, catch-up, generation conflicts, concurrency limits, lease recovery and durable dispatcher failures.
+
+### Distributed boundary
+
+M29 is the durable single-node scheduler contract. Distributed workers, queue backends, leader election/fencing, regional scheduling and failover remain M38. This prevents SQLite from being presented as a distributed scheduler while preserving a replaceable scheduler persistence boundary.
