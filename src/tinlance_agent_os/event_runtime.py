@@ -124,7 +124,7 @@ class EventSignalRuntime:
             dict(payload),
             correlation_id,
             occurred_at,
-            dedupe_key
+            dedupe_key,
         )
 
     def subscribe(
@@ -189,11 +189,7 @@ class EventSignalRuntime:
             if row[2] != DeliveryState.PENDING.value:
                 raise EventRuntimeError("delivery is not pending")
             attempt = int(row[0]) + 1
-            state = (
-                DeliveryState.DEAD_LETTER
-                if attempt >= int(row[1])
-                else DeliveryState.PENDING
-            )
+            state = DeliveryState.DEAD_LETTER if attempt >= int(row[1]) else DeliveryState.PENDING
             db.execute(
                 "UPDATE os_event_deliveries SET attempt=?,state=? "
                 "WHERE event_id=? AND subscription_id=?",
