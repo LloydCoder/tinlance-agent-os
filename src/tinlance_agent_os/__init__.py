@@ -194,6 +194,11 @@ __all__ = [
     "EvaluationRun",
     "EvaluationRuntime",
     "GateResult",
+    "FleetControlPlane",
+    "FleetDeployment",
+    "FleetDevice",
+    "FleetGroup",
+    "Placement",
 ]
 
 from .sdk import (
@@ -384,6 +389,8 @@ from .evaluation import (
     EvaluationRuntime,
     GateResult,
 )
+
+from .fleet import FleetControlPlane, FleetDeployment, FleetDevice, FleetGroup, Placement
 
 from .reference_agents import (
     CybersecurityAgent,
