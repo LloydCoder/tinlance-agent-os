@@ -226,6 +226,11 @@ __all__ = [
     "AdaptivePolicy",
     "AdaptiveRecommendation",
     "AdaptiveRuntime",
+    "EnterpriseGARuntime",
+    "GACompatibility",
+    "GACheck",
+    "GAReadiness",
+    "GARelease",
 ]
 
 from .sdk import (
@@ -437,6 +442,8 @@ from .enterprise_security import (
 )
 
 from .adaptive import AdaptiveObservation, AdaptivePolicy, AdaptiveRecommendation, AdaptiveRuntime
+
+from .assurance import EnterpriseGARuntime, GACompatibility, GACheck, GAReadiness, GARelease
 
 from .reference_agents import (
     CybersecurityAgent,
