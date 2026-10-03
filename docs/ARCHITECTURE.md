@@ -615,3 +615,43 @@ OS lifecycle / external adapter
 ```
 
 The event runtime owns durable signal state and routing metadata. It does not execute handlers, authorize actions, mint capabilities, or write authoritative evidence. Workspace identity is part of every event and delivery query, so cross-workspace signals cannot be consumed accidentally.
+
+
+## M29 Scheduler + Job Runtime
+
+M29 introduces the OS temporal runtime without moving consequential authority into the scheduler:
+
+```text
+      cron / interval / calendar
+                 |
+                 v
+            Scheduler
+                 |
+                 v
+               Job
+                 |
+                 v
+        Task / Workflow / Agent
+                 |
+                 v
+        Agent Platform Run
+```
+
+The Scheduler owns cadence, desired trigger timing, durable job lifecycle, worker leases, misfire handling and per-schedule concurrency. Job metadata is ordinary OS state. A job does not imply a capability, approval or permission to execute.
+
+Schedule timestamps are persisted in UTC while cron/calendar evaluation uses an explicitly validated IANA timezone. Schedule updates use generation checks. Misfires are explicit: skip, run-once or bounded catch-up. Job identifiers are deterministic from the schedule identity and scheduled occurrence, preventing duplicate publication after a scheduler restart.
+
+Worker leasing is a local durability primitive. An expired lease returns a job to the queued state; the dispatcher may then reacquire it. This is deliberately not presented as distributed exactly-once execution. M38 supplies distributed queues, leader election/fencing, HA and regional failover.
+
+### Scheduler authority invariant
+
+```text
+Scheduler
+   -> Job
+   -> Task / Workflow
+   -> Platform authorization / policy / approval
+   -> Platform governed execution
+   -> Platform evidence
+```
+
+The scheduler cannot mint capabilities, approve work, create authoritative evidence or bypass the Platform adapter. This keeps temporal orchestration separate from consequential authority.
