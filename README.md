@@ -361,37 +361,53 @@ Those boundaries are deliberate.
 
 ~~~text
 src/tinlance_agent_os/
-├── domain.py             # OS domain contracts
-├── agent_runtime.py      # M12 durable agent lifecycle runtime
-├── agent_directory.py    # M26 desired-state directory and reconciliation
-├── sdk.py                # M13 official high-level Agent Developer SDK
-├── model_gateway.py      # M14 model provider abstraction and router
-├── contracts.py          # Platform-facing protocol
-├── platform_adapter.py   # Platform mapping
-├── transport.py          # Versioned transport
-├── client.py             # Deterministic conformance double
+├── domain.py             # Core OS domain contracts
+├── contracts.py          # Platform-facing protocol contracts
+├── platform_adapter.py   # Agent Platform authority adapter
+├── transport.py         # Versioned Platform transport
+├── client.py             # Deterministic Platform conformance double
+├── store.py              # Durable local state
 ├── daemon.py             # Local Unix-socket daemon
 ├── daemon_service.py     # OS lifecycle service
-├── store.py              # Durable SQLite state
-├── workflow.py           # Workflow definition and deterministic DAG contracts
-├── workflow_runtime.py   # M16 durable orchestration, recovery and Platform mapping
-├── coordination.py       # M17 authenticated multi-agent coordination
-├── memory.py             # M15 trusted memory/context subsystem
-├── applications.py       # Application manifests/lifecycle
-├── system.py             # Filesystem/process/notification abstraction
+├── cli.py                # CLI control entry point
+├── agent_runtime.py      # M12 agent lifecycle
+├── agent_directory.py    # M26 desired-state agent directory
+├── sdk.py                # M13 official Agent Developer SDK
+├── model_gateway.py      # M14 model provider/router
+├── workflow.py           # Workflow DAG contracts
+├── workflow_runtime.py   # M16 durable workflow execution
+├── coordination.py       # M17 multi-agent coordination
+├── ecosystem.py          # M18 package/skill ecosystem boundary
+├── memory.py             # M15 trusted memory/context
+├── knowledge.py          # M30 knowledge fabric
+├── applications.py       # Agent application manifests/lifecycle
+├── system.py             # Filesystem/process/notification adapters
 ├── shell.py              # Toolkit-neutral shell model
-├── extensions.py         # Capability-scoped extension SDK
-├── ecosystem.py           # Package/skill/connector ecosystem boundary
-├── enterprise.py          # Remote/fleet integration seam
-├── remote_runtime.py      # Local/remote worker runtime
-├── observability.py       # OpenTelemetry traces and metrics
-├── reference_agents.py    # Canonical governed reference agents
-├── production.py          # Production release control plane
-└── distribution.py        # Release/update integrity
+├── extensions.py         # Capability-scoped extensions
+├── workspace.py          # M19 channels/workspace presentation
+├── workspace_fabric.py   # M27 organization/project/environment/workspace fabric
+├── event_runtime.py      # M28 event/signal/reactive runtime
+├── scheduler.py          # M29 temporal/job runtime
+├── connectors.py         # M31 connector/data-space contracts
+├── resource.py           # M32 resource/cost/capacity ledger
+├── evaluation.py         # M33 evaluation/quality runtime
+├── fleet.py              # M34 fleet/control-plane contracts
+├── device_os.py          # M35 device/desktop OS profile
+├── registry.py            # M36 agent registry/marketplace contract
+├── operator.py            # M37 admin/operator plane
+├── reliability.py         # M38 HA/DR/chaos contracts
+├── enterprise_security.py # M39 enterprise security/compliance integrations
+├── adaptive.py             # M40 adaptive optimization/recommendation runtime
+├── assurance.py            # M41 GA release-assurance contracts
+├── enterprise.py           # Remote/fleet integration seam
+├── remote_runtime.py       # Local/remote worker runtime
+├── observability.py        # OpenTelemetry lifecycle telemetry
+├── reference_agents.py     # Canonical governed reference agents
+├── production.py           # Production release controller
+└── distribution.py         # Release/update integrity state machine
 ~~~
 
 ---
-
 ## Quick start
 
 ### Requirements
