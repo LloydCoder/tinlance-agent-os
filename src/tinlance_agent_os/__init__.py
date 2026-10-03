@@ -204,6 +204,10 @@ __all__ = [
     "DeviceSecurityProfile",
     "OSImage",
     "OSUpdate",
+    "AgentRegistry",
+    "RegistryPackage",
+    "RegistryPublisher",
+    "RegistryVersion",
 ]
 
 from .sdk import (
@@ -398,6 +402,8 @@ from .evaluation import (
 from .fleet import FleetControlPlane, FleetDeployment, FleetDevice, FleetGroup, Placement
 
 from .device_os import DeviceOSDesired, DeviceOSRuntime, DeviceSecurityProfile, OSImage, OSUpdate
+
+from .registry import AgentRegistry, RegistryPackage, RegistryPublisher, RegistryVersion
 
 from .reference_agents import (
     CybersecurityAgent,
