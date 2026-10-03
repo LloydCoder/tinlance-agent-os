@@ -238,6 +238,18 @@ class EvaluationRuntime:
             measurement.evidence_ref,
         )
         with sqlite3.connect(self.store.path) as db:
+            run = db.execute(
+                "SELECT suite_id FROM evaluation_runs WHERE run_id=?", (normalized.run_id,)
+            ).fetchone()
+            case = db.execute(
+                "SELECT suite_id FROM evaluation_cases WHERE case_id=?", (normalized.case_id,)
+            ).fetchone()
+            if run is None:
+                raise KeyError(f"unknown evaluation run: {normalized.run_id}")
+            if case is None:
+                raise KeyError(f"unknown evaluation case: {normalized.case_id}")
+            if str(run[0]) != str(case[0]):
+                raise ValueError("evaluation case and run must belong to the same suite")
             db.execute(
                 """INSERT INTO evaluation_measurements
                 (measurement_id,run_id,case_id,metric,value,unit,observed_at,evidence_ref)
@@ -294,14 +306,19 @@ class EvaluationRuntime:
             results: list[GateResult] = []
             for gate_id, metric, direction, threshold, unit in gates:
                 row = db.execute(
-                    """SELECT AVG(value), MIN(unit)
+                    """SELECT AVG(value), COUNT(DISTINCT unit), MIN(unit)
                        FROM evaluation_measurements
                        WHERE run_id=? AND metric=?""",
                     (run_id, metric),
                 ).fetchone()
                 observed = None if row[0] is None else int(row[0])
-                observed_unit = None if row[1] is None else str(row[1])
-                unit_matches = observed_unit == unit if observed is not None else False
+                unit_count = int(row[1] or 0)
+                observed_unit = None if row[2] is None else str(row[2])
+                unit_matches = (
+                    observed is not None
+                    and unit_count == 1
+                    and observed_unit == unit
+                )
                 passed = (
                     observed is not None
                     and unit_matches
@@ -329,18 +346,44 @@ class EvaluationRuntime:
         candidate_run_id: str,
     ) -> dict[str, int]:
         with sqlite3.connect(self.store.path) as db:
+            suites = db.execute(
+                """SELECT DISTINCT suite_id FROM evaluation_runs
+                   WHERE run_id IN (?,?) ORDER BY suite_id""",
+                (baseline_run_id, candidate_run_id),
+            ).fetchall()
+            if len(suites) != 1:
+                raise ValueError("baseline and candidate runs must belong to one suite")
             rows = db.execute(
                 """SELECT metric,
                           AVG(CASE WHEN run_id=? THEN value END),
-                          AVG(CASE WHEN run_id=? THEN value END)
+                          AVG(CASE WHEN run_id=? THEN value END),
+                          COUNT(DISTINCT CASE WHEN run_id=? THEN unit END),
+                          COUNT(DISTINCT CASE WHEN run_id=? THEN unit END),
+                          MIN(CASE WHEN run_id=? THEN unit END),
+                          MIN(CASE WHEN run_id=? THEN unit END)
                    FROM evaluation_measurements
                    WHERE run_id IN (?,?)
                    GROUP BY metric ORDER BY metric""",
-                (baseline_run_id, candidate_run_id, baseline_run_id, candidate_run_id),
+                (
+                    baseline_run_id,
+                    candidate_run_id,
+                    baseline_run_id,
+                    candidate_run_id,
+                    baseline_run_id,
+                    candidate_run_id,
+                    baseline_run_id,
+                    candidate_run_id,
+                ),
             ).fetchall()
         comparison: dict[str, int] = {}
-        for metric, baseline, candidate in rows:
-            if baseline is None or candidate is None:
+        for metric, baseline, candidate, baseline_units, candidate_units, baseline_unit, candidate_unit in rows:
+            if (
+                baseline is None
+                or candidate is None
+                or int(baseline_units) != 1
+                or int(candidate_units) != 1
+                or baseline_unit != candidate_unit
+            ):
                 continue
             comparison[str(metric)] = int(candidate) - int(baseline)
         return comparison
