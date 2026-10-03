@@ -267,8 +267,16 @@ class AdaptiveRuntime:
                 (state, next_generation, recommendation_id, actual),
             )
         return AdaptiveRecommendation(
-            str(row[0]), str(row[1]), str(row[2]), str(row[3]), str(row[4]),
-            str(row[5]), float(row[6]), float(row[7]), state, next_generation
+            str(row[0]),
+            str(row[1]),
+            str(row[2]),
+            str(row[3]),
+            str(row[4]),
+            str(row[5]),
+            float(row[6]),
+            float(row[7]),
+            state,
+            next_generation,
         )
 
     def recommendations(self, workspace_id: str) -> tuple[AdaptiveRecommendation, ...]:
@@ -283,8 +291,16 @@ class AdaptiveRuntime:
             ).fetchall()
         return tuple(
             AdaptiveRecommendation(
-                str(r[0]), str(r[1]), str(r[2]), str(r[3]), str(r[4]),
-                str(r[5]), float(r[6]), float(r[7]), str(r[8]), int(r[9])
+                str(r[0]),
+                str(r[1]),
+                str(r[2]),
+                str(r[3]),
+                str(r[4]),
+                str(r[5]),
+                float(r[6]),
+                float(r[7]),
+                str(r[8]),
+                int(r[9]),
             )
             for r in rows
         )
