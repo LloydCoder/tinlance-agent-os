@@ -570,3 +570,26 @@ The directory owns the declarative answer to "what agent should exist and in wha
 Each desired definition has a monotonic generation. Updates use compare-and-swap semantics so concurrent operators cannot silently overwrite a newer deployment intent. Compatibility metadata describes minimum Agent OS version, Platform contract version and runtime requirements; it is deployment metadata, not authorization.
 
 Version, configuration and capability drift are explicit reconciliation conditions. A missing observed agent produces a BLOCKED plan rather than implicitly installing or launching code. Cross-workspace observations are blocked. The directory never mints capabilities, validates Platform approvals, creates Platform runs, or writes authoritative evidence.
+
+
+## M27 Enterprise Workspace & Organization Fabric
+
+M27 adds an explicit OS organizational hierarchy without moving tenancy authority out of Agent Platform:
+
+```text
+Organization
+    |
+    +-- Project
+          |
+          +-- Environment (development/staging/production)
+                    |
+                    +-- Workspace
+                           |
+                           +-- Sessions / Tasks / Agents / Workflows / Memory
+```
+
+The workspace fabric owns lifecycle and configuration context. Configuration is layered as organization defaults, project overrides, environment overrides, then workspace overrides. A workspace profile has a monotonic generation and updates can require an expected generation, preventing silent lost updates.
+
+The fabric validates that projects belong to their organization, environments belong to their project, and workspace profiles point into the same hierarchy. These are OS consistency checks, not authorization decisions. Agent Platform remains authoritative for identity, tenancy membership, authorization, policy, approvals, budgets, execution and evidence.
+
+Workspace templates are declarative metadata and do not install code or grant capabilities. Export produces a portable workspace profile plus its effective configuration; import/deployment remains a higher-level integration concern.
