@@ -44,6 +44,27 @@ def test_interval_schedule_creates_one_deterministic_job(tmp_path: Path) -> None
     assert scheduler.reconcile(now=datetime(2026, 10, 3, 1, 1, tzinfo=UTC)) == ()
 
 
+def test_skip_misfire_discards_backlog_and_reanchors_cadence(tmp_path: Path) -> None:
+    scheduler = make_scheduler(tmp_path)
+    seed_workspace(scheduler)
+    scheduler.create(
+        Schedule(
+            "schedule-skip",
+            "workspace-1",
+            "skip",
+            ScheduleKind.INTERVAL,
+            "60",
+            misfire_policy=MisfirePolicy.SKIP,
+            next_run_at=datetime(2026, 10, 3, 0, 0, tzinfo=UTC),
+        )
+    )
+
+    assert scheduler.reconcile(now=datetime(2026, 10, 3, 0, 3, tzinfo=UTC)) == ()
+    assert scheduler.get("schedule-skip").next_run_at == datetime(
+        2026, 10, 3, 0, 1, tzinfo=UTC
+    )
+
+
 def test_catch_up_preserves_each_interval_occurrence(tmp_path: Path) -> None:
     scheduler = make_scheduler(tmp_path)
     seed_workspace(scheduler)
