@@ -373,6 +373,25 @@ class StateStore:
                     ON scheduler_jobs(workspace_id, state, scheduled_for);
                 CREATE INDEX IF NOT EXISTS idx_scheduler_jobs_lease
                     ON scheduler_jobs(state, lease_expires_at);
+                CREATE TABLE IF NOT EXISTS connectors (
+                    connector_id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                    name TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    endpoint TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    capabilities TEXT NOT NULL,
+                    metadata TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    UNIQUE(workspace_id, name)
+                );
+                CREATE TABLE IF NOT EXISTS connector_cursors (
+                    connector_id TEXT PRIMARY KEY REFERENCES connectors(connector_id),
+                    cursor TEXT NOT NULL,
+                    version INTEGER NOT NULL,
+                    observed_at TEXT NOT NULL
+                );
                 CREATE TABLE IF NOT EXISTS knowledge_sources (
                     source_id TEXT PRIMARY KEY,
                     workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
@@ -775,6 +794,48 @@ class StateStore:
                 (next_run_at, last_run_at, last_run_at, schedule_id),
             )
             db.commit()
+
+    def put_connector(self, row: tuple[Any, ...]) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute(
+                "INSERT INTO connectors VALUES (?,?,?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(connector_id) DO UPDATE SET endpoint=excluded.endpoint,"
+                "state=excluded.state,capabilities=excluded.capabilities,metadata=excluded.metadata,"
+                "updated_at=excluded.updated_at",
+                row,
+            )
+            db.commit()
+
+    def get_connector(self, connector_id: str) -> sqlite3.Row | None:
+        rows = self.query("SELECT * FROM connectors WHERE connector_id=?", (connector_id,))
+        return rows[0] if rows else None
+
+    def update_connector_state(self, connector_id: str, state: str, updated_at: str) -> None:
+        with sqlite3.connect(self.path) as db:
+            result = db.execute(
+                "UPDATE connectors SET state=?,updated_at=? WHERE connector_id=?",
+                (state, updated_at, connector_id),
+            )
+            if result.rowcount != 1:
+                raise KeyError(connector_id)
+            db.commit()
+
+    def put_connector_cursor(self, row: tuple[Any, ...]) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute(
+                "INSERT INTO connector_cursors VALUES (?,?,?,?) "
+                "ON CONFLICT(connector_id) DO UPDATE SET cursor=excluded.cursor,"
+                "version=excluded.version,observed_at=excluded.observed_at",
+                row,
+            )
+            db.commit()
+
+    def get_connector_cursor(self, connector_id: str) -> sqlite3.Row | None:
+        rows = self.query(
+            "SELECT * FROM connector_cursors WHERE connector_id=?", (connector_id,)
+        )
+        return rows[0] if rows else None
 
     def put_knowledge_source(self, row: tuple[Any, ...]) -> None:
         with sqlite3.connect(self.path) as db:
