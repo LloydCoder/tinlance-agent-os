@@ -34,9 +34,7 @@ def test_connector_registration_and_cursor_are_durable(tmp_path: Path) -> None:
         )
     )
     registry.transition("connector-1", ConnectorState.READY)
-    cursor = registry.save_cursor(
-        DataCursor("connector-1", "v42", 42, datetime.now(UTC))
-    )
+    cursor = registry.save_cursor(DataCursor("connector-1", "v42", 42, datetime.now(UTC)))
     assert registry.get_cursor("connector-1") == cursor
 
 
