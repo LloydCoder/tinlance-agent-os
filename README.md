@@ -139,6 +139,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M28 | Event, Signal & Reactive Runtime | Complete |
 | M29 | Scheduler & Job Runtime | Complete |
 | M30 | Context & Knowledge Fabric | Complete |
+| M31 | Connectors & Data Spaces | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -658,3 +659,8 @@ See docs/M29-STATUS.md for acceptance and operational boundaries.
 M30 adds durable knowledge sources, documents and chunks; provenance, freshness, authority, classification and trust metadata; deterministic retrieval; and bounded context assembly. Knowledge is data, not authority, and retrieval cannot grant Platform permissions.
 
 See docs/M30-STATUS.md for the acceptance boundary.
+
+
+### M31 — Connectors & Data Spaces
+
+M31 provides durable connector registration, endpoint validation, connector lifecycle state and synchronization cursors for external data spaces. Connector metadata is not authority; consequential operations still cross Agent Platform governance.
