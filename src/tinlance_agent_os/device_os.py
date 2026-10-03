@@ -256,7 +256,10 @@ class DeviceOSRuntime:
                 raise KeyError(f"unknown update: {update_id}")
             actual = int(row[6])
             if actual != expected_generation:
-                raise ValueError(f"generation conflict: expected {expected_generation}, actual {actual}")
+                message = (
+                    f"generation conflict: expected {expected_generation}, actual {actual}"
+                )
+                raise ValueError(message)
             next_generation = actual + 1
             db.execute(
                 "UPDATE device_os_updates SET state=?,generation=? WHERE update_id=?",
