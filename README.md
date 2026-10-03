@@ -613,3 +613,9 @@ M21 provides OpenTelemetry traces/metrics with OTLP configuration and W3C contex
 ## Production Distribution
 
 M24 adds signed release artifacts, CycloneDX SBOMs, Sigstore signing, GitHub artifact attestations, staged channels, health-gated deployment, automatic rollback, downgrade prevention, migration/backup controls and operational security runbooks.
+
+### M27 — Enterprise Workspace & Organization Fabric
+
+M27 adds durable organizational context above the existing workspace/session/task runtime. It models organization → project → environment → workspace relationships, workspace configuration inheritance, templates, lifecycle state and generation-protected workspace binding. It does not implement authorization; Agent Platform remains authoritative for identity and access.
+
+The configuration model follows a layered approach: organization defaults → project overrides → environment overrides → workspace overrides. Effective configuration is deterministic and exportable. Cross-organization/project/environment bindings fail closed, and concurrent workspace changes use generation checks.
