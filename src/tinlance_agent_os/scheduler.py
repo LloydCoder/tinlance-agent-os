@@ -278,7 +278,9 @@ class Scheduler:
             self.store.update_scheduler_schedule(
                 schedule.schedule_id,
                 expected_generation=schedule.generation,
-                enabled=schedule.enabled and schedule.kind not in {
+                enabled=schedule.enabled
+                and schedule.kind
+                not in {
                     ScheduleKind.ONE_SHOT,
                     ScheduleKind.CALENDAR,
                 },
@@ -337,9 +339,7 @@ class Scheduler:
         limit: int = 100,
     ) -> SchedulerRun:
         created = self.reconcile(now=now, limit=limit)
-        leased = self.lease_due(
-            owner=owner, lease_seconds=lease_seconds, now=now, limit=limit
-        )
+        leased = self.lease_due(owner=owner, lease_seconds=lease_seconds, now=now, limit=limit)
         for job in leased:
             try:
                 dispatcher(job)
