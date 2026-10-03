@@ -100,6 +100,4 @@ def test_duplicate_dr_and_stale_release_fail_closed(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="generation"):
         runtime.release_lease("lease-1", expected_generation=1)
     with pytest.raises(sqlite3.IntegrityError):
-        runtime.register_dr_plan(
-            DRPlan("dr-1", "workspace-1", "backup", "restore", 1, 1)
-        )
+        runtime.register_dr_plan(DRPlan("dr-1", "workspace-1", "backup", "restore", 1, 1))
