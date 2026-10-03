@@ -26,7 +26,9 @@ def test_ingest_persists_provenance_and_chunks(tmp_path: Path) -> None:
     fabric.register_source(
         KnowledgeSource("source-1", "workspace-1", "Internal Wiki", authority_rank=80)
     )
-    content = "Agent OS owns lifecycle composition while Platform owns consequential authority. " * 12
+    content = (
+        "Agent OS owns lifecycle composition while Platform owns consequential authority. " * 12
+    )
     chunks = fabric.ingest(
         KnowledgeDocument(
             "doc-1",
