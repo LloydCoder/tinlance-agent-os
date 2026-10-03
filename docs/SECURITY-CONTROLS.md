@@ -221,3 +221,18 @@ The scheduler is an OS lifecycle mechanism. It is not an authorization engine, a
 | Evidence boundary | Evidence references are opaque metadata | EvaluationMeasurement |
 | Authority | Evaluation cannot grant capabilities, authorize actions or enforce Platform budgets | Architecture boundary |
 | External benchmarks | FAS/FAS-Bench integrate through data/contracts rather than kernel imports | Dependency boundary |
+
+
+## M34 fleet control-plane controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Device identity | Device and endpoint IDs are required and endpoint IDs are unique | Fleet schema + validation |
+| Workspace isolation | Devices, groups and deployments carry workspace identity; membership and deployment joins verify it | FleetControlPlane |
+| Generation safety | Device state/configuration updates require expected generation | CAS-style generation check |
+| Health safety | Placement only considers enrolled/online devices | Placement planner |
+| Capacity safety | Negative and overcommitted capacity is rejected | FleetDevice validation |
+| Rollout state | Agent/version/cohort desired state is durable | FleetDeployment |
+| Attestation | Attestation is an opaque reference, not a local trust decision | FleetDevice |
+| Authority | Fleet planning cannot grant capabilities or execute consequential actions | Architecture boundary |
+| Hosted seam | Centralized control plane and device-management services remain deployment integrations | M34 boundary |
