@@ -135,6 +135,9 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M24 | Production Agent OS | Complete |
 | M25 | Enterprise Forensic Hardening | Complete |
 | M26 | Agent Directory & Desired-State Management | Complete |
+| M27 | Enterprise Workspace & Organization Fabric | Complete |
+| M28 | Event, Signal & Reactive Runtime | Complete |
+| M29 | Scheduler & Job Runtime | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -531,7 +534,7 @@ M16 acceptance coverage includes sequential and parallel execution, conditions, 
 
 ## Status
 
-**M0–M26 repository implementation: complete.**
+**M0–M29 repository implementation: complete.**
 
 M23 adds an independent adversarial conformance suite. M24 adds the production release controller and signed distribution workflow. M25 closes the forensic-hardening gaps found after M24: release minimum-version enforcement and safe staging failure handling, trusted-memory provenance promotion controls, supervised-process environment hardening, Unix fleet endpoint validation, and immutable GitHub Action pin enforcement.
 
@@ -623,3 +626,27 @@ The configuration model follows a layered approach: organization defaults → pr
 ### M28 — Event, Signal & Reactive Runtime
 
 M28 adds durable workspace-scoped event publication, subscriptions, delivery state, deduplication, bounded retry/dead-letter handling and replay. Events are lifecycle/data signals; they never grant authority or execute consequential actions.
+
+
+### M29 — Scheduler & Job Runtime
+
+M29 adds the durable temporal runtime above the event/signal layer:
+
+- cron, interval, one-shot and calendar schedules;
+- IANA timezone validation with UTC-normalized persistence;
+- generation-protected schedule updates;
+- explicit skip/run-once/catch-up misfire policy;
+- deterministic job IDs and durable job state;
+- worker leases with expiry/recovery;
+- per-schedule concurrency limits;
+- bounded due-job queries and durable dispatcher failures.
+
+The runtime follows:
+
+```text
+Schedule -> Job -> Task -> Workflow / Agent -> Platform Run
+```
+
+The scheduler controls *when* OS work becomes a job. It does not authorize work, mint capabilities, approve actions or create authoritative evidence. Distributed queues, leader election/fencing, multi-node scheduling and regional failover remain M38.
+
+See docs/M29-STATUS.md for acceptance and operational boundaries.
