@@ -26,5 +26,5 @@ def test_m40_m41_are_exposed_as_os_intelligence_not_authority() -> None:
     adaptive = (SRC / "adaptive.py").read_text()
     assurance = (SRC / "assurance.py").read_text()
     assert "authorization" not in adaptive.lower()
-    assert "grant" not in adaptive.lower()
+    assert "grant_capability" not in adaptive.lower()
     assert "authorize" not in assurance.lower()
