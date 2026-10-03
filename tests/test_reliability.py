@@ -90,7 +90,9 @@ def test_lease_and_timestamp_safety(tmp_path: Path) -> None:
 def test_duplicate_dr_and_stale_release_fail_closed(tmp_path: Path) -> None:
     runtime = make_runtime(tmp_path)
     now = datetime.now(UTC) + timedelta(minutes=5)
-    runtime.acquire_lease(WorkerLease("lease-1", "workspace-1", "worker-1", "workflow", "active", now))
+    runtime.acquire_lease(
+        WorkerLease("lease-1", "workspace-1", "worker-1", "workflow", "active", now)
+    )
     with pytest.raises(ValueError, match="active lease"):
         runtime.acquire_lease(
             WorkerLease("lease-2", "workspace-1", "worker-1", "workflow", "active", now)
