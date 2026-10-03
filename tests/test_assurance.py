@@ -19,15 +19,9 @@ def make_runtime(tmp_path: Path) -> EnterpriseGARuntime:
 
 def test_ga_readiness_requires_all_non_waived_checks_to_pass(tmp_path: Path) -> None:
     runtime = make_runtime(tmp_path)
-    runtime.register_release(
-        GARelease("r1", "1.0.0", 1, "schema-1", "a" * 64, "sbom-1", "prov-1")
-    )
-    runtime.record_check(
-        GACheck("ci-1", "r1", "ci", "CI", "passed", "run-1")
-    )
-    runtime.record_check(
-        GACheck("security-1", "r1", "security", "security review", "pending")
-    )
+    runtime.register_release(GARelease("r1", "1.0.0", 1, "schema-1", "a" * 64, "sbom-1", "prov-1"))
+    runtime.record_check(GACheck("ci-1", "r1", "ci", "CI", "passed", "run-1"))
+    runtime.record_check(GACheck("security-1", "r1", "security", "security review", "pending"))
     assert runtime.readiness("r1").ready is False
     runtime.record_check(
         GACheck("security-2", "r1", "security", "security review", "passed", "report-1")
@@ -37,9 +31,7 @@ def test_ga_readiness_requires_all_non_waived_checks_to_pass(tmp_path: Path) -> 
 
 def test_completed_check_requires_evidence(tmp_path: Path) -> None:
     runtime = make_runtime(tmp_path)
-    runtime.register_release(
-        GARelease("r1", "1.0.0", 1, "schema-1", "a" * 64, "sbom-1", "prov-1")
-    )
+    runtime.register_release(GARelease("r1", "1.0.0", 1, "schema-1", "a" * 64, "sbom-1", "prov-1"))
     with pytest.raises(ValueError, match="evidence_ref"):
         runtime.record_check(GACheck("ci-1", "r1", "ci", "CI", "passed"))
 
