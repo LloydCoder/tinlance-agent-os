@@ -80,12 +80,7 @@ def test_environment_must_belong_to_project(tmp_path: Path) -> None:
     wf.create_project("project-2", "org-1", "Other")
 
     with pytest.raises(WorkspaceFabricError, match="environment"):
-        wf.create_environment(
-            "env-2",
-            "project-2",
-            "Production",
-            EnvironmentKind.PRODUCTION,
-        )
+        wf.bind_workspace("ws-1", "org-1", "project-2", "env-1")
 
     with pytest.raises(WorkspaceFabricError, match="environment"):
         wf.bind_workspace("ws-1", "org-1", "project-1", "env-missing")
