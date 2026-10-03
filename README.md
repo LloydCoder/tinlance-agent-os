@@ -133,7 +133,8 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M22 | Reference Agents | Complete |
 | M23 | Agent OS Conformance & Red Team Suite | Complete |
 | M24 | Production Agent OS | Complete |
-| M25 | Enterprise Forensic Hardening | Complete |\n| M26 | Agent Directory & Desired-State Management | Complete |
+| M25 | Enterprise Forensic Hardening | Complete |
+| M26 | Agent Directory & Desired-State Management | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -356,7 +357,8 @@ Those boundaries are deliberate.
 ~~~text
 src/tinlance_agent_os/
 ├── domain.py             # OS domain contracts
-├── agent_runtime.py      # M12 durable agent lifecycle runtime\n├── agent_directory.py    # M26 desired-state directory and reconciliation
+├── agent_runtime.py      # M12 durable agent lifecycle runtime
+├── agent_directory.py    # M26 desired-state directory and reconciliation
 ├── sdk.py                # M13 official high-level Agent Developer SDK
 ├── model_gateway.py      # M14 model provider abstraction and router
 ├── contracts.py          # Platform-facing protocol
@@ -531,7 +533,9 @@ M16 acceptance coverage includes sequential and parallel execution, conditions, 
 
 **M0–M26 repository implementation: complete.**
 
-M23 adds an independent adversarial conformance suite. M24 adds the production release controller and signed distribution workflow. M25 closes the forensic-hardening gaps found after M24: release minimum-version enforcement and safe staging failure handling, trusted-memory provenance promotion controls, supervised-process environment hardening, Unix fleet endpoint validation, and immutable GitHub Action pin enforcement.\n\nM26 adds the Agent Directory desired-state layer on top of the existing M12 lifecycle runtime. Desired state is durable and generationed; reconciliation is deterministic and read-only.
+M23 adds an independent adversarial conformance suite. M24 adds the production release controller and signed distribution workflow. M25 closes the forensic-hardening gaps found after M24: release minimum-version enforcement and safe staging failure handling, trusted-memory provenance promotion controls, supervised-process environment hardening, Unix fleet endpoint validation, and immutable GitHub Action pin enforcement.
+
+M26 adds the Agent Directory desired-state layer on top of the existing M12 lifecycle runtime. Desired state is durable and generationed; reconciliation is deterministic and read-only.
 
 "Complete" means the repository-owned contracts, implementation, tests, architecture constraints and documentation are implemented and verified by CI. External infrastructure is explicitly represented as an integration seam rather than being simulated or overstated.
 
