@@ -87,7 +87,8 @@ class EventSignalRuntime:
             if existing is not None:
                 event_id = str(existing[0])
                 row = db.execute(
-                    "SELECT event_id,workspace_id,event_type,payload,correlation_id,occurred_at,dedupe_key "
+                    "SELECT event_id,workspace_id,event_type,payload,correlation_id,occurred_at,"
+                    "dedupe_key "
                     "FROM os_events WHERE event_id=?",
                     (event_id,),
                 ).fetchone()
@@ -96,7 +97,15 @@ class EventSignalRuntime:
                 )
             db.execute(
                 "INSERT INTO os_events VALUES (?,?,?,?,?,?,?)",
-                (event_id, workspace_id, event_type, encoded, correlation_id, occurred_at, dedupe_key),
+                (
+                    event_id,
+                    workspace_id,
+                    event_type,
+                    encoded,
+                    correlation_id,
+                    occurred_at,
+                    dedupe_key,
+                ),
             )
             subscriptions = db.execute(
                 "SELECT subscription_id,max_attempts FROM os_subscriptions "
@@ -109,7 +118,13 @@ class EventSignalRuntime:
                     (event_id, subscription_id, 0, DeliveryState.PENDING.value, max_attempts),
                 )
         return EventEnvelope(
-            event_id, workspace_id, event_type, dict(payload), correlation_id, occurred_at, dedupe_key
+            event_id,
+            workspace_id,
+            event_type,
+            dict(payload),
+            correlation_id,
+            occurred_at,
+            dedupe_key
         )
 
     def subscribe(
@@ -197,7 +212,8 @@ class EventSignalRuntime:
             else:
                 result = db.execute(
                     "UPDATE os_event_deliveries SET state=? WHERE state=? "
-                    "AND event_id IN (SELECT event_id FROM os_events WHERE workspace_id=? AND event_type=?)",
+                    "AND event_id IN (SELECT event_id FROM os_events "
+                    "WHERE workspace_id=? AND event_type=?)",
                     (
                         DeliveryState.PENDING.value,
                         DeliveryState.DEAD_LETTER.value,
