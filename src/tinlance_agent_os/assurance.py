@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 from .store import StateStore
 
@@ -201,7 +201,7 @@ class EnterpriseGARuntime:
         return GACheck(
             str(row[0]),
             str(row[1]),
-            str(row[2]),
+            cast(EvidenceKind, str(row[2])),
             str(row[3]),
             state,
             evidence_ref,
