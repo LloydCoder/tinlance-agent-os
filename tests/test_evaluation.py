@@ -22,9 +22,7 @@ def make_runtime(tmp_path: Path) -> EvaluationRuntime:
 
 def test_evaluation_is_durable_and_gateable(tmp_path: Path) -> None:
     runtime = make_runtime(tmp_path)
-    runtime.register_case(
-        EvaluationCase("case-1", "suite-1", "baseline", "1", "sha256:input")
-    )
+    runtime.register_case(EvaluationCase("case-1", "suite-1", "baseline", "1", "sha256:input"))
     runtime.start_run(
         EvaluationRun(
             "run-1",
@@ -34,9 +32,7 @@ def test_evaluation_is_durable_and_gateable(tmp_path: Path) -> None:
         )
     )
     runtime.record_measurement(
-        EvaluationMeasurement(
-            "measurement-1", "run-1", "case-1", "success_rate_bps", 9800, "bps"
-        )
+        EvaluationMeasurement("measurement-1", "run-1", "case-1", "success_rate_bps", 9800, "bps")
     )
     runtime.register_gate(
         EvaluationGate("gate-1", "suite-1", "success_rate_bps", "min", 9500, "bps")
@@ -94,13 +90,6 @@ def test_run_comparison_is_deterministic(tmp_path: Path) -> None:
     for run_id, value in (("baseline", 9000), ("candidate", 9400)):
         runtime.start_run(EvaluationRun(run_id, "suite-1", "workspace-1"))
         runtime.record_measurement(
-            EvaluationMeasurement(
-                f"{run_id}-measurement",
-                run_id,
-                "case-1",
-                "success_rate_bps",
-                value,
-                "bps",
-            )
+            EvaluationMeasurement(f"{run_id}-measurement", run_id, "case-1", "success_rate_bps", value, "bps")
         )
     assert runtime.compare_runs("baseline", "candidate") == {"success_rate_bps": 400}
