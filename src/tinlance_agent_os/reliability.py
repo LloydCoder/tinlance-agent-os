@@ -297,10 +297,7 @@ class ReliabilityRuntime:
         return {
             "profile_present": profile is not None,
             "distributed_ready": profile is not None
-            and (
-                str(profile[0]) == "sqlite-local"
-                or int(profile[1]) >= 2
-            ),
+            and (str(profile[0]) == "sqlite-local" or int(profile[1]) >= 2),
             "targets_defined": profile is not None
             and int(profile[2]) >= 0
             and int(profile[3]) >= 0,
