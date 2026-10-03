@@ -670,3 +670,57 @@ Source -> Document -> Chunk -> Retrieval -> Context Budget -> Agent/Workflow
 ```
 
 The repository implementation is intentionally backend-neutral. Local deterministic lexical retrieval is the baseline; semantic/vector retrieval can be introduced behind the same contract. The OS remains responsible for lifecycle and context assembly, while the Agent Platform remains responsible for identity, authorization, policy, approvals and governed execution.
+
+
+## Advanced Agent OS architecture: M26–M41
+
+The post-M25 architecture is layered rather than a second execution kernel:
+
+~~~text
+                    Agent OS composition and intelligence
+     ┌──────────────────────────────────────────────────────────┐
+     │ M26 Agent Directory / desired state                      │
+     │ M27 Organization / project / environment / workspace     │
+     │ M28 Events / signals / reactive runtime                   │
+     │ M29 Scheduler / jobs                                     │
+     │ M30 Knowledge / context                                   │
+     │ M31 Connectors / data spaces                              │
+     │ M32 Resource / cost / capacity telemetry                  │
+     │ M33 Evaluation / quality                                  │
+     │ M34 Fleet / remote control plane                          │
+     │ M35 Device / desktop deployment profile                   │
+     │ M36 Registry / marketplace                                │
+     │ M37 Admin / operator projections and intents              │
+     │ M38 Reliability / HA / DR / chaos                         │
+     │ M39 Enterprise security/compliance integrations            │
+     │ M40 Adaptive recommendations                               │
+     │ M41 Release assurance / compatibility                      │
+     └──────────────────────────────┬───────────────────────────┘
+                                    │ governed adapter
+                                    v
+                         Tinlance Agent Platform
+              identity / authorization / policy / approval
+              budgets / governed execution / sandbox / tools
+              authoritative evidence / audit
+~~~
+
+### M26–M41 ownership rule
+
+These milestones own lifecycle, composition, state, telemetry, projections, recommendations and integration metadata. They do not become an authorization, approval, budget, sandbox or authoritative evidence plane.
+
+In particular:
+
+- M32 observes usage and cost; Platform budgets remain authoritative.
+- M34 plans fleet placement and desired state; Platform identity and authorization remain authoritative.
+- M36 stores package metadata and verification references; it does not execute packages or grant capabilities.
+- M37 records operator intents; it does not execute them locally.
+- M40 can recommend model/workflow/context/resource/fleet changes; it cannot authorize or execute them.
+- M41 records release and assurance evidence; it does not self-certify the organization.
+
+### External standards alignment
+
+MCP remains an interoperability protocol rather than an OS lifecycle kernel. The July 2026 MCP specification introduced a stateless protocol core and explicit mechanisms for long-running Tasks; Agent OS therefore keeps durable task/workflow lifecycle in its own runtime and treats MCP as a transport/interoperability boundary.
+
+OpenTelemetry GenAI conventions provide a useful external vocabulary for model, retrieval, tool and agent telemetry. Agent OS should keep sensitive content opt-in and correlate lifecycle identifiers without copying secrets or confidential memory into telemetry.
+
+NIST's 2026 AI Agent Standards Initiative emphasizes interoperability, agent security and identity. NIST's agent identity/authorization work reinforces the architectural choice that identity, authorization, auditing and non-repudiation belong in explicit control planes rather than being inferred from model or application state.
