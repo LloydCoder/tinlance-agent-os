@@ -376,7 +376,15 @@ class EvaluationRuntime:
                 ),
             ).fetchall()
         comparison: dict[str, int] = {}
-        for metric, baseline, candidate, baseline_units, candidate_units, baseline_unit, candidate_unit in rows:
+        for (
+            metric,
+            baseline,
+            candidate,
+            baseline_units,
+            candidate_units,
+            baseline_unit,
+            candidate_unit,
+        ) in rows:
             if (
                 baseline is None
                 or candidate is None
