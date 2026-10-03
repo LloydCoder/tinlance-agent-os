@@ -194,7 +194,7 @@ class EvaluationRuntime:
                     normalized.workflow_id,
                     normalized.model,
                     normalized.status,
-                    normalized.started_at.isoformat(),
+                    started_at.isoformat(),
                     completed.isoformat() if completed else None,
                 ),
             )
@@ -247,7 +247,6 @@ class EvaluationRuntime:
                 raise KeyError(f"unknown evaluation case: {normalized.case_id}")
             if str(run[0]) != str(case[0]):
                 raise ValueError("evaluation case and run must belong to the same suite")
-            observed = normalized.observed_at
             db.execute(
                 """INSERT INTO evaluation_measurements
                 (measurement_id,run_id,case_id,metric,value,unit,observed_at,evidence_ref)
@@ -259,7 +258,7 @@ class EvaluationRuntime:
                     normalized.metric,
                     normalized.value,
                     normalized.unit,
-                    observed.isoformat(),
+                    observed_at.isoformat(),
                     normalized.evidence_ref,
                 ),
             )
