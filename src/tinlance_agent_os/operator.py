@@ -133,7 +133,7 @@ class OperatorPlane:
                     normalized.health,
                     normalized.version,
                     normalized.summary,
-                    normalized.updated_at.isoformat(),
+                    updated_at.isoformat(),
                     generation,
                 ),
             )
@@ -225,7 +225,7 @@ class OperatorPlane:
                     normalized.action,
                     normalized.parameters_digest,
                     normalized.state,
-                    normalized.created_at.isoformat(),
+                    created_at.isoformat(),
                     normalized.generation,
                 ),
             )
