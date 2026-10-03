@@ -266,3 +266,17 @@ The scheduler is an OS lifecycle mechanism. It is not an authorization engine, a
 | Identity | Package/version duplicates are rejected | Unique constraints |
 | Execution boundary | Registry never executes package code | Architecture boundary |
 | Authority | Installation/capability grants remain Platform-governed | Platform integration |
+
+
+## M37 operator-plane controls
+
+| Area | Control | Enforcement |
+|---|---|---|
+| Projection isolation | Every operator entity carries workspace identity | Operator schema |
+| Projection integrity | Entity generations advance on replacement | OperatorPlane |
+| Query safety | Workspace is mandatory; optional filters are parameterized | list_entities |
+| Command integrity | Commands require entity/action/parameter digest identity | OperatorCommand validation |
+| Command uniqueness | Command IDs are unique | Database constraint |
+| Time integrity | Naive timestamps are rejected | OperatorPlane |
+| Authority boundary | Commands are intents only; no local execution or authorization | Architecture boundary |
+| Source of truth | Operator data is a projection of owning runtimes | M37 design |
