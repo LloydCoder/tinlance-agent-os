@@ -139,7 +139,7 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M28 | Event, Signal & Reactive Runtime | Complete |
 | M29 | Scheduler & Job Runtime | Complete |
 | M30 | Context & Knowledge Fabric | Complete |
-| M31 | Connectors & Data Spaces | Complete |
+| M31 | Connectors & Data Spaces | Complete |\n| M32 | Resource, Cost & Capacity Runtime | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -664,3 +664,8 @@ See docs/M30-STATUS.md for the acceptance boundary.
 ### M31 — Connectors & Data Spaces
 
 M31 provides durable connector registration, endpoint validation, connector lifecycle state and synchronization cursors for external data spaces. Connector metadata is not authority; consequential operations still cross Agent Platform governance.
+
+
+### M32 — Resource, Cost & Capacity Runtime
+
+The resource ledger records OS-observed usage and attributable cost metadata for workspace, agent, task and workflow reporting. It uses durable SQLite state, explicit units and integer micro-costs. It does not enforce or replace Agent Platform budgets, quotas or authorization.

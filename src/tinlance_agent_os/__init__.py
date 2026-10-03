@@ -185,6 +185,9 @@ __all__ = [
     "WorkspaceProfile",
     "WorkspaceState",
     "WorkspaceTemplate",
+    "ResourceLedger",
+    "UsageRecord",
+    "UsageSummary",
 ]
 
 from .sdk import (
@@ -364,6 +367,8 @@ from .scheduler import (
     Scheduler,
     SchedulerRun,
 )
+
+from .resource import ResourceLedger, UsageRecord, UsageSummary
 
 from .reference_agents import (
     CybersecurityAgent,

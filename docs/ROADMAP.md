@@ -37,7 +37,7 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M28 | Event, Signal & Reactive Runtime | COMPLETE |
 | M29 | Scheduler & Job Runtime | COMPLETE |
 | M30 | Context & Knowledge Fabric | COMPLETE |
-| M31 | Connectors & Data Spaces | COMPLETE |
+| M31 | Connectors & Data Spaces | COMPLETE |\n| M32 | Resource, Cost & Capacity Runtime | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -559,3 +559,19 @@ Durable sources, documents and chunks with provenance, freshness, authority, cla
 ## M31 — Connectors & Data Spaces
 
 Connector lifecycle, endpoint validation, capabilities metadata and durable synchronization cursors across filesystem, Git, databases, object storage, HTTP/SaaS, messaging, knowledge and MCP data spaces. MCP remains the interoperability protocol; OS owns lifecycle around it.
+
+
+## M32 — Resource, Cost & Capacity Runtime
+
+M32 adds durable OS-observed resource accounting and cost attribution for model, compute, storage, network and tool/workflow usage. Quantities are integer values with explicit units and monetary values use integer micro-units to avoid floating-point accounting drift. Records can be attributed to workspace, agent, task and workflow.
+
+M32 is accounting and telemetry, not an authorization or quota engine. Agent Platform remains authoritative for budgets, quotas, approvals and consequential execution. The ledger therefore records observed consumption and attributable cost; it cannot grant additional capacity, bypass a Platform budget, or turn a local estimate into authoritative billing.
+
+### Acceptance
+
+- durable usage records survive process restart;
+- workspace/resource summaries are deterministic;
+- cost attribution works at agent/task/workflow scope;
+- invalid negative quantities/costs and naive timestamps fail closed;
+- duplicate usage identifiers are rejected;
+- no Platform authority is introduced.
