@@ -66,7 +66,7 @@ def test_catch_up_preserves_each_interval_occurrence(tmp_path: Path) -> None:
 def test_cron_weekday_mapping_uses_standard_cron_sunday_zero(tmp_path: Path) -> None:
     scheduler = make_scheduler(tmp_path)
     seed_workspace(scheduler)
-    scheduler.create(
+    schedule = scheduler.create(
         Schedule(
             "schedule-cron",
             "workspace-1",
@@ -74,11 +74,10 @@ def test_cron_weekday_mapping_uses_standard_cron_sunday_zero(tmp_path: Path) -> 
             ScheduleKind.CRON,
             "0 9 * * 1",
             timezone="UTC",
-            next_run_at=datetime(2026, 10, 5, 9, tzinfo=UTC),
-        )
+        ),
+        now=datetime(2026, 10, 4, 8, 59, tzinfo=UTC),
     )
-    jobs = scheduler.reconcile(now=datetime(2026, 10, 5, 9, tzinfo=UTC))
-    assert len(jobs) == 1
+    assert schedule.next_run_at == datetime(2026, 10, 5, 9, tzinfo=UTC)
 
 
 def test_cron_and_timezone_are_supported(tmp_path: Path) -> None:
