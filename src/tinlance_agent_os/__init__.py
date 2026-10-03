@@ -199,6 +199,11 @@ __all__ = [
     "FleetDevice",
     "FleetGroup",
     "Placement",
+    "DeviceOSDesired",
+    "DeviceOSRuntime",
+    "DeviceSecurityProfile",
+    "OSImage",
+    "OSUpdate",
 ]
 
 from .sdk import (
@@ -391,6 +396,8 @@ from .evaluation import (
 )
 
 from .fleet import FleetControlPlane, FleetDeployment, FleetDevice, FleetGroup, Placement
+
+from .device_os import DeviceOSDesired, DeviceOSRuntime, DeviceSecurityProfile, OSImage, OSUpdate
 
 from .reference_agents import (
     CybersecurityAgent,
