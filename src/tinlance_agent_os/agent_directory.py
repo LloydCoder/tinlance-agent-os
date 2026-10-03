@@ -13,7 +13,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any, Mapping
+from typing import Mapping
 
 from .agent_runtime import AgentLifecycleState, HealthState
 from .store import StateStore
@@ -281,23 +281,60 @@ class AgentDirectory:
                 "observed capabilities differ from desired capabilities",
             )
         if desired.desired_state is DesiredAgentState.RUNNING:
-            if observed.state is AgentLifecycleState.RUNNING and observed.health is HealthState.HEALTHY:
-                return ReconciliationPlan(agent_id, desired.generation, ReconciliationAction.NOOP, "in desired state")
-            return ReconciliationPlan(agent_id, desired.generation, ReconciliationAction.START, "agent should be running")
+            if (
+                observed.state is AgentLifecycleState.RUNNING
+                and observed.health is HealthState.HEALTHY
+            ):
+                return ReconciliationPlan(
+                    agent_id,
+                    desired.generation,
+                    ReconciliationAction.NOOP,
+                    "in desired state",
+                )
+            return ReconciliationPlan(
+                agent_id,
+                desired.generation,
+                ReconciliationAction.START,
+                "agent should be running",
+            )
         if desired.desired_state is DesiredAgentState.PAUSED:
             if observed.state is AgentLifecycleState.PAUSED:
-                return ReconciliationPlan(agent_id, desired.generation, ReconciliationAction.NOOP, "in desired state")
-            return ReconciliationPlan(agent_id, desired.generation, ReconciliationAction.PAUSE, "agent should be paused")
+                return ReconciliationPlan(
+                    agent_id,
+                    desired.generation,
+                    ReconciliationAction.NOOP,
+                    "in desired state",
+                )
+            return ReconciliationPlan(
+                agent_id,
+                desired.generation,
+                ReconciliationAction.PAUSE,
+                "agent should be paused",
+            )
         if observed.state is AgentLifecycleState.STOPPED:
-            return ReconciliationPlan(agent_id, desired.generation, ReconciliationAction.NOOP, "in desired state")
-        return ReconciliationPlan(agent_id, desired.generation, ReconciliationAction.STOP, "agent should be stopped")
+            return ReconciliationPlan(
+                agent_id,
+                desired.generation,
+                ReconciliationAction.NOOP,
+                "in desired state",
+            )
+        return ReconciliationPlan(
+            agent_id,
+            desired.generation,
+            ReconciliationAction.STOP,
+            "agent should be stopped",
+        )
 
     def list_desired(self, workspace_id: str) -> tuple[DesiredAgent, ...]:
         rows = self.store.query(
             "SELECT agent_id FROM agent_desired_state WHERE workspace_id = ? ORDER BY agent_id",
             (workspace_id,),
         )
-        return tuple(item for row in rows if (item := self.get_desired(row["agent_id"])) is not None)
+        return tuple(
+            item
+            for row in rows
+            if (item := self.get_desired(row["agent_id"])) is not None
+        )
 
     def _ensure_schema(self) -> None:
         with sqlite3.connect(self.store.path) as db:
