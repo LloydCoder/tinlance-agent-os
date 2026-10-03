@@ -61,6 +61,10 @@ The M29 test suite verifies:
 
 M29 does not execute customer code, authorize tools, mint capabilities, approve actions, or produce authoritative evidence. A dispatched job must enter the existing Agent OS Task/Workflow path and consequential work must still enter Agent Platform governed execution.
 
+## CI verification
+
+The M29 acceptance suite is verified through the repository quality and architecture gates across Python 3.12, 3.13 and 3.14 before the milestone is merged.
+
 ## Operational note
 
 The local SQLite scheduler is the single-node durable mode. Distributed scheduling, leader election, multi-node queues and regional failover remain M38 infrastructure work; M29 deliberately exposes the lease and persistence contracts needed to replace the local store without changing scheduler semantics.
