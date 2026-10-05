@@ -28,9 +28,8 @@ def match_profile(
     requirement: MatchRequirement,
 ) -> Match | None:
     capabilities = set(profile.capability_ids)
-    if (
-        not requirement.capabilities.issubset(capabilities)
-        or (requirement.domain and profile.domain != requirement.domain)
+    if not requirement.capabilities.issubset(capabilities) or (
+        requirement.domain and profile.domain != requirement.domain
     ):
         return None
 
