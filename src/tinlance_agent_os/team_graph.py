@@ -62,8 +62,10 @@ class TeamGraph:
             def depth(node_id: str) -> int:
                 if node_id in cache:
                     return cache[node_id]
-                value = 0 if not edges[node_id] else 1 + max(
-                    depth(dependency) for dependency in edges[node_id]
+                value = (
+                    0
+                    if not edges[node_id]
+                    else 1 + max(depth(dependency) for dependency in edges[node_id])
                 )
                 cache[node_id] = value
                 return value
