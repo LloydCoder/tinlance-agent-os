@@ -7,7 +7,6 @@ from tempfile import TemporaryDirectory
 import struct
 import socket
 import threading
-import time
 
 from tinlance_agent_os.applications import (
     AgentManifest,
