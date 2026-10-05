@@ -9,6 +9,7 @@ from .team_spec import TeamBudget, TeamSpec, TeamTopology
 
 @dataclass(frozen=True, slots=True)
 class GoalPlan:
+    goal: str
     topology: TeamTopology
     required_capabilities: tuple[str, ...]
     rationale: tuple[str, ...]
@@ -26,18 +27,21 @@ def plan(
         raise ValueError("capabilities required")
     if candidates <= 1:
         return GoalPlan(
+            goal,
             TeamTopology.SINGLE,
             capabilities,
             ("one capable candidate is sufficient",),
         )
     if len(capabilities) == 1:
         return GoalPlan(
+            goal,
             TeamTopology.SINGLE,
             capabilities,
             ("single capability does not warrant collaboration",),
         )
     topology = TeamTopology.PARALLEL if budget.max_active_agents > 1 else TeamTopology.SEQUENTIAL
     return GoalPlan(
+        goal,
         topology,
         capabilities,
         ("multiple independent capability requirements",),
@@ -54,7 +58,7 @@ def compose_spec(
 ) -> TeamSpec:
     return TeamSpec(
         team_id,
-        goal_plan.rationale[0] if goal_plan.rationale else goal_plan.topology.value,
+        goal_plan.goal,
         workspace,
         supervisor,
         members,

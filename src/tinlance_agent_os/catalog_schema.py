@@ -44,7 +44,14 @@ class CapabilityProfile:
     max_fanout: int = 0
     evidence_required: bool = True
     evaluation_suite: str = "default"
+    evaluation_score: float = 0.0
+    trust_score: float = 0.0
+    cost_microunits: int = 0
+    latency_ms: int = 0
     provenance: tuple[str, ...] = ()
+    artifact_digest: str = ""
+    signature_ref: str = ""
+    sbom_ref: str = ""
     compatibility: dict[str, str] = field(default_factory=dict)
     status: str = "active"
 
@@ -59,9 +66,15 @@ class CapabilityProfile:
             raise ValueError("delegation limits require delegation_allowed=true")
         if not self.provenance:
             raise ValueError("profile provenance is required")
+        if not 0.0 <= self.evaluation_score <= 1.0:
+            raise ValueError("evaluation_score must be between 0 and 1")
+        if not 0.0 <= self.trust_score <= 1.0:
+            raise ValueError("trust_score must be between 0 and 1")
+        if self.cost_microunits < 0 or self.latency_ms < 0:
+            raise ValueError("cost and latency cannot be negative")
 
     def to_record(self) -> dict[str, Any]:
-        result = {
+        return {
             "schema": "tinlance.agent-profile.v2",
             "id": self.id,
             "version": self.version,
@@ -84,8 +97,52 @@ class CapabilityProfile:
             "max_fanout": self.max_fanout,
             "evidence_required": self.evidence_required,
             "evaluation_suite": self.evaluation_suite,
+            "evaluation_score": self.evaluation_score,
+            "trust_score": self.trust_score,
+            "cost_microunits": self.cost_microunits,
+            "latency_ms": self.latency_ms,
             "provenance": list(self.provenance),
+            "artifact_digest": self.artifact_digest,
+            "signature_ref": self.signature_ref,
+            "sbom_ref": self.sbom_ref,
             "compatibility": dict(self.compatibility),
             "status": self.status,
         }
-        return result
+
+    @classmethod
+    def from_record(cls, record: dict[str, Any]) -> CapabilityProfile:
+        if record.get("schema") != "tinlance.agent-profile.v2":
+            raise ValueError("unsupported profile schema")
+        return cls(
+            id=str(record["id"]),
+            version=str(record["version"]),
+            domain=str(record["domain"]),
+            capability_ids=tuple(record["capabilities"]),
+            skill_ids=tuple(record.get("skills", ())),
+            inputs=tuple(record.get("inputs", ())),
+            outputs=tuple(record.get("outputs", ())),
+            tools=tuple(record.get("tools", ())),
+            environments=tuple(record.get("environments", ())),
+            modalities=tuple(record.get("modalities", ())),
+            protocols=tuple(record.get("protocols", ())),
+            models=tuple(record.get("models", ())),
+            risk_level=RiskLevel(record.get("risk_level", RiskLevel.LOW)),
+            autonomy_level=AutonomyLevel(record.get("autonomy_level", AutonomyLevel.SUPERVISED)),
+            approval_policy=str(record.get("approval_policy", "platform-default")),
+            data_sensitivity=str(record.get("data_sensitivity", "internal")),
+            delegation_allowed=bool(record.get("delegation_allowed", False)),
+            max_delegation_depth=int(record.get("max_delegation_depth", 0)),
+            max_fanout=int(record.get("max_fanout", 0)),
+            evidence_required=bool(record.get("evidence_required", True)),
+            evaluation_suite=str(record.get("evaluation_suite", "default")),
+            evaluation_score=float(record.get("evaluation_score", 0.0)),
+            trust_score=float(record.get("trust_score", 0.0)),
+            cost_microunits=int(record.get("cost_microunits", 0)),
+            latency_ms=int(record.get("latency_ms", 0)),
+            provenance=tuple(record.get("provenance", ())),
+            artifact_digest=str(record.get("artifact_digest", "")),
+            signature_ref=str(record.get("signature_ref", "")),
+            sbom_ref=str(record.get("sbom_ref", "")),
+            compatibility=dict(record.get("compatibility", {})),
+            status=str(record.get("status", "active")),
+        )
