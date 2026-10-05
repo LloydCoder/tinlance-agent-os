@@ -1,4 +1,5 @@
-import pytest\nfrom tinlance_agent_os.catalog_discovery import CatalogDiscovery, DiscoveryQuery
+import pytest
+from tinlance_agent_os.catalog_discovery import CatalogDiscovery, DiscoveryQuery
 from tinlance_agent_os.catalog_schema import CapabilityProfile, RiskLevel
 from tinlance_agent_os.catalog_store import CatalogStore
 
