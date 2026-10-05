@@ -14,8 +14,9 @@ from tinlance_agent_os.team_spec import TeamBudget, TeamSpec, TeamTopology
 
 
 def profile(**kwargs: object) -> CapabilityProfile:
+    profile_id = str(kwargs.pop("id", "agent"))
     return CapabilityProfile(
-        id="agent",
+        id=profile_id,
         version="1",
         domain="security",
         capability_ids=("security.scan",),
