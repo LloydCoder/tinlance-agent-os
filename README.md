@@ -139,7 +139,17 @@ This prevents presentation/session lifecycle from becoming an accidental executi
 | M28 | Event, Signal & Reactive Runtime | Complete |
 | M29 | Scheduler & Job Runtime | Complete |
 | M30 | Context & Knowledge Fabric | Complete |
-| M31 | Connectors & Data Spaces | Complete |\n| M32 | Resource, Cost & Capacity Runtime | Complete |\n| M33 | Evaluation & Agent Quality Runtime | Complete |\n| M34 | Enterprise Fleet & Remote Control Plane | Complete |\n| M35 | Device / Desktop Operating Environment | Complete |\n| M36 | Agent Marketplace & Enterprise Registry | Complete |\n| M37 | Enterprise Admin & Operator Plane | Complete |\n| M38 | Reliability, HA, DR & Chaos | Complete |\n| M39 | Enterprise Security, Compliance & Governance Integration | Complete |\n| M40 | Agent OS Intelligence & Adaptive Runtime | Complete |\n| M41 | Enterprise GA & Certification | Complete |
+| M31 | Connectors & Data Spaces | Complete |
+| M32 | Resource, Cost & Capacity Runtime | Complete |
+| M33 | Evaluation & Agent Quality Runtime | Complete |
+| M34 | Enterprise Fleet & Remote Control Plane | Complete |
+| M35 | Device / Desktop Operating Environment | Complete |
+| M36 | Agent Marketplace & Enterprise Registry | Complete |
+| M37 | Enterprise Admin & Operator Plane | Complete |
+| M38 | Reliability, HA, DR & Chaos | Complete |
+| M39 | Enterprise Security, Compliance & Governance Integration | Complete |
+| M40 | Agent OS Intelligence & Adaptive Runtime | Complete |
+| M41 | Enterprise GA & Certification | Complete |
 
 The roadmap is implemented as a **repository-level architecture and integration foundation**. M8-M11 intentionally expose provider/deployment seams rather than pretending that a desktop toolkit, hosted fleet control plane, enterprise IdP, telemetry backend, package registry, or signing service already exists inside this repository.
 
@@ -559,6 +569,23 @@ M23 adds an independent adversarial conformance suite. M24 adds the production r
 M26 adds the Agent Directory desired-state layer on top of the existing M12 lifecycle runtime. Desired state is durable and generationed; reconciliation is deterministic and read-only.
 
 "Complete" means the repository-owned contracts, implementation, tests, architecture constraints and documentation are implemented and verified by CI. External infrastructure is explicitly represented as an integration seam rather than being simulated or overstated.
+
+
+## Agent Catalog v2 and Dynamic Team Formation
+
+Agent Catalog v2 is the semantic discovery and composition layer above M17, M26 and M36.
+
+- M17 remains the authenticated multi-agent coordination runtime.
+- M26 remains the desired-state Agent Directory.
+- M36 remains the package/publisher/version and supply-chain Registry.
+- Agent Platform remains the sole authority for identity, authorization, policy, approval, budget, governed execution and authoritative evidence.
+- Catalog metadata never grants authority.
+
+The catalog normalizes agents, capabilities, skills, roles, archetypes, tools, environments, domains, protocols, risk, autonomy and evaluation profiles. Dynamic team formation is a planning function: the planner chooses the least-complex valid plan and prefers a single agent when collaboration is unnecessary.
+
+The full serial build is documented in docs/agent-catalog-v2/README.md. Phase 0 architecture is frozen in docs/agent-catalog-v2/ARCHITECTURE.md and ADR-0005.
+
+The design aligns with current agent interoperability and security direction: A2A Agent Cards describe identity/capabilities/skills/interfaces and support registry/catalog discovery; NIST's 2026 AI Agent Standards Initiative emphasizes interoperability, security and identity; OWASP's 2026 agentic guidance includes inter-agent communication, cascading failure, supply-chain, memory/context and rogue-agent risks.
 
 ## License
 
