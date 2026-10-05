@@ -562,11 +562,11 @@ M16 acceptance coverage includes sequential and parallel execution, conditions, 
 
 ## Status
 
-**M0–M29 repository implementation: complete.**
+**M0–M41 repository implementation: complete.**
 
 M23 adds an independent adversarial conformance suite. M24 adds the production release controller and signed distribution workflow. M25 closes the forensic-hardening gaps found after M24: release minimum-version enforcement and safe staging failure handling, trusted-memory provenance promotion controls, supervised-process environment hardening, Unix fleet endpoint validation, and immutable GitHub Action pin enforcement.
 
-M26 adds the Agent Directory desired-state layer on top of the existing M12 lifecycle runtime. Desired state is durable and generationed; reconciliation is deterministic and read-only.
+Agent Catalog v2 adds semantic capability discovery and dynamic team planning; M26 adds the Agent Directory desired-state layer on top of the existing M12 lifecycle runtime. Desired state is durable and generationed; reconciliation is deterministic and read-only.
 
 "Complete" means the repository-owned contracts, implementation, tests, architecture constraints and documentation are implemented and verified by CI. External infrastructure is explicitly represented as an integration seam rather than being simulated or overstated.
 
