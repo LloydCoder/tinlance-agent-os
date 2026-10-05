@@ -1,5 +1,6 @@
 from tinlance_agent_os.catalog_schema import AutonomyLevel, CapabilityProfile, RiskLevel
 
+
 def test_profile_serialization_and_invariants() -> None:
     p = CapabilityProfile(
         id="agent.security",
@@ -21,8 +22,12 @@ def test_profile_serialization_and_invariants() -> None:
 def test_profile_rejects_undeclared_delegation_limits() -> None:
     try:
         CapabilityProfile(
-            id="x", version="1", domain="x", capability_ids=("x",),
-            max_fanout=1, provenance=("test",)
+            id="x",
+            version="1",
+            domain="x",
+            capability_ids=("x",),
+            max_fanout=1,
+            provenance=("test",),
         )
     except ValueError as exc:
         assert "delegation_allowed" in str(exc)
