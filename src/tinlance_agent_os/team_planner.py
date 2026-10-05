@@ -36,11 +36,7 @@ def plan(
             capabilities,
             ("single capability does not warrant collaboration",),
         )
-    topology = (
-        TeamTopology.PARALLEL
-        if budget.max_active_agents > 1
-        else TeamTopology.SEQUENTIAL
-    )
+    topology = TeamTopology.PARALLEL if budget.max_active_agents > 1 else TeamTopology.SEQUENTIAL
     return GoalPlan(
         topology,
         capabilities,
