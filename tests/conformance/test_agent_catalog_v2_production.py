@@ -38,9 +38,7 @@ def test_team_graph_respects_agent_and_fanout_budget() -> None:
             TeamNode("child-b", "b", ("root",)),
         )
     )
-    graph.validate_against_budget(
-        TeamBudget(max_agents=3, max_active_agents=2, max_fanout=2)
-    )
+    graph.validate_against_budget(TeamBudget(max_agents=3, max_active_agents=2, max_fanout=2))
 
 
 def test_team_graph_rejects_excess_agents() -> None:
@@ -52,9 +50,7 @@ def test_team_graph_rejects_excess_agents() -> None:
         )
     )
     with pytest.raises(ValueError, match="max_agents"):
-        graph.validate_against_budget(
-            TeamBudget(max_agents=2, max_active_agents=2)
-        )
+        graph.validate_against_budget(TeamBudget(max_agents=2, max_active_agents=2))
 
 
 def test_team_graph_rejects_excess_depth() -> None:
@@ -66,6 +62,4 @@ def test_team_graph_rejects_excess_depth() -> None:
         )
     )
     with pytest.raises(ValueError, match="max_depth"):
-        graph.validate_against_budget(
-            TeamBudget(max_agents=3, max_active_agents=2, max_depth=1)
-        )
+        graph.validate_against_budget(TeamBudget(max_agents=3, max_active_agents=2, max_depth=1))
