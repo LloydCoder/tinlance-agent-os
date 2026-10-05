@@ -1,0 +1,73 @@
+{
+  "version": "taxonomy-v1-reconciled",
+  "seed_entries": 420,
+  "categories": 30,
+  "unresolved": 0,
+  "semantic_classes": [
+    "CAPABILITY",
+    "SKILL",
+    "ROLE",
+    "ARCHETYPE",
+    "META",
+    "EVIDENCE",
+    "CONTROL",
+    "PROTOCOL"
+  ],
+  "explicit_canonical_merges": [
+    {
+      "source": "Cyber Threat Intelligence Agent",
+      "target": "Threat Intelligence Agent"
+    },
+    {
+      "source": "Cloud Security Agent",
+      "target": "cybersecurity.cloud_security"
+    },
+    {
+      "source": "DevSecOps Container Security Agent",
+      "target": "cybersecurity.container_security"
+    },
+    {
+      "source": "DevSecOps Infrastructure Security Agent",
+      "target": "cybersecurity.infrastructure_security"
+    }
+  ],
+  "forbidden_reimplementation": [
+    "authorization",
+    "m17_coordination",
+    "m26_directory",
+    "m36_registry",
+    "platform_r10"
+  ],
+  "category_counts": {
+    "Core Platform / Reference Agents": 12,
+    "Cybersecurity": 45,
+    "FAS / Evidence Intelligence": 9,
+    "FDSE / Software Engineering": 31,
+    "FDE Mastery": 9,
+    "Tinlance World Intelligence": 20,
+    "TADS / Demand & Account Intelligence": 17,
+    "GTM / Revenue Intelligence": 18,
+    "FadeReach": 9,
+    "Olvrix / CRM & Automation": 12,
+    "Healthcare": 16,
+    "Fintech": 14,
+    "Logistics & Supply Chain": 12,
+    "Procurement": 10,
+    "LegalTech": 10,
+    "AI Governance": 14,
+    "Data Engineering": 16,
+    "Cloud & Infrastructure": 13,
+    "DevSecOps": 10,
+    "IT Operations": 11,
+    "Research & Knowledge": 12,
+    "Finance & Business": 12,
+    "Marketing": 10,
+    "Customer Support": 10,
+    "Executive & Operations": 11,
+    "HR & People": 9,
+    "Documents & Knowledge Assets": 9,
+    "Compliance & Risk": 10,
+    "Agent Infrastructure": 13,
+    "Meta-Agents": 16
+  }
+}
