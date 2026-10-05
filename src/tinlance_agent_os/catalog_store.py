@@ -92,3 +92,49 @@ class CatalogStore:
         for value in protocols:
             candidates &= self._index.by_protocol.get(value, set())
         return tuple(self._profiles[i] for i in sorted(candidates))
+
+
+class SqliteCatalogStore(CatalogStore):
+    """Durable Catalog v2 adapter with atomic SQLite upserts."""
+
+    def __init__(self, database_path: str) -> None:
+        import json
+        import sqlite3
+
+        super().__init__()
+        self._database_path = database_path
+        with sqlite3.connect(database_path) as db:
+            db.execute(
+                """
+                CREATE TABLE IF NOT EXISTS agent_catalog_profiles (
+                    profile_id TEXT PRIMARY KEY,
+                    profile_version TEXT NOT NULL,
+                    profile_json TEXT NOT NULL,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            rows = db.execute(
+                "SELECT profile_json FROM agent_catalog_profiles ORDER BY profile_id"
+            ).fetchall()
+        for (payload,) in rows:
+            self.upsert(CapabilityProfile.from_record(json.loads(payload)))
+
+    def upsert(self, profile: CapabilityProfile) -> None:
+        import json
+        import sqlite3
+
+        super().upsert(profile)
+        with sqlite3.connect(self._database_path) as db:
+            db.execute(
+                """
+                INSERT INTO agent_catalog_profiles
+                    (profile_id, profile_version, profile_json)
+                VALUES (?, ?, ?)
+                ON CONFLICT(profile_id) DO UPDATE SET
+                    profile_version=excluded.profile_version,
+                    profile_json=excluded.profile_json,
+                    updated_at=CURRENT_TIMESTAMP
+                """,
+                (profile.id, profile.version, json.dumps(profile.to_record(), sort_keys=True)),
+            )
