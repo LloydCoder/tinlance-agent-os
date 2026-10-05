@@ -37,7 +37,9 @@ A milestone is **complete** when the repository-owned contracts, implementation,
 | M28 | Event, Signal & Reactive Runtime | COMPLETE |
 | M29 | Scheduler & Job Runtime | COMPLETE |
 | M30 | Context & Knowledge Fabric | COMPLETE |
-| M31 | Connectors & Data Spaces | COMPLETE |\n| M32 | Resource, Cost & Capacity Runtime | COMPLETE |\n| M33 | Evaluation & Agent Quality Runtime | COMPLETE |
+| M31 | Connectors & Data Spaces | COMPLETE |
+| M32 | Resource, Cost & Capacity Runtime | COMPLETE |
+| M33 | Evaluation & Agent Quality Runtime | COMPLETE |
 
 ## M0 — Architecture Foundation
 
@@ -835,3 +837,45 @@ M41 does not claim external certification. SOC 2, ISO 27001, penetration testing
 - compatibility is explicit and versioned;
 - external certification is represented as evidence, not asserted as a repository property;
 - no new authority plane is introduced.
+
+
+## Agent Catalog v2 serial program
+
+Agent Catalog v2 is a new semantic program inside Agent OS; it is not a new repository and does not replace M17, M26 or M36.
+
+### Phase gates
+
+| Phase | Scope | Gate |
+|---|---|---|
+| 0 | Architecture freeze | terminology, ownership, trust boundaries, evidence/interoperability and negative architecture constraints verified |
+| 1 | Repository/contract forensics | reusable/extend/replace/missing/forbidden-duplicate matrix |
+| 2 | 420 taxonomy reconciliation | every seed entry classified and normalized |
+| 3 | External ecosystem research | major standards/ecosystem categories mapped, adopted or rejected |
+| 4 | Canonical ontology | versioned deterministic ontology |
+| 5 | Capability schema | machine-validatable profile/schema contracts |
+| 6 | Catalog storage/index | durable indexed semantic catalog |
+| 7 | Agent capability profiles | reference agents connected to canonical profiles |
+| 8 | Discovery API | exact/semantic/constraint discovery |
+| 9 | Capability matching | reproducible capability fit/risk/trust/evaluation/cost matching |
+| 10 | Agent selection | deterministic single-agent selection when sufficient |
+| 11 | Team specification | versioned bounded TeamSpec |
+| 12 | Dynamic team planner | explainable single/team topology planning |
+| 13 | Team composer/DAG | executable composition integrated with M17 |
+| 14 | Governed team execution | authority attenuation and Platform admission |
+| 15 | Evidence/handoff/synthesis | provenance-preserving collaboration and synthesis |
+| 16 | A2A/MCP interoperability | external agent/tool metadata and governed adapters |
+| 17 | Evaluation/benchmarking | capability, selection and team quality benchmarks |
+| 18 | Adversarial/security validation | agentic security and failure scenarios |
+| 19 | Production hardening | crash recovery, limits, idempotency, observability and migration |
+| 20 | GA/continuous discovery | release contracts, audited taxonomy and ongoing discovery |
+
+### Serial completion rule
+
+Phase N is not complete until implementation, unit tests, contract tests, architecture/security tests, documentation reconciliation and all CI workflows are green. Only then may Phase N+1 begin.
+
+See:
+- docs/agent-catalog-v2/README.md
+- docs/agent-catalog-v2/ARCHITECTURE.md
+- docs/agent-catalog-v2/TERMINOLOGY.md
+- docs/agent-catalog-v2/OWNERSHIP.md
+- docs/adr/0005-agent-catalog-v2-architecture.md
