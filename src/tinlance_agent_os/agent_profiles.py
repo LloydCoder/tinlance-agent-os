@@ -27,10 +27,7 @@ class AgentProfileCatalog:
         binding: AgentCapabilityBinding,
         profile: CapabilityProfile,
     ) -> None:
-        if (
-            binding.profile_id != profile.id
-            or binding.profile_version != profile.version
-        ):
+        if binding.profile_id != profile.id or binding.profile_version != profile.version:
             raise ValueError("binding/profile version mismatch")
         if self.store.get(profile.id) is None:
             self.store.upsert(profile)
