@@ -14,6 +14,18 @@ def test_planner_parallelizes_distinct_capabilities() -> None:
 
 
 def test_compose_spec_preserves_goal() -> None:
-    result = plan("original goal", ("a", "b"), 2, TeamBudget(max_agents=2, max_active_agents=2))
-    spec = compose_spec(result, "team-1", "workspace-1", "supervisor-1", ("a", "b"), TeamBudget(max_agents=2, max_active_agents=2))
+    result = plan(
+        "original goal",
+        ("a", "b"),
+        2,
+        TeamBudget(max_agents=2, max_active_agents=2),
+    )
+    spec = compose_spec(
+        result,
+        "team-1",
+        "workspace-1",
+        "supervisor-1",
+        ("a", "b"),
+        TeamBudget(max_agents=2, max_active_agents=2),
+    )
     assert spec.goal == "original goal"
