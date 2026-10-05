@@ -124,7 +124,7 @@ class SqliteCatalogStore(CatalogStore):
         import json
         import sqlite3
 
-        super().upsert(profile)
+        record = json.dumps(profile.to_record(), sort_keys=True)
         with sqlite3.connect(self._database_path) as db:
             db.execute(
                 """
@@ -136,5 +136,6 @@ class SqliteCatalogStore(CatalogStore):
                     profile_json=excluded.profile_json,
                     updated_at=CURRENT_TIMESTAMP
                 """,
-                (profile.id, profile.version, json.dumps(profile.to_record(), sort_keys=True)),
+                (profile.id, profile.version, record),
             )
+        super().upsert(profile)
