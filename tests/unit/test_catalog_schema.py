@@ -19,6 +19,7 @@ def test_profile_serialization_and_invariants() -> None:
     assert record["capabilities"] == ["security.review"]
     assert record["max_fanout"] == 4
 
+
 def test_profile_rejects_undeclared_delegation_limits() -> None:
     try:
         CapabilityProfile(
