@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .team_spec import TeamBudget
+
 
 @dataclass(frozen=True, slots=True)
 class TeamNode:
@@ -44,3 +46,27 @@ class TeamGraph:
 
         for node_id in ids:
             visit(node_id)
+
+    def validate_against_budget(self, budget: TeamBudget) -> None:
+        self.validate()
+        if len(self.nodes) > budget.max_agents:
+            raise ValueError("team graph exceeds max_agents")
+        if budget.max_fanout:
+            for node in self.nodes:
+                if len(node.depends_on) > budget.max_fanout:
+                    raise ValueError("team graph exceeds max_fanout")
+        if budget.max_depth:
+            edges = {node.node_id: node.depends_on for node in self.nodes}
+            cache: dict[str, int] = {}
+
+            def depth(node_id: str) -> int:
+                if node_id in cache:
+                    return cache[node_id]
+                value = 0 if not edges[node_id] else 1 + max(
+                    depth(dependency) for dependency in edges[node_id]
+                )
+                cache[node_id] = value
+                return value
+
+            if max(depth(node.node_id) for node in self.nodes) > budget.max_depth:
+                raise ValueError("team graph exceeds max_depth")
