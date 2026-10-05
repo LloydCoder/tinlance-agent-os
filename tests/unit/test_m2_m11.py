@@ -440,10 +440,7 @@ def test_daemon_serves_real_unix_socket_and_shutdown() -> None:
         )
         thread = threading.Thread(target=daemon.serve_forever, daemon=True)
         thread.start()
-        for _ in range(50):
-            if socket_path.exists():
-                break
-            time.sleep(0.01)
+        assert daemon.wait_ready(timeout=2.0)
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
             client.connect(str(socket_path))
             client.sendall(b'{"x":1}\n')
