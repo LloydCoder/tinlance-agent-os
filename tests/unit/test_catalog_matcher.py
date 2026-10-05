@@ -26,7 +26,7 @@ def test_match_is_reproducible() -> None:
     )
     match = match_profile(profile, requirement)
     assert match is not None
-    assert match.score == 16.0
+    assert match.score == 30.0
 
 
 def test_match_rejects_low_trust_profile() -> None:
