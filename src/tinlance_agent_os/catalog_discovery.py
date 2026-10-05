@@ -39,8 +39,4 @@ class CatalogDiscovery:
             RiskLevel.CRITICAL: 3,
         }
         limit = rank[query.risk_max]
-        return tuple(
-            profile
-            for profile in profiles
-            if rank[profile.risk_level] <= limit
-        )
+        return tuple(profile for profile in profiles if rank[profile.risk_level] <= limit)
