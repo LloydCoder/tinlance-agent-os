@@ -110,7 +110,7 @@ class CapabilityProfile:
         }
 
     @classmethod
-    def from_record(cls, record: dict[str, Any]) -> "CapabilityProfile":
+    def from_record(cls, record: dict[str, Any]) -> CapabilityProfile:
         if record.get("schema") != "tinlance.agent-profile.v2":
             raise ValueError("unsupported profile schema")
         return cls(
