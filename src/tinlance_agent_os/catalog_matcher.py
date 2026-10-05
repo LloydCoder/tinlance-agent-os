@@ -46,9 +46,15 @@ def match_profile(
         return None
     if profile.trust_score < requirement.min_trust_score:
         return None
-    if requirement.max_cost_microunits is not None and profile.cost_microunits > requirement.max_cost_microunits:
+    if (
+        requirement.max_cost_microunits is not None
+        and profile.cost_microunits > requirement.max_cost_microunits
+    ):
         return None
-    if requirement.max_latency_ms is not None and profile.latency_ms > requirement.max_latency_ms:
+    if (
+        requirement.max_latency_ms is not None
+        and profile.latency_ms > requirement.max_latency_ms
+    ):
         return None
 
     score = (
