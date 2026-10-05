@@ -17,11 +17,7 @@ def test_catalog_store_indexes_and_replaces_profiles() -> None:
     store = CatalogStore()
     store.upsert(profile("a", tools=("github",), environments=("cloud",)))
     store.upsert(profile("b", tools=("github",), environments=("local",)))
-
     assert store.ids_for_capability("security.review") == ("a", "b")
-    assert [p.id for p in store.search(tools=("github",), environments=("cloud",))] == [
-        "a"
-    ]
-
+    assert [p.id for p in store.search(tools=("github",), environments=("cloud",))] == ["a"]
     store.upsert(profile("a", tools=("slack",), environments=("local",)))
     assert [p.id for p in store.search(tools=("github",))] == ["b"]
