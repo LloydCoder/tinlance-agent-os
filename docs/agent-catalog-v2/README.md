@@ -1,109 +1,117 @@
-
 # Agent Catalog v2
 
-Agent Catalog v2 is the semantic discovery and composition layer for Tinlance Agent OS.
+Agent Catalog v2 is the semantic discovery, selection and dynamic-team planning layer inside Tinlance Agent OS.
 
-It does not replace or duplicate Tinlance Agent Platform authority, M17 multi-agent coordination, M26 desired-state management, or M36 supply-chain registry semantics.
+It does not replace or duplicate M17 multi-agent coordination, M26 desired-state management, M36 package/marketplace registry semantics, or Agent Platform authority.
 
-## Core rule
+## Authority rule
 
-The catalog answers what exists, what it can do, and how it can be composed. The Platform answers what is authorized and what may execute.
+The catalog answers:
+- what capabilities and agents exist;
+- which constraints they advertise;
+- which candidates fit a goal;
+- whether a bounded single-agent or team plan is appropriate.
 
-~~~text
-Goal
-  |
-  v
-Task/context analysis
-  |
-  v
-Capability Catalog
-  |
-  v
-Capability matching
-  |
-  v
-Agent selection
-  |
-  +--> single agent
-  |
-  +--> dynamic TeamSpec
-          |
-          v
-      M17 coordination
-          |
-          v
-   Platform authority
-          |
-          v
- Evidence / artifacts
-~~~
+Agent Platform answers:
+- who the principal is;
+- which tenant/workspace it belongs to;
+- what is authorized;
+- which policies and approvals apply;
+- what may execute;
+- what evidence/audit is authoritative.
 
-## Frozen vocabulary
+Catalog metadata never grants authority.
 
-- Agent: an executable or addressable actor with identity and declared behavior.
-- Capability: a governed semantic unit of work an agent can perform.
-- Skill: a narrower behavior supporting a capability; descriptive unless bound to an agent.
-- Role: an organizational or coordination position, not an authority grant.
-- Archetype: a reusable behavioral pattern for selecting/composing agents.
-- Tool: an operation surface; not an agent.
-- Environment: execution/data context.
-- Domain: subject-matter classification.
-- Team: a runtime composition of agents around a goal.
-- Workflow: a durable OS process definition whose steps may be executed by agents.
-- Directory: desired-state declarations for agents.
-- Catalog: semantic metadata and discovery for capabilities/agents.
-- Registry: package/publisher/version and supply-chain metadata.
-- Authority: effective permission to cause a consequential action; owned by Agent Platform.
+## Canonical ontology
 
-## Non-negotiable invariants
+Domain -> Capability Family -> Capability -> Skill -> Agent Profile -> Agent Instance
 
-1. Catalog metadata never grants authority.
-2. Capability declarations are not capability grants.
-3. Roles are not authorization boundaries.
-4. Tools are not agents.
-5. Workflows are not teams.
-6. Teams are not authorization planes.
-7. Child authority can never exceed parent authority.
-8. Child team budget can never exceed remaining parent budget.
-9. Cross-tenant and cross-workspace composition is rejected.
-10. External agents must cross the authenticated Platform trust boundary before consequential execution.
-11. Evidence provenance remains authoritative in Platform/FAS-integrated evidence systems.
-12. A single-agent plan is preferred whenever sufficient.
-13. The planner must not spawn agents merely because candidates exist.
-14. Dynamic teams have bounded depth, fan-out, cardinality, runtime, retries and cost.
-15. Catalog evolution is versioned and compatibility-checked.
+Roles and archetypes are orthogonal semantic nodes. Tools, environments, modalities and protocols are typed discovery constraints.
 
-## Relationship to external standards
+## Serial build status
 
-A2A provides agent collaboration interoperability and Agent Card metadata for identity, capabilities, skills, interfaces and security requirements. Tinlance maps that metadata into its catalog but does not treat an Agent Card as an authority grant.
+| Phase | Scope | Status |
+|---:|---|---|
+| 0 | Architecture freeze | COMPLETE |
+| 1 | Repository/contract forensics | COMPLETE |
+| 2 | 420 taxonomy reconciliation | COMPLETE |
+| 3 | External ecosystem research | COMPLETE |
+| 4 | Canonical ontology | COMPLETE |
+| 5 | Capability schema | COMPLETE |
+| 6 | Catalog storage/index | COMPLETE |
+| 7 | Agent capability profiles | COMPLETE |
+| 8 | Catalog discovery API | COMPLETE |
+| 9 | Capability matching | COMPLETE |
+| 10 | Agent selection | COMPLETE |
+| 11 | Team specification | COMPLETE |
+| 12 | Dynamic team planner | COMPLETE |
+| 13 | Team composer/DAG | COMPLETE |
+| 14 | Governed team execution boundary | COMPLETE |
+| 15 | Evidence/handoff/synthesis | COMPLETE |
+| 16 | A2A/MCP interoperability | COMPLETE |
+| 17 | Evaluation/benchmarking | COMPLETE |
+| 18 | Adversarial/security validation | COMPLETE |
+| 19 | Production hardening | COMPLETE |
+| 20 | GA/continuous discovery | IN PROGRESS |
 
-MCP is the tool/data integration layer. An MCP server is a tool provider, not automatically an agent.
+## Catalog / Directory / Registry separation
 
-NIST's 2026 AI Agent Standards Initiative emphasizes interoperability plus agent security and identity. OWASP's 2026 Agentic Applications guidance highlights inter-agent communication, cascading failure, supply-chain, memory/context and rogue-agent risks. These become catalog/planning constraints; enforcement remains in Platform.
+- M26 Directory: desired-state inventory and lifecycle intent.
+- Catalog v2: semantic capability metadata, profiles, discovery and planning.
+- M36 Registry: publisher/package/version and supply-chain state.
+- M17: authenticated coordination and durable parent/child task execution.
+- Agent Platform: authoritative identity, authorization, policy, approval, budget, governed execution and evidence/audit.
 
-## Serial build
+## Dynamic team formation
 
-Phase 0 freezes architecture and vocabulary. Implementation begins only after its gate is green.
+The planner must choose the least-complex valid plan:
 
-0. Architecture freeze
-1. Repository/contract forensics
-2. Taxonomy reconciliation
-3. External ecosystem research
-4. Canonical ontology
-5. Capability schema
-6. Catalog storage/index
-7. Catalog discovery API
-8. Capability matching
-9. Agent selection
-10. Team specification
-11. Dynamic team planner
-12. Team composer/DAG
-13. Governed team execution
-14. Evidence/handoff/synthesis
-15. A2A/MCP interoperability
-16. Evaluation/benchmarking
-17. Adversarial/security validation
-18. Production hardening
-19. GA/continuous discovery
+1. SINGLE_AGENT
+2. SEQUENTIAL
+3. PARALLEL
+4. HIERARCHICAL
+5. DAG
+6. REVIEW_LOOP
+7. HUMAN_ESCALATION
 
-Every phase requires implementation, tests, architecture/contract tests, documentation reconciliation, CI green and forensic review before the next phase.
+A team is not created merely because multiple candidates exist. TeamSpec bounds total agents, active agents, depth, fan-out, runtime, retries, tokens, tool calls and cost. Team graphs are validated against those limits before M17 coordination.
+
+## Continuous discovery
+
+External metadata is freshness-sensitive and untrusted.
+
+Each discovery source records:
+- stable source ID;
+- source type/protocol;
+- provenance;
+- TTL;
+- last refresh;
+- enabled state.
+
+Freshness can reduce candidate confidence or exclude stale metadata. Refresh cannot move backward in time. Discovery does not grant authority.
+
+## Interoperability
+
+A2A Agent Cards are mapped as external agent metadata. Current A2A defines Agent Cards with identity, interfaces, capabilities, skills and security requirements and supports discovery through well-known resources, registries/catalogs and direct configuration.
+
+MCP is modeled as tool/data integration. MCP servers are not automatically agents. Protocol versions and authorization metadata are compatibility/security inputs, not local authority.
+
+## Evidence
+
+Catalog records references to authoritative evidence rather than creating verdict authority.
+
+FAS semantics remain:
+
+observation != evidence != finding != verdict
+
+## Taxonomy
+
+The original 420 entries are the Tinlance Agent Taxonomy v1 seed. The Phase 2 reconciliation accounts for all 420 entries across 30 categories with zero unresolved classifications.
+
+The 420 figure is therefore a historical seed count, not a claim that exactly 420 permanent agents must be deployed.
+
+## Phase gate
+
+Every phase requires implementation, unit tests, contract/security tests, documentation reconciliation and green CI before merge. The merged main commit is revalidated before the next phase begins.
+
+See ARCHITECTURE.md, TERMINOLOGY.md, OWNERSHIP.md and POST-MERGE-FORENSIC-AUDIT.md.
