@@ -51,10 +51,7 @@ def match_profile(
         and profile.cost_microunits > requirement.max_cost_microunits
     ):
         return None
-    if (
-        requirement.max_latency_ms is not None
-        and profile.latency_ms > requirement.max_latency_ms
-    ):
+    if requirement.max_latency_ms is not None and profile.latency_ms > requirement.max_latency_ms:
         return None
 
     score = (
