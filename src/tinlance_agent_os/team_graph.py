@@ -1,23 +1,46 @@
 """Executable team DAG adapter; delegates actual runtime to M17."""
+
+from __future__ import annotations
+
 from dataclasses import dataclass
-@dataclass(frozen=True,slots=True)
+
+
+@dataclass(frozen=True, slots=True)
 class TeamNode:
-    node_id:str;agent_id:str;depends_on:tuple[str,...]=()
-@dataclass(frozen=True,slots=True)
+    node_id: str
+    agent_id: str
+    depends_on: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class TeamGraph:
-    nodes:tuple[TeamNode,...]
-    def validate(self)->None:
-        ids={n.node_id for n in self.nodes}
-        if len(ids)!=len(self.nodes): raise ValueError("duplicate team node")
-        for n in self.nodes:
-            if any(d not in ids for d in n.depends_on): raise ValueError("unknown dependency")
-            if n.node_id in n.depends_on: raise ValueError("self dependency")
-        visiting:set[str]=set();done:set[str]=set()
-        edges={n.node_id:n.depends_on for n in self.nodes}
-        def visit(x:str)->None:
-            if x in visiting: raise ValueError("cycle")
-            if x in done:return
-            visiting.add(x)
-            for d in edges[x]:visit(d)
-            visiting.remove(x);done.add(x)
-        for x in ids:visit(x)
+    nodes: tuple[TeamNode, ...]
+
+    def validate(self) -> None:
+        ids = {node.node_id for node in self.nodes}
+        if len(ids) != len(self.nodes):
+            raise ValueError("duplicate team node")
+
+        for node in self.nodes:
+            if any(dependency not in ids for dependency in node.depends_on):
+                raise ValueError("unknown dependency")
+            if node.node_id in node.depends_on:
+                raise ValueError("self dependency")
+
+        visiting: set[str] = set()
+        done: set[str] = set()
+        edges = {node.node_id: node.depends_on for node in self.nodes}
+
+        def visit(node_id: str) -> None:
+            if node_id in visiting:
+                raise ValueError("cycle")
+            if node_id in done:
+                return
+            visiting.add(node_id)
+            for dependency in edges[node_id]:
+                visit(dependency)
+            visiting.remove(node_id)
+            done.add(node_id)
+
+        for node_id in ids:
+            visit(node_id)

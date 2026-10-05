@@ -43,6 +43,7 @@ class AgentOSDaemon:
         self.handler = handler
         self._stop = threading.Event()
         self._server: socket.socket | None = None
+        self._ready = threading.Event()
 
     def serve_forever(self) -> None:
         self.config.socket_path.parent.mkdir(parents=True, exist_ok=True)
@@ -55,6 +56,7 @@ class AgentOSDaemon:
             server.bind(str(self.config.socket_path))
             os.chmod(self.config.socket_path, 0o600)
             server.listen(self.config.backlog)
+            self._ready.set()
             server.settimeout(0.5)
             while not self._stop.is_set():
                 try:
@@ -70,6 +72,7 @@ class AgentOSDaemon:
             with contextlib.suppress(OSError):
                 server.close()
             self._server = None
+            self._ready.clear()
             with contextlib.suppress(FileNotFoundError):
                 self.config.socket_path.unlink()
 
@@ -137,6 +140,11 @@ class AgentOSDaemon:
     @staticmethod
     def _send(conn: socket.socket, response: dict[str, object]) -> None:
         conn.sendall((json.dumps(response, separators=(",", ":")) + "\n").encode("utf-8"))
+
+    def wait_ready(self, timeout: float = 5.0) -> bool:
+        if timeout <= 0:
+            raise ValueError("timeout must be positive")
+        return self._ready.wait(timeout)
 
     def shutdown(self) -> None:
         self._stop.set()

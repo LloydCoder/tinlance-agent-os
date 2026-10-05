@@ -1,11 +1,17 @@
 from tinlance_agent_os.catalog_schema import CapabilityProfile
 from tinlance_agent_os.catalog_store import CatalogStore
 
+
 def profile(i: str, **kw: object) -> CapabilityProfile:
     return CapabilityProfile(
-        id=i, version="1", domain="security", capability_ids=("security.review",),
-        provenance=("test",), **kw
+        id=i,
+        version="1",
+        domain="security",
+        capability_ids=("security.review",),
+        provenance=("test",),
+        **kw,
     )
+
 
 def test_catalog_store_indexes_and_replaces_profiles() -> None:
     store = CatalogStore()
