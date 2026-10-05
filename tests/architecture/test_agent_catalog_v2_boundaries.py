@@ -30,7 +30,8 @@ def test_catalog_v2_freezes_authority_boundary() -> None:
 
 
 def test_catalog_v2_does_not_create_a_second_authority_plane() -> None:
-    source = "\n".join(path.read_text() for path in (ROOT / "src" / "tinlance_agent_os").rglob("*.py"))
+    source_root = ROOT / "src" / "tinlance_agent_os"
+    source = "\n".join(path.read_text() for path in source_root.rglob("*.py"))
     forbidden = (
         "grant_capability(",
         "mint_capability(",
