@@ -52,7 +52,7 @@ Roles and archetypes are orthogonal semantic nodes. Tools, environments, modalit
 | 17 | Evaluation/benchmarking | COMPLETE |
 | 18 | Adversarial/security validation | COMPLETE |
 | 19 | Production hardening | COMPLETE |
-| 20 | GA/continuous discovery | IN PROGRESS |
+| 20 | GA/continuous discovery | COMPLETE |
 
 ## Catalog / Directory / Registry separation
 
