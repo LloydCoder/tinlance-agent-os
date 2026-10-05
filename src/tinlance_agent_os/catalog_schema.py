@@ -127,9 +127,7 @@ class CapabilityProfile:
             protocols=tuple(record.get("protocols", ())),
             models=tuple(record.get("models", ())),
             risk_level=RiskLevel(record.get("risk_level", RiskLevel.LOW)),
-            autonomy_level=AutonomyLevel(
-                record.get("autonomy_level", AutonomyLevel.SUPERVISED)
-            ),
+            autonomy_level=AutonomyLevel(record.get("autonomy_level", AutonomyLevel.SUPERVISED)),
             approval_policy=str(record.get("approval_policy", "platform-default")),
             data_sensitivity=str(record.get("data_sensitivity", "internal")),
             delegation_allowed=bool(record.get("delegation_allowed", False)),
