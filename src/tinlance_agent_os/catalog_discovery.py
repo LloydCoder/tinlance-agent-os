@@ -43,10 +43,7 @@ class CatalogDiscovery:
                 query.max_cost_microunits is None
                 or profile.cost_microunits <= query.max_cost_microunits
             )
-            and (
-                query.max_latency_ms is None
-                or profile.latency_ms <= query.max_latency_ms
-            )
+            and (query.max_latency_ms is None or profile.latency_ms <= query.max_latency_ms)
         )
         if query.risk_max is None:
             return profiles
