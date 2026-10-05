@@ -55,3 +55,40 @@ class CatalogDiscovery:
         }
         limit = rank[query.risk_max]
         return tuple(profile for profile in profiles if rank[profile.risk_level] <= limit)
+
+
+@dataclass(frozen=True, slots=True)
+class DiscoverySource:
+    source_id: str
+    source_type: str
+    provenance: str
+    ttl_seconds: int
+    last_refreshed_epoch: int
+    enabled: bool = True
+
+    def is_fresh(self, now_epoch: int) -> bool:
+        if not self.source_id or not self.source_type or not self.provenance:
+            return False
+        if self.ttl_seconds <= 0 or self.last_refreshed_epoch < 0:
+            return False
+        return self.enabled and now_epoch <= self.last_refreshed_epoch + self.ttl_seconds
+
+
+@dataclass(slots=True)
+class ContinuousDiscoveryRegistry:
+    sources: dict[str, DiscoverySource]
+
+    def register(self, source: DiscoverySource) -> None:
+        if not source.source_id:
+            raise ValueError("source_id is required")
+        existing = self.sources.get(source.source_id)
+        if existing is not None and source.last_refreshed_epoch < existing.last_refreshed_epoch:
+            raise ValueError("discovery source freshness cannot move backwards")
+        self.sources[source.source_id] = source
+
+    def fresh_sources(self, now_epoch: int) -> tuple[DiscoverySource, ...]:
+        return tuple(
+            source
+            for source in sorted(self.sources.values(), key=lambda item: item.source_id)
+            if source.is_fresh(now_epoch)
+        )
