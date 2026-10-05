@@ -28,16 +28,10 @@ class Handoff:
 
 
 def synthesize(handoffs: tuple[Handoff, ...]) -> Handoff:
-    evidence = tuple(
-        dict.fromkeys(item for handoff in handoffs for item in handoff.evidence_refs)
-    )
-    findings = tuple(
-        dict.fromkeys(item for handoff in handoffs for item in handoff.findings)
-    )
+    evidence = tuple(dict.fromkeys(item for handoff in handoffs for item in handoff.evidence_refs))
+    findings = tuple(dict.fromkeys(item for handoff in handoffs for item in handoff.findings))
     confidence = (
-        sum(handoff.confidence for handoff in handoffs) / len(handoffs)
-        if handoffs
-        else 0.0
+        sum(handoff.confidence for handoff in handoffs) / len(handoffs) if handoffs else 0.0
     )
     return Handoff(
         "synthesis",
