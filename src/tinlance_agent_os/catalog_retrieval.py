@@ -21,6 +21,18 @@ class RetrievalRequirement:
     max_cost_microunits: int | None = None
     max_latency_ms: int | None = None
 
+    def __post_init__(self) -> None:
+        if not self.capabilities:
+            raise ValueError("at least one capability is required")
+        if not 0.0 <= self.min_evaluation_score <= 1.0:
+            raise ValueError("min_evaluation_score must be between 0 and 1")
+        if not 0.0 <= self.min_trust_score <= 1.0:
+            raise ValueError("min_trust_score must be between 0 and 1")
+        if self.max_cost_microunits is not None and self.max_cost_microunits < 0:
+            raise ValueError("max_cost_microunits cannot be negative")
+        if self.max_latency_ms is not None and self.max_latency_ms < 0:
+            raise ValueError("max_latency_ms cannot be negative")
+
 
 @dataclass(frozen=True, slots=True)
 class RetrievalResult:
@@ -39,11 +51,12 @@ def retrieve_profiles(
 ) -> tuple[RetrievalResult, ...]:
     if limit < 1:
         raise ValueError("retrieval limit must be positive")
-    if not requirement.capabilities:
-        raise ValueError("at least one capability is required")
 
     results: list[RetrievalResult] = []
     for profile in profiles:
+        if profile.status != "active":
+            continue
+
         profile_capabilities = frozenset(profile.capability_ids)
         profile_skills = frozenset(profile.skill_ids)
         capability_coverage = len(requirement.capabilities & profile_capabilities) / len(
@@ -56,6 +69,10 @@ def retrieve_profiles(
         )
 
         if requirement.domain and profile.domain != requirement.domain:
+            continue
+        if capability_coverage < 1.0:
+            continue
+        if requirement.skills and skill_coverage < 1.0:
             continue
         if profile.evaluation_score < requirement.min_evaluation_score:
             continue
@@ -70,8 +87,6 @@ def retrieve_profiles(
             requirement.max_latency_ms is not None
             and profile.latency_ms > requirement.max_latency_ms
         ):
-            continue
-        if capability_coverage == 0.0:
             continue
 
         score = round(
@@ -88,7 +103,7 @@ def retrieve_profiles(
                 capability_coverage=round(capability_coverage, 6),
                 skill_coverage=round(skill_coverage, 6),
                 rationale=(
-                    "deterministic semantic coverage",
+                    "all required capabilities and skills matched",
                     "evaluation and trust thresholds applied",
                     "Platform admission remains authoritative",
                 ),
