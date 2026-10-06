@@ -1,0 +1,67 @@
+# Agent Catalog v3 — 20K Ontology Program
+
+Agent Catalog v3 is the controlled expansion program from the reconciled 420-entry v1 seed toward 20,000+ canonical agent archetypes without imposing a permanent upper bound.
+
+## Phase 21 — Ontology Foundation
+
+Phase 21 freezes the semantic expansion boundary before candidate generation begins.
+
+### Canonical chain
+
+`Domain -> Capability Family -> Capability -> Skill -> Agent Archetype -> Agent Profile -> Agent Instance`
+
+The existing v2 ontology remains compatible. Phase 21 makes the **agent archetype** an explicit canonical semantic layer between skill and implementation profile.
+
+### Archetype contract
+
+A canonical archetype must have:
+
+- stable ID;
+- semantic version;
+- canonical name and description;
+- domain;
+- one or more capabilities;
+- zero or more skills;
+- inclusion criteria;
+- exclusion criteria;
+- provenance;
+- lifecycle status;
+- aliases and supersession metadata where applicable;
+- deterministic semantic digest.
+
+### Candidate lifecycle
+
+`DISCOVERED -> NORMALIZED -> CLUSTERED -> CANDIDATE -> VALIDATED -> REVIEWED -> CANONICAL -> DEPRECATED`
+
+Automated discovery can create candidates. It cannot publish a canonical entry by itself.
+
+### Non-inflation rule
+
+The following do **not** independently justify a new archetype:
+
+- model/provider choice;
+- geography;
+- deployment environment;
+- tool choice;
+- protocol choice;
+- latency/cost tier;
+- authorization or permission level;
+- customer/workspace identity.
+
+Those belong in profiles, constraints, deployment metadata or Platform policy.
+
+### Compatibility
+
+The 420 seed remains a compatibility baseline. Expansion must preserve stable references through explicit equivalence, specialization, generalization or supersession mappings.
+
+### Scale rule
+
+There is no hard-coded `20_000` maximum in the runtime. 20,000 is a program milestone and quality target. The data model must support larger catalogs without schema migration solely because the count grows.
+
+### Authority boundary
+
+Taxonomy entries are descriptive. They do not grant capability, authorization, approval, budget, sandbox access, secrets, tool authority or execution rights. Agent Platform remains authoritative.
+
+### Gate
+
+Phase 21 is complete only after implementation, unit tests, architecture tests, documentation reconciliation, complete CI, merged-main CI, and a post-merge forensic audit are green.
