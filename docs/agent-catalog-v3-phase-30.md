@@ -16,7 +16,7 @@ The gate is therefore a proof boundary, not a synthetic taxonomy generator.
 - canonical identifiers are unique;
 - semantic archetype keys (domain + capabilities + skills) are unique independent of display name/description;
 - 100% of entries retain provenance;
-- at least 30 distinct domains are represented;
+- exactly the mandated minimum of 30 distinct domains is enforced by the gate; callers cannot lower the threshold;
 - deterministic SHA-256 inventory digest;
 - no Platform authority, Directory deployment, Registry publication, or runtime execution is performed.
 
@@ -33,6 +33,10 @@ This module is descriptive release validation only. Platform remains the runtime
 ## Post-merge forensic remediation
 
 The merged Phase 30 gate was re-audited after release. A semantic deduplication weakness was found: the inherited candidate fingerprint included display name and description, so a renamed/reworded duplicate could evade the release gate. The remediation defines release identity from domain, capabilities and skills, with stable IDs and provenance retained separately for inventory integrity.
+
+## Post-merge policy-lock remediation
+
+A second forensic audit found that min_domains was caller-configurable and could be lowered, weakening the release contract. The remediation makes the 10K target and 30-domain diversity threshold immutable policy constants at runtime and rejects blank release identifiers.
 
 ## Gate
 
