@@ -163,11 +163,11 @@ def _bounded_strings(value: Any, field: str, *, max_items: int = 256) -> tuple[s
         raise ValueError(f"{field} must be an array")
     if len(value) > max_items:
         raise ValueError(f"{field} exceeds maximum item count")
-    result = tuple(_bounded_text(item, f"{field}[{index}]", max_length=512) for index, item in enumerate(value))
+    result = tuple(\n        _bounded_text(item, f"{field}[{index}]", max_length=512)\n        for index, item in enumerate(value)\n    )
     return result
 
 
-def normalize_curated_catalog_record(record: dict[str, Any], source_ref: str) -> ExternalCatalogRecord:
+def normalize_curated_catalog_record(\n    record: dict[str, Any], source_ref: str\n) -> ExternalCatalogRecord:
     """Normalize a bounded generic catalog record into untrusted descriptive metadata."""
     if not isinstance(record, dict):
         raise ValueError("external catalog record must be an object")
