@@ -70,8 +70,6 @@ def test_a2a_requires_skills() -> None:
     with pytest.raises(ValueError, match="at least one skill"):
         normalize_a2a_agent_card(invalid, "a2a:no-skills")
 
-
-
 def test_curated_catalog_record_maps_to_candidate_with_provenance() -> None:
     from tinlance_agent_os.catalog_external import normalize_curated_catalog_record
 
