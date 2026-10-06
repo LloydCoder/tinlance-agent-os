@@ -15,7 +15,7 @@ The controlled seed spans eight families:
 7. human-services
 8. operations
 
-The phase seed contains more than 48 canonical domain IDs. Each domain has explicit inclusion and exclusion criteria and a stable semantic key.
+The phase seed contains 48 canonical domain IDs. Each domain has explicit inclusion and exclusion criteria and a stable semantic key.
 
 ## Non-inflation rule
 
