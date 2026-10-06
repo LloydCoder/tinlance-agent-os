@@ -73,8 +73,6 @@ def test_classification_is_deterministic() -> None:
         ({"risk_class": RiskClass.HIGH}, "isolation"),
     ],
 )
-def test_classification_fails_closed(
-    overrides: dict[str, object], message: str
-) -> None:
+def test_classification_fails_closed(overrides: dict[str, object], message: str) -> None:
     with pytest.raises(ValueError, match=message):
         base(**overrides)
