@@ -44,3 +44,7 @@ Consequential execution budget is Platform authority. Requests may carry declare
 ## M13.5 tool authority reconciliation
 
 The OS may orchestrate tool lifecycle and sandbox configuration, but it never grants tool authority. Consequential execution must traverse the Platform policy boundary and consume a Platform-issued single-use permit; sandbox workspace roots are Platform-governed policy inputs.
+
+## M13.6–M13.8 production-runtime reconciliation
+
+M13.6–M13.8 reconciliation: OS orchestration may propagate execution-scoped secret references and correlation context, but cannot resolve provider secrets, sign evidence, or grant authority. Platform owns secret scope validation, evidence/audit integrity and security-event correlation contracts.
