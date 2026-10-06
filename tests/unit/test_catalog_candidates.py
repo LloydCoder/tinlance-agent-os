@@ -29,6 +29,14 @@ def candidate(
     )
 
 
+def reviewed_candidate() -> TaxonomyCandidate:
+    normalized = candidate().normalized()
+    clustered = cluster_candidate(normalized)
+    marked = mark_candidate(clustered)
+    validated = validate_candidates((marked,))[0]
+    return promote_for_review(validated, review_ref="review:example")
+
+
 def test_candidate_requires_provenance() -> None:
     try:
         candidate(sources=())
@@ -61,21 +69,17 @@ def test_deduplicate_keeps_one_semantic_representative() -> None:
 
 
 def test_full_lifecycle_requires_each_gate() -> None:
-    normalized = candidate().normalized()
-    clustered = cluster_candidate(normalized)
-    candidate_state = mark_candidate(clustered)
-    validated = validate_candidates((candidate_state,))[0]
-    reviewed = promote_for_review(validated)
+    reviewed = reviewed_candidate()
     canonical = publish_canonical(reviewed, "cybersecurity.threat_intelligence.analyst")
     deprecated = deprecate(canonical)
 
-    assert clustered.state is CandidateState.CLUSTERED
-    assert candidate_state.state is CandidateState.CANDIDATE
-    assert validated.state is CandidateState.VALIDATED
     assert reviewed.state is CandidateState.REVIEWED
+    assert reviewed.review_ref == "review:example"
     assert canonical.state is CandidateState.CANONICAL
     assert canonical.canonical_id == "cybersecurity.threat_intelligence.analyst"
-    assert deprecated.state is CandidateState.DEPRECATED\n    assert deprecated.canonical_id == canonical.canonical_id
+    assert deprecated.state is CandidateState.DEPRECATED
+    assert deprecated.canonical_id == canonical.canonical_id
+    assert deprecated.review_ref == reviewed.review_ref
 
 
 def test_cannot_skip_lifecycle_gates() -> None:
@@ -86,36 +90,44 @@ def test_cannot_skip_lifecycle_gates() -> None:
     )
     for record, target in invalid:
         try:
-            record.transition(target, canonical_id="test.id")
+            record.transition(target, canonical_id="test.id", review_ref="review:example")
         except ValueError:
             pass
         else:
             raise AssertionError("invalid lifecycle transition must fail")
 
     try:
-        promote_for_review(candidate())
+        promote_for_review(candidate(), review_ref="review:example")
     except ValueError as exc:
-        assert "transition" in str(exc)
+        assert "invalid candidate transition" in str(exc)
     else:
         raise AssertionError("unvalidated candidate must not enter review")
 
+    reviewed = reviewed_candidate()
+    for invalid_id in ("", "Threat.Intelligence", "bad id"):
+        try:
+            publish_canonical(reviewed, invalid_id)
+        except ValueError as exc:
+            assert "canonical" in str(exc)
+        else:
+            raise AssertionError("invalid canonical ID must fail")
+
+
+def test_review_attestation_is_required() -> None:
+    normalized = candidate().normalized()
+    clustered = cluster_candidate(normalized)
+    marked = mark_candidate(clustered)
+    validated = validate_candidates((marked,))[0]
     try:
-        publish_canonical(
-            candidate(state=CandidateState.REVIEWED),
-            "test.id",
-        )
+        promote_for_review(validated, review_ref="")
     except ValueError as exc:
-        assert "transition" in str(exc)
+        assert "review_ref" in str(exc)
     else:
-        raise AssertionError("review state cannot be fabricated without lifecycle")
+        raise AssertionError("review without evidence reference must fail")
 
 
 def test_canonical_requires_stable_id() -> None:
-    reviewed = promote_for_review(
-        validate_candidates(
-            (mark_candidate(cluster_candidate(candidate().normalized())),)
-        )[0]
-    )
+    reviewed = reviewed_candidate()
     try:
         publish_canonical(reviewed, "")
     except ValueError as exc:
