@@ -1,6 +1,6 @@
 # Agent Catalog v3 — Phase 28: Candidate Pipeline
 
-Phase 28 establishes the controlled lifecycle for external and generated taxonomy candidates.
+Phase 28 establishes a controlled lifecycle for external and generated taxonomy candidates.
 
 ## Lifecycle
 
@@ -8,19 +8,28 @@ Phase 28 establishes the controlled lifecycle for external and generated taxonom
 
 Deprecated entries leave the canonical set through `CANONICAL → DEPRECATED`.
 
-This module implements the structural portion of the lifecycle. Clustering, human review, and canonical publication remain separate gates.
+Every transition is explicit and forward-only. The implementation rejects skipped, reversed, or fabricated lifecycle transitions.
 
 ## Hard controls
 
-Every candidate requires non-empty identity and domain, at least one capability, explicit provenance/source references, deterministic normalization, a SHA-256 semantic fingerprint, structural validation before review, an explicit review transition, and a stable canonical identifier before canonical state.
+Every candidate requires:
 
-A candidate cannot jump directly from discovery to canonical publication.
+- non-empty identity and domain;
+- at least one capability;
+- explicit provenance/source references;
+- deterministic normalization;
+- a SHA-256 semantic fingerprint;
+- structural validation before review;
+- explicit human/governance review state before canonical publication;
+- a stable canonical identifier at publication.
+
+Canonical publication is exposed only through `publish_canonical()` and requires `REVIEWED` state plus a stable canonical ID. The candidate module never executes work or grants authority.
 
 ## Deduplication
 
-Deduplication uses normalized domain, name, description, capabilities and skills. The representative is deterministic and prefers the candidate with the larger provenance set; fingerprint ordering breaks remaining ties.
+Initial deduplication operates only on normalized structural identity: domain, name, description, capabilities and skills. The representative is deterministic and prefers the larger provenance set; fingerprint ordering breaks remaining ties.
 
-This is intentionally conservative: semantic equivalence beyond normalized identity is a future clustering/evaluation concern, not an assumption hidden inside string matching.
+This is intentionally conservative. Deeper semantic equivalence, clustering quality, and cross-source ontology reconciliation belong to later phases and must not be hidden inside candidate ingestion.
 
 ## Security boundary
 
@@ -28,8 +37,24 @@ Candidate data is untrusted descriptive metadata. It does not grant authority, s
 
 ## Research alignment
 
-NIST identifies functionality, access patterns, risk, reliability, modality, monitoring and autonomy as complementary dimensions and recommends multidimensional approaches rather than a single taxonomy axis. A2A's current Agent Card model likewise describes agent identity, capabilities, skills and security requirements for discovery; discovery metadata is not equivalent to execution authority.
+NIST's current TEVV work emphasizes context-specific, repeatable measurement and structured evidence for AI-system evaluation, while its agentic evaluation work emphasizes machine-readable audit trails and evidence grounding. OWASP's agentic guidance reinforces least functionality, least privilege, human approval for high-impact actions, and complete mediation. Candidate lifecycle controls therefore remain deterministic and governance-gated rather than LLM-authoritative. citeturn0search1turn0search4turn0search0
+
+A2A-style discovery metadata can inform candidate inputs, but discovery metadata is not execution authority. MCP metadata likewise remains descriptive input to governed ingestion.
+
+## Phase boundary
+
+Phase 28 owns candidate lifecycle and structural validation.
+
+It does not own:
+
+- external corpus ingestion (Phase 23);
+- semantic deduplication/clustering quality (Phase 24);
+- broad domain expansion (Phase 25);
+- evaluation/retrieval ranking (Phase 27);
+- security/trust classification (Phase 31);
+- A2A/MCP interoperability mapping (Phase 32);
+- Platform authorization or admission.
 
 ## Gate
 
-Phase 28 may merge only when full PR CI is green. After merge, main CI must be green and the merged state must pass a forensic audit before Phase 29 begins.
+Phase 28 may merge only when full PR CI is green. After merge, merged-main CI must be green/observable and a post-merge forensic audit must confirm the lifecycle, tests, docs, workflow integrity, and authority boundary before Phase 29 begins.
