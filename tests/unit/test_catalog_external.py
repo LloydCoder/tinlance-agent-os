@@ -67,5 +67,5 @@ def test_external_skill_rejects_duplicate_tags() -> None:
 def test_a2a_requires_skills() -> None:
     invalid = card()
     invalid["skills"] = []
-    with pytest.raises(ValueError, match="required"):
+    with pytest.raises(ValueError, match="at least one skill"):
         normalize_a2a_agent_card(invalid, "a2a:no-skills")
