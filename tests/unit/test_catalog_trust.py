@@ -46,7 +46,7 @@ def test_classification_is_deterministic() -> None:
         ({"risk_class": RiskClass.LOW, "destructive_action_potential": True}, "destructive"),
         ({"risk_class": RiskClass.LOW, "data_sensitivity": DataSensitivity.RESTRICTED}, "restricted"),
         ({"autonomy_class": AutonomyClass.AUTONOMOUS, "evidence_required": False}, "evidence"),
-        ({"destructive_action_potential": True, "risk_class": RiskClass.HIGH, "isolation_required": True}, "human approval"),
+        (\n            {"destructive_action_potential": True, "risk_class": RiskClass.HIGH, "isolation_required": True},\n            "human approval",\n        ),
         ({"credential_required": True, "network_access": False}, "network access"),
         ({"risk_class": RiskClass.HIGH}, "isolation"),
     ],
