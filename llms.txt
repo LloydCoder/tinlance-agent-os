@@ -1,0 +1,59 @@
+# Tinlance Agent OS
+
+> An agent-native operating environment for teams building governed AI agents, workflows, and enterprise agent applications on the Tinlance Agent Platform.
+
+Tinlance Agent OS is the OS/control-plane layer above Tinlance Agent Platform. It owns lifecycle, workspaces, sessions, tasks, workflows, memory, applications, extensions, scheduling, fleet metadata, evaluation, registry, operator projections, and release-assurance contracts. Agent Platform remains authoritative for identity, authorization, policy, approvals, budgets, governed execution, sandbox/tool authority, and authoritative evidence.
+
+## Start here
+
+- [README.md](README.md) — product scope, architecture, installation, usage, configuration, and repository layout.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — architecture, dependency direction, authority boundaries, and milestone contracts.
+- [docs/ROADMAP.md](docs/ROADMAP.md) — implementation roadmap and milestone status.
+- [docs/SECURITY-CONTROLS.md](docs/SECURITY-CONTROLS.md) — security-control model.
+- [security/threat-model.md](security/threat-model.md) — threat model for the Platform integration boundary.
+- [docs/architecture/agent-platform-integration.md](docs/architecture/agent-platform-integration.md) — Platform adapter contract.
+- [docs/agent-catalog-v2/README.md](docs/agent-catalog-v2/README.md) — Agent Catalog semantic program.
+- [CONTRIBUTING.md](CONTRIBUTING.md) — development and contribution workflow.
+- [SECURITY.md](SECURITY.md) — vulnerability reporting and disclosure.
+- [CHANGELOG.md](CHANGELOG.md) — release history.
+
+## Core invariants
+
+- Agent OS does not authorize consequential actions.
+- Model output, memory, retrieved content, tool output, remote responses, and inter-agent messages are not authority.
+- Platform approval and evidence identifiers are opaque references.
+- Non-idempotent Platform operations are not automatically retried.
+- Security-sensitive state changes fail closed on invalid identity, scope, version, classification, or generation data.
+- Domain products remain integrations rather than kernel dependencies.
+
+## Developer entry points
+
+- [pyproject.toml](pyproject.toml) — package metadata, dependencies, CLI entry point, and tool configuration.
+- [src/tinlance_agent_os/](src/tinlance_agent_os/) — implementation.
+- [tests/](tests/) — unit, architecture, contract, and integration tests.
+
+## Documentation map
+
+### Tutorials
+
+The repository currently emphasizes contract/reference documentation rather than a separate tutorial site. The README Quick Start is the shortest runnable path.
+
+### How-to
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [SECURITY.md](SECURITY.md)
+
+### Explanation
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [security/threat-model.md](security/threat-model.md)
+- [docs/SECURITY-CONTROLS.md](docs/SECURITY-CONTROLS.md)
+
+### Reference
+
+- [docs/architecture/agent-platform-integration.md](docs/architecture/agent-platform-integration.md)
+- [docs/agent-catalog-v2/](docs/agent-catalog-v2/)
+- [docs/adr/](docs/adr/)
+
+[!NOTE]
+This file follows the llms.txt v2 proposal: keep the discovery file concise and point agents to focused Markdown sources for detail.
