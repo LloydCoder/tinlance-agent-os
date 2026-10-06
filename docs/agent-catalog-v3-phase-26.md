@@ -1,16 +1,16 @@
 # Agent Catalog v3 — Phase 26: 2K Controlled Expansion
 
-Phase 26 establishes the first large-scale, machine-generated canonical archetype set without treating scale itself as semantic evidence.
+Phase 26 establishes the first large-scale, machine-generated validated archetype set without treating scale itself as semantic evidence.
 
 ## Result
 
 - 48 canonical domains from Phase 25.
 - 43 bounded semantic work patterns.
-- 2,064 canonical archetypes (48 × 43).
-- Deterministic IDs, semantic boundaries, provenance, and canonical status.
+- 2,064 validated archetypes (48 × 43).
+- Deterministic IDs, semantic boundaries, and provenance, with canonical promotion still review-gated.
 - No model, provider, geography, customer, deployment, tool, protocol, cost, latency, or authorization dimension is part of archetype identity.
 
-The 2,064 records are generated from an explicit semantic matrix rather than a list of arbitrary names. A domain/work-pattern pair is a taxonomy unit only because the work boundary changes with the domain; implementation choices remain profile/instance metadata.
+The 2,064 records are generated from an explicit semantic matrix rather than a list of arbitrary names. A domain/work-pattern pair is a taxonomy unit only because the work boundary changes with the domain; implementation choices remain profile/instance metadata. Generation validates structure and provenance but does not bypass the taxonomy lifecycle's review-before-canonical rule.
 
 ## Research basis
 
