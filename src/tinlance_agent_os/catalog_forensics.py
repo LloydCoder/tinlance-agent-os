@@ -39,9 +39,7 @@ def _semantic_key(candidate: TaxonomyCandidate) -> str:
     )
 
 
-def _digest(
-    candidates: Iterable[TaxonomyCandidate], failures: tuple[str, ...]
-) -> str:
+def _digest(candidates: Iterable[TaxonomyCandidate], failures: tuple[str, ...]) -> str:
     payload = {
         "entries": sorted(
             (
@@ -73,9 +71,7 @@ def audit_canonical_inventory(
     if len(inventory) < minimum_count:
         failures.append(f"canonical count below required minimum {minimum_count}")
 
-    canonical_count = sum(
-        candidate.state is CandidateState.CANONICAL for candidate in inventory
-    )
+    canonical_count = sum(candidate.state is CandidateState.CANONICAL for candidate in inventory)
     if canonical_count != len(inventory):
         failures.append("inventory contains non-canonical lifecycle records")
 
