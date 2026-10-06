@@ -58,8 +58,10 @@ _WORK_PATTERNS: tuple[tuple[str, str], ...] = (
     ("coordinate", "coordinates information or work dependencies without replacing M17 execution"),
 )
 
+
 def _slug(value: str) -> str:
     return value.casefold().replace("_", "-").replace(" ", "-")
+
 
 def build_phase_26_catalog() -> tuple[CanonicalAgentArchetype, ...]:
     """Build the deterministic 48 × 42 = 2,016 archetype expansion."""
@@ -98,6 +100,7 @@ def build_phase_26_catalog() -> tuple[CanonicalAgentArchetype, ...]:
                 )
             )
     return tuple(result)
+
 
 def phase_26_count() -> int:
     return len(build_domain_catalog()) * len(_WORK_PATTERNS)
