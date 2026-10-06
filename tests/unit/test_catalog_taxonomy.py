@@ -10,9 +10,7 @@ from tinlance_agent_os.catalog_taxonomy import (
 
 
 def provenance() -> tuple[TaxonomyProvenance, ...]:
-    return (
-        TaxonomyProvenance("seed-v1", "taxonomy", "seed:420", "forensic-reconciliation"),
-    )
+    return (TaxonomyProvenance("seed-v1", "taxonomy", "seed:420", "forensic-reconciliation"),)
 
 
 def archetype(status: TaxonomyStatus = TaxonomyStatus.CANDIDATE) -> CanonicalAgentArchetype:
