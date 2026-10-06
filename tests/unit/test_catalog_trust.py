@@ -1,3 +1,4 @@
+import pytest
 from tinlance_agent_os.catalog_trust import (
     AutonomyClass,
     DataSensitivity,
