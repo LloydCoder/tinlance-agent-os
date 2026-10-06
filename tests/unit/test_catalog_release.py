@@ -100,6 +100,21 @@ def test_10k_release_digest_is_order_independent() -> None:
     assert first.inventory_digest == second.inventory_digest
 
 
+def test_10k_release_locks_policy_thresholds() -> None:
+    inventory = canonical_inventory(10_000)
+    for kwargs, expected in (
+        ({"target_count": 9_999}, "target"),
+        ({"min_domains": 1}, "diversity"),
+        ({"release": "   "}, "release identifier"),
+    ):
+        try:
+            build_10k_release_manifest(inventory, **kwargs)
+        except ValueError as exc:
+            assert expected in str(exc)
+        else:
+            raise AssertionError("release policy weakening must be rejected")
+
+
 def test_10k_release_requires_domain_diversity() -> None:
     inventory = tuple(
         TaxonomyCandidate(
