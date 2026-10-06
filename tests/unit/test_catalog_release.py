@@ -35,7 +35,7 @@ def test_10k_release_fails_closed_below_target() -> None:
     try:
         build_10k_release_manifest(canonical_inventory(9_999))
     except ValueError as exc:
-        assert "10,000" in str(exc)
+        assert "10000" in str(exc)
     else:
         raise AssertionError("sub-target inventory must not release")
 
