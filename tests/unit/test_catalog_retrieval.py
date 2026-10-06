@@ -38,7 +38,7 @@ def profile(
         trust_score=trust,
         cost_microunits=cost,
         latency_ms=latency,
-        provenance=("test",)
+        provenance=("test",),
         artifact_digest="sha256:test",
         signature_ref="",
         sbom_ref="",
