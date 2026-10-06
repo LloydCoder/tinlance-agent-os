@@ -37,11 +37,13 @@ class TaxonomyCandidate:
     def __post_init__(self) -> None:
         if not self.name.strip() or not self.description.strip() or not self.domain.strip():
             raise ValueError("candidate name, description and domain are required")
-        if not self.capabilities:
-            raise ValueError("candidate requires at least one capability")
-        if not self.source_refs:
-            raise ValueError("candidate provenance is required")
-        if self.state is CandidateState.CANONICAL and not self.canonical_id:
+        if not self.capabilities or any(not value.strip() for value in self.capabilities):
+            raise ValueError("candidate capabilities must be non-empty")
+        if any(not value.strip() for value in self.skills):
+            raise ValueError("candidate skills must be non-empty")
+        if not self.source_refs or any(not ref.strip() for ref in self.source_refs):
+            raise ValueError("candidate provenance must contain non-empty references")
+        if self.state is CandidateState.CANONICAL and not self.canonical_id.strip():
             raise ValueError("canonical candidates require canonical_id")
 
     @property
@@ -67,7 +69,7 @@ class TaxonomyCandidate:
             domain=normalize(self.domain),
             capabilities=tuple(sorted({normalize(value) for value in self.capabilities})),
             skills=tuple(sorted({normalize(value) for value in self.skills})),
-            source_refs=tuple(sorted(set(ref.strip() for ref in self.source_refs if ref.strip()))),
+            source_refs=tuple(sorted({ref.strip() for ref in self.source_refs if ref.strip()})),
             state=CandidateState.NORMALIZED,
         )
 
@@ -106,8 +108,6 @@ def validate_candidates(
             raise ValueError("candidate name is too short")
         if len(normalized.description) < 20:
             raise ValueError("candidate description is too short")
-        if any(not value.strip() for value in normalized.capabilities):
-            raise ValueError("candidate capabilities must be non-empty")
         validated.append(
             TaxonomyCandidate(
                 name=normalized.name,

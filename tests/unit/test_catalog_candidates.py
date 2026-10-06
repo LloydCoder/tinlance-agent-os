@@ -26,12 +26,42 @@ def candidate(
 
 
 def test_candidate_requires_provenance() -> None:
+    for sources in ((), ("",), ("  ",), ("a", "")):
+        try:
+            candidate(sources=sources)
+        except ValueError as exc:
+            assert "provenance" in str(exc)
+        else:
+            raise AssertionError("blank provenance must fail")
+
+
+def test_candidate_rejects_blank_capability_or_skill() -> None:
     try:
-        candidate(sources=())
+        TaxonomyCandidate(
+            name="Valid Agent",
+            description="A sufficiently descriptive candidate for testing.",
+            domain="test",
+            capabilities=(" ",),
+            source_refs=("test",),
+        )
     except ValueError as exc:
-        assert "provenance" in str(exc)
+        assert "capabilities" in str(exc)
     else:
-        raise AssertionError("candidate without provenance must fail")
+        raise AssertionError("blank capability must fail")
+
+    try:
+        TaxonomyCandidate(
+            name="Valid Agent",
+            description="A sufficiently descriptive candidate for testing.",
+            domain="test",
+            capabilities=("test.capability",),
+            skills=(" ",),
+            source_refs=("test",),
+        )
+    except ValueError as exc:
+        assert "skills" in str(exc)
+    else:
+        raise AssertionError("blank skill must fail")
 
 
 def test_normalization_is_deterministic() -> None:
