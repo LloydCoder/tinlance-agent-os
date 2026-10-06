@@ -37,7 +37,7 @@ Candidate data is untrusted descriptive metadata. It does not grant authority, s
 
 ## Research alignment
 
-NIST's current TEVV work emphasizes context-specific, repeatable measurement and structured evidence for AI-system evaluation, while its agentic evaluation work emphasizes machine-readable audit trails and evidence grounding. OWASP's agentic guidance reinforces least functionality, least privilege, human approval for high-impact actions, and complete mediation. Candidate lifecycle controls therefore remain deterministic and governance-gated rather than LLM-authoritative. citeturn0search1turn0search4turn0search0
+NIST's current [TEVV-Athlon framework](https://www.nist.gov/artificial-intelligence/ai-research/tevv-athlon-framework-evaluating-ai-systems) emphasizes context-specific, repeatable measurement and structured evidence for AI-system evaluation. NIST's [agentic evaluation probes](https://www.nist.gov/programs-projects/building-evaluation-probes-agentic-ai) emphasize machine-readable audit trails and evidence grounding. OWASP's [agentic security guidance](https://genai.owasp.org/llmrisk/llm062025-excessive-agency/) reinforces least functionality, least privilege, human approval for high-impact actions, and complete mediation. Candidate lifecycle controls therefore remain deterministic and governance-gated rather than LLM-authoritative.
 
 A2A-style discovery metadata can inform candidate inputs, but discovery metadata is not execution authority. MCP metadata likewise remains descriptive input to governed ingestion.
 
