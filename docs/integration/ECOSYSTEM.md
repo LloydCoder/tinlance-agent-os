@@ -48,3 +48,8 @@ The OS may orchestrate tool lifecycle and sandbox configuration, but it never gr
 ## M13.6–M13.8 production-runtime reconciliation
 
 M13.6–M13.8 reconciliation: OS orchestration may propagate execution-scoped secret references and correlation context, but cannot resolve provider secrets, sign evidence, or grant authority. Platform owns secret scope validation, evidence/audit integrity and security-event correlation contracts.
+
+
+## M13.6 — Secrets and credential governance
+
+M13.6 secret governance: OS secret references are non-authoritative. Consequential resolution must use Platform-scoped handles; the Platform enforces tenant, execution, capability, purpose, audience and validity-window constraints.
