@@ -103,7 +103,12 @@ def map_mcp_server(
     signed: bool = False,
 ) -> InteropMapping:
     """Map MCP server primitives as tool-provider metadata, never as agents."""
-    capabilities = tuple(sorted({f"tool:{value}" for value in tools} | {f"resource:{value}" for value in resources}))
+    capabilities = tuple(
+        sorted(
+            {f"tool:{value}" for value in tools}
+            | {f"resource:{value}" for value in resources}
+        )
+    )
     skills = tuple(sorted(f"prompt:{value}" for value in prompts))
     return InteropMapping(
         protocol=InteropProtocol.MCP,
