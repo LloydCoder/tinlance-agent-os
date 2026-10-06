@@ -1,0 +1,37 @@
+name: Feature request
+description: Propose a focused improvement to Tinlance Agent OS.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Explain the user problem first. Proposals that weaken the Agent OS / Agent Platform authority boundary will not be accepted.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem exists today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the smallest useful change.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: textarea
+    id: architecture
+    attributes:
+      label: Architecture impact
+      description: Explain affected boundaries, contracts, persistence, security, or compatibility.
+    validations:
+      required: true
