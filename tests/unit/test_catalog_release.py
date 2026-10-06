@@ -15,6 +15,7 @@ def canonical_inventory(count: int) -> tuple[TaxonomyCandidate, ...]:
             source_refs=(f"source:{index}",),
             state=CandidateState.CANONICAL,
             canonical_id=f"agent.catalog.{index:05d}",
+            review_ref=f"review:catalog:{index}",
         )
         for index in range(count)
     )
@@ -51,6 +52,7 @@ def test_10k_release_rejects_noncanonical_entries() -> None:
         source_refs=inventory[-1].source_refs,
         state=CandidateState.REVIEWED,
         canonical_id=inventory[-1].canonical_id,
+        review_ref="review:catalog:9999",
     )
     try:
         build_10k_release_manifest(inventory)
@@ -84,6 +86,7 @@ def test_10k_release_rejects_renamed_semantic_duplicate() -> None:
         source_refs=original.source_refs,
         state=CandidateState.CANONICAL,
         canonical_id=original.canonical_id,
+        review_ref=original.review_ref,
     )
     try:
         build_10k_release_manifest(inventory)
