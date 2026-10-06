@@ -126,7 +126,12 @@ def test_report_compares_each_pair_once() -> None:
     entries = (
         archetype("research.a", "Research Agent"),
         archetype("research.b", "Research Agent"),
-        archetype("research.c", "Procurement Agent", capabilities=("procurement.sourcing",), skills=("procurement.sourcing",)),
+        archetype(
+            "research.c",
+            "Procurement Agent",
+            capabilities=("procurement.sourcing",),
+            skills=("procurement.sourcing",),
+        ),
     )
     report = SemanticDeduplicator.report(entries)
     assert report.compared == 3
