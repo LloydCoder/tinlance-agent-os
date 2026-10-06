@@ -82,7 +82,9 @@ def test_10k_release_requires_domain_diversity() -> None:
     inventory = tuple(
         TaxonomyCandidate(
             name=f"Canonical Agent {index}",
-            description=f"Performs a distinct governed catalog capability for release validation {index}.",
+            description=(
+                f"Performs a distinct governed catalog capability for release validation {index}."
+            ),
             domain="single-domain",
             capabilities=(f"capability.{index}",),
             skills=(f"skill.{index}",),
