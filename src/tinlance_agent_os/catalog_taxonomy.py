@@ -35,7 +35,8 @@ class TaxonomyProvenance:
     method: str
 
     def __post_init__(self) -> None:
-        if not all(value.strip() for value in (self.source_id, self.source_type, self.reference, self.method)):
+        values = (self.source_id, self.source_type, self.reference, self.method)
+        if not all(value.strip() for value in values):
             raise ValueError("taxonomy provenance fields are required")
 
 
@@ -137,7 +138,8 @@ class TaxonomyCompatibility:
     relation: str
 
     def __post_init__(self) -> None:
-        if not all(value.strip() for value in (self.seed_id, self.canonical_id, self.relation)):
+        values = (self.seed_id, self.canonical_id, self.relation)
+        if not all(value.strip() for value in values):
             raise ValueError("taxonomy compatibility fields are required")
         if self.relation not in {"equivalent", "specialized", "generalized", "superseded"}:
             raise ValueError("unsupported taxonomy compatibility relation")

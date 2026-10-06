@@ -1,4 +1,8 @@
-from tinlance_agent_os.catalog_taxonomy import CanonicalAgentArchetype, TaxonomyStatus
+from tinlance_agent_os.catalog_taxonomy import (
+    CanonicalAgentArchetype,
+    TaxonomyProvenance,
+    TaxonomyStatus,
+)
 
 
 def test_taxonomy_foundation_is_not_authority() -> None:
@@ -13,8 +17,12 @@ def test_taxonomy_foundation_is_not_authority() -> None:
         inclusion_criteria=("synthesizes supplied evidence",),
         exclusion_criteria=("does not authorize consequential actions",),
         provenance=(
-            __import__("tinlance_agent_os.catalog_taxonomy", fromlist=["TaxonomyProvenance"])
-            .TaxonomyProvenance("seed-v1", "taxonomy", "seed:420", "forensic-reconciliation"),
+            TaxonomyProvenance(
+                "seed-v1",
+                "taxonomy",
+                "seed:420",
+                "forensic-reconciliation",
+            ),
         ),
         status=TaxonomyStatus.CANDIDATE,
     )
