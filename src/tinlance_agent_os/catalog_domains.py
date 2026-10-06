@@ -85,7 +85,6 @@ _DOMAIN_SEEDS: tuple[tuple[str, DomainFamily, str], ...] = (
     ("regulated.insurance", DomainFamily.REGULATED, "Insurance underwriting, claims and policy operations"),
     ("regulated.pharma", DomainFamily.REGULATED, "Pharmaceutical and life-science regulated operations"),
     ("regulated.public-sector", DomainFamily.REGULATED, "Public-sector administration and civic service workflows"),
-    ("regulated.education", DomainFamily.REGULATED, "Education administration and learning operations"),
     ("science.life", DomainFamily.SCIENCE, "Biology, life science and biomedical research"),
     ("science.physical", DomainFamily.SCIENCE, "Physics, chemistry and physical science"),
     ("science.earth", DomainFamily.SCIENCE, "Earth, environmental and climate science"),
