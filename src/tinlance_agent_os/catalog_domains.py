@@ -311,7 +311,8 @@ def build_domain_catalog() -> tuple[CanonicalDomain, ...]:
                 description=description,
                 inclusion_criteria=(f"work semantically belongs to {identifier}",),
                 exclusion_criteria=(
-                    "does not encode geography, customer identity, model, tool, protocol, or authorization",
+                    "does not encode geography, customer identity, model, tool, "
+                    "protocol, or authorization",
                 ),
             )
         )
