@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from .catalog_candidates import TaxonomyCandidate
@@ -152,7 +152,7 @@ class ExternalCatalogRecord:
 def _bounded_text(value: Any, field: str, *, max_length: int = 4096) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field} is required")
-    value = value.strip()
+    value = cast(str, value.strip())
     if len(value) > max_length:
         raise ValueError(f"{field} exceeds maximum length")
     return value
