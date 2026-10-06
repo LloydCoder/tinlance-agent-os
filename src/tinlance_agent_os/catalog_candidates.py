@@ -1,7 +1,7 @@
 """Governed candidate pipeline for Agent Catalog v3.
 
 Candidate records are untrusted inputs. Canonical taxonomy publication is
-explicitly outside this module and remains review-gated.
+explicitly review-gated and never grants execution authority.
 """
 
 from __future__ import annotations
@@ -23,6 +23,18 @@ class CandidateState(StrEnum):
     DEPRECATED = "deprecated"
 
 
+_ALLOWED_TRANSITIONS: dict[CandidateState, frozenset[CandidateState]] = {
+    CandidateState.DISCOVERED: frozenset({CandidateState.NORMALIZED}),
+    CandidateState.NORMALIZED: frozenset({CandidateState.CLUSTERED}),
+    CandidateState.CLUSTERED: frozenset({CandidateState.CANDIDATE}),
+    CandidateState.CANDIDATE: frozenset({CandidateState.VALIDATED}),
+    CandidateState.VALIDATED: frozenset({CandidateState.REVIEWED}),
+    CandidateState.REVIEWED: frozenset({CandidateState.CANONICAL}),
+    CandidateState.CANONICAL: frozenset({CandidateState.DEPRECATED}),
+    CandidateState.DEPRECATED: frozenset(),
+}
+
+
 @dataclass(frozen=True, slots=True)
 class TaxonomyCandidate:
     name: str
@@ -41,8 +53,10 @@ class TaxonomyCandidate:
             raise ValueError("candidate requires at least one capability")
         if not self.source_refs:
             raise ValueError("candidate provenance is required")
-        if self.state is CandidateState.CANONICAL and not self.canonical_id:
+        if self.state is CandidateState.CANONICAL and not self.canonical_id.strip():
             raise ValueError("canonical candidates require canonical_id")
+        if self.state is not CandidateState.CANONICAL and self.canonical_id:
+            raise ValueError("canonical_id is only valid for canonical candidates")
 
     @property
     def semantic_key(self) -> str:
@@ -60,25 +74,44 @@ class TaxonomyCandidate:
     def fingerprint(self) -> str:
         return hashlib.sha256(self.semantic_key.encode("utf-8")).hexdigest()
 
+    def transition(self, target: CandidateState, *, canonical_id: str = "") -> TaxonomyCandidate:
+        if target not in _ALLOWED_TRANSITIONS[self.state]:
+            raise ValueError(f"invalid candidate transition: {self.state} -> {target}")
+        if target is CandidateState.CANONICAL and not canonical_id.strip():
+            raise ValueError("canonical publication requires canonical_id")
+        if target is not CandidateState.CANONICAL and canonical_id:
+            raise ValueError("canonical_id is only valid for canonical candidates")
+        return TaxonomyCandidate(
+            name=self.name,
+            description=self.description,
+            domain=self.domain,
+            capabilities=self.capabilities,
+            skills=self.skills,
+            source_refs=self.source_refs,
+            state=target,
+            canonical_id=canonical_id if target is CandidateState.CANONICAL else "",
+        )
+
     def normalized(self) -> TaxonomyCandidate:
+        if self.state is not CandidateState.DISCOVERED:
+            raise ValueError("only discovered candidates may be normalized")
         return TaxonomyCandidate(
             name=normalize(self.name),
             description=normalize(self.description),
             domain=normalize(self.domain),
             capabilities=tuple(sorted({normalize(value) for value in self.capabilities})),
             skills=tuple(sorted({normalize(value) for value in self.skills})),
-            source_refs=tuple(sorted(set(ref.strip() for ref in self.source_refs if ref.strip()))),
+            source_refs=tuple(sorted({ref.strip() for ref in self.source_refs if ref.strip()})),
             state=CandidateState.NORMALIZED,
         )
 
 
 def normalize(value: str) -> str:
-    text = re.sub(r"\s+", " ", value.strip().lower())
-    return text
+    return re.sub(r"\s+", " ", value.strip().lower())
 
 
 def deduplicate(candidates: tuple[TaxonomyCandidate, ...]) -> tuple[TaxonomyCandidate, ...]:
-    """Normalize and retain one deterministic representative per semantic key."""
+    """Normalize discovered records and retain one deterministic representative."""
     representatives: dict[str, TaxonomyCandidate] = {}
     for candidate in candidates:
         normalized = candidate.normalized()
@@ -95,44 +128,44 @@ def deduplicate(candidates: tuple[TaxonomyCandidate, ...]) -> tuple[TaxonomyCand
     return tuple(sorted(representatives.values(), key=lambda item: item.fingerprint))
 
 
-def validate_candidates(
-    candidates: tuple[TaxonomyCandidate, ...],
-) -> tuple[TaxonomyCandidate, ...]:
-    """Advance normalized candidates to VALIDATED only when structural gates pass."""
+def cluster_candidate(candidate: TaxonomyCandidate) -> TaxonomyCandidate:
+    if candidate.state is not CandidateState.NORMALIZED:
+        raise ValueError("only normalized candidates may be clustered")
+    return candidate.transition(CandidateState.CLUSTERED)
+
+
+def mark_candidate(candidate: TaxonomyCandidate) -> TaxonomyCandidate:
+    if candidate.state is not CandidateState.CLUSTERED:
+        raise ValueError("only clustered candidates may become candidates")
+    return candidate.transition(CandidateState.CANDIDATE)
+
+
+def validate_candidates(candidates: tuple[TaxonomyCandidate, ...]) -> tuple[TaxonomyCandidate, ...]:
+    """Advance candidate records to VALIDATED only when structural gates pass."""
     validated: list[TaxonomyCandidate] = []
     for candidate in candidates:
-        normalized = candidate.normalized()
-        if len(normalized.name) < 3:
+        if candidate.state is not CandidateState.CANDIDATE:
+            raise ValueError("only candidate-state records may be validated")
+        if len(candidate.name) < 3:
             raise ValueError("candidate name is too short")
-        if len(normalized.description) < 20:
+        if len(candidate.description) < 20:
             raise ValueError("candidate description is too short")
-        if any(not value.strip() for value in normalized.capabilities):
+        if any(not value.strip() for value in candidate.capabilities):
             raise ValueError("candidate capabilities must be non-empty")
-        validated.append(
-            TaxonomyCandidate(
-                name=normalized.name,
-                description=normalized.description,
-                domain=normalized.domain,
-                capabilities=normalized.capabilities,
-                skills=normalized.skills,
-                source_refs=normalized.source_refs,
-                state=CandidateState.VALIDATED,
-            )
-        )
+        validated.append(candidate.transition(CandidateState.VALIDATED))
     return tuple(validated)
 
 
 def promote_for_review(candidate: TaxonomyCandidate) -> TaxonomyCandidate:
     """Move a validated candidate to review; never directly to canonical."""
-    if candidate.state is not CandidateState.VALIDATED:
-        raise ValueError("only validated candidates may enter review")
-    return TaxonomyCandidate(
-        name=candidate.name,
-        description=candidate.description,
-        domain=candidate.domain,
-        capabilities=candidate.capabilities,
-        skills=candidate.skills,
-        source_refs=candidate.source_refs,
-        state=CandidateState.REVIEWED,
-        canonical_id=candidate.canonical_id,
-    )
+    return candidate.transition(CandidateState.REVIEWED)
+
+
+def publish_canonical(candidate: TaxonomyCandidate, canonical_id: str) -> TaxonomyCandidate:
+    """Publish only an explicitly reviewed candidate under a stable canonical ID."""
+    return candidate.transition(CandidateState.CANONICAL, canonical_id=canonical_id)
+
+
+def deprecate(candidate: TaxonomyCandidate) -> TaxonomyCandidate:
+    """Remove a canonical record from the active canonical set."""
+    return candidate.transition(CandidateState.DEPRECATED)
