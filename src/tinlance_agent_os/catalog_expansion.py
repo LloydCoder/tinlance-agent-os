@@ -64,7 +64,7 @@ def _slug(value: str) -> str:
 
 
 def build_phase_26_catalog() -> tuple[CanonicalAgentArchetype, ...]:
-    """Build the deterministic 48 × 42 = 2,016 archetype expansion."""
+    """Build the deterministic 48 × 43 = 2,064 archetype expansion."""
     result: list[CanonicalAgentArchetype] = []
     for domain in build_domain_catalog():
         for pattern_id, pattern_description in _WORK_PATTERNS:
