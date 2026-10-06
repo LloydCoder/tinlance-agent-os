@@ -11,6 +11,7 @@ def profile(
     trust: float = 0.8,
     cost: int = 100,
     latency: int = 100,
+    status: str = "active",
 ) -> CapabilityProfile:
     return CapabilityProfile(
         id=identifier,
@@ -43,7 +44,7 @@ def profile(
         signature_ref="",
         sbom_ref="",
         compatibility={},
-        status="active",
+        status=status,
     )
 
 
@@ -65,6 +66,29 @@ def test_retrieval_ranks_deterministically() -> None:
     )
     assert [item.profile_id for item in results] == ["a", "b", "c"]
     assert results[0].score == results[1].score
+
+
+def test_retrieval_requires_complete_capability_and_skill_coverage() -> None:
+    results = retrieve_profiles(
+        (
+            profile("partial-capability", capabilities=("research.search",)),
+            profile(
+                "partial-skill",
+                capabilities=("research.search", "research.synthesis"),
+                skills=("search",),
+            ),
+            profile(
+                "complete",
+                capabilities=("research.search", "research.synthesis"),
+                skills=("search", "synthesis"),
+            ),
+        ),
+        RetrievalRequirement(
+            frozenset({"research.search", "research.synthesis"}),
+            frozenset({"search", "synthesis"}),
+        ),
+    )
+    assert [item.profile_id for item in results] == ["complete"]
 
 
 def test_retrieval_applies_hard_thresholds() -> None:
@@ -93,11 +117,36 @@ def test_retrieval_supports_cost_and_latency_limits() -> None:
     assert [item.profile_id for item in results] == ["cheap-fast"]
 
 
-def test_retrieval_rejects_missing_capability_and_invalid_limit() -> None:
-    assert not retrieve_profiles(
-        (profile("x", capabilities=("other",)),),
+def test_retrieval_excludes_inactive_profiles() -> None:
+    results = retrieve_profiles(
+        (profile("inactive", status="deprecated"), profile("active")),
         RetrievalRequirement(frozenset({"research.search"})),
     )
+    assert [item.profile_id for item in results] == ["active"]
+
+
+def test_retrieval_rejects_invalid_requirements_and_limit() -> None:
+    invalid_requirements = (
+        RetrievalRequirement(frozenset({"research.search"}), min_evaluation_score=-0.1),
+        RetrievalRequirement(frozenset({"research.search"}), min_trust_score=1.1),
+        RetrievalRequirement(frozenset({"research.search"}), max_cost_microunits=-1),
+        RetrievalRequirement(frozenset({"research.search"}), max_latency_ms=-1),
+    )
+    for requirement in invalid_requirements:
+        try:
+            _ = requirement
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("expected invalid requirement failure")
+
+    try:
+        RetrievalRequirement(frozenset())
+    except ValueError as exc:
+        assert "capability" in str(exc)
+    else:
+        raise AssertionError("expected missing capability failure")
+
     try:
         retrieve_profiles(
             (profile("x"),), RetrievalRequirement(frozenset({"research.search"})), limit=0
