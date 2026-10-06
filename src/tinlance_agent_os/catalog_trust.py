@@ -58,10 +58,7 @@ class SecurityTrustProfile:
             raise ValueError("destructive actions require human approval metadata")
         if self.credential_required and not self.network_access:
             raise ValueError("credential requirement requires network access metadata")
-        if (
-            self.risk_class in {RiskClass.HIGH, RiskClass.CRITICAL}
-            and not self.isolation_required
-        ):
+        if self.risk_class in {RiskClass.HIGH, RiskClass.CRITICAL} and not self.isolation_required:
             raise ValueError("high and critical risk profiles require isolation metadata")
 
     @property
