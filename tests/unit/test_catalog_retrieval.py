@@ -25,8 +25,8 @@ def profile(
         modalities=(),
         protocols=(),
         models=(),
-        risk="low",
-        autonomy="bounded",
+        risk_level="low",
+        autonomy_level="bounded",
         approval_policy="platform",
         data_sensitivity="public",
         delegation_allowed=False,
@@ -38,11 +38,11 @@ def profile(
         trust_score=trust,
         cost_microunits=cost,
         latency_ms=latency,
-        provenance="test",
+        provenance=("test",)
         artifact_digest="sha256:test",
-        signature_ref=None,
-        sbom_ref=None,
-        compatibility=(),
+        signature_ref="",
+        sbom_ref="",
+        compatibility={},
         status="active",
     )
 
