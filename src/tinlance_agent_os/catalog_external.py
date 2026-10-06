@@ -158,10 +158,10 @@ class ExternalCatalogRecord:
 def _bounded_text(value: Any, field: str, *, max_length: int = 4096) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field} is required")
-    value = value.strip()
-    if len(value) > max_length:
+    text: str = value.strip()
+    if len(text) > max_length:
         raise ValueError(f"{field} exceeds maximum length")
-    return value
+    return text
 
 
 def _bounded_strings(value: Any, field: str, *, max_items: int = 256) -> tuple[str, ...]:
