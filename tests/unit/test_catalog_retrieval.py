@@ -31,7 +31,7 @@ def profile(
         data_sensitivity="public",
         delegation_allowed=False,
         max_delegation_depth=0,
-        max_fanout=1,
+        max_fanout=0,
         evidence_required=False,
         evaluation_suite="phase-27",
         evaluation_score=evaluation,
