@@ -64,6 +64,8 @@ def build_10k_release_manifest(
     inventory = tuple(candidates)
     if target_count != 10_000:
         raise ValueError("Phase 30 release target is fixed at 10,000 canonical entries")
+    if min_domains != 30:
+        raise ValueError("Phase 30 release diversity threshold is fixed at 30 domains")
     if len(inventory) < target_count:
         raise ValueError(f"10K release requires at least {target_count} canonical entries")
 
@@ -88,6 +90,8 @@ def build_10k_release_manifest(
     if len(domains) < min_domains:
         raise ValueError(f"10K release requires at least {min_domains} distinct domains")
 
+    if not release.strip():
+        raise ValueError("release identifier is required")
     digest = _inventory_digest(inventory)
     return CatalogReleaseManifest(
         release=release,
