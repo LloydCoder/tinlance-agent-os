@@ -68,15 +68,19 @@ class TaxonomyCandidate:
             if not self.review_ref.strip():
                 raise ValueError("canonical candidates require review_ref")
         if (
-            self.state not in {CandidateState.REVIEWED, CandidateState.CANONICAL, CandidateState.DEPRECATED}
+            self.state\n            not in {CandidateState.REVIEWED, CandidateState.CANONICAL, CandidateState.DEPRECATED}
             and self.review_ref
         ):
-            raise ValueError(\n                "review_ref is only valid for reviewed, canonical, or deprecated candidates"\n            )
+            raise ValueError(
+                "review_ref is only valid for reviewed, canonical, or deprecated candidates"
+            )
         if (
             self.state not in {CandidateState.CANONICAL, CandidateState.DEPRECATED}
             and self.canonical_id
         ):
-            raise ValueError(\n                "canonical_id is only valid for canonical or deprecated candidates"\n            )
+            raise ValueError(
+                "canonical_id is only valid for canonical or deprecated candidates"
+            )
         if self.state is CandidateState.DEPRECATED and not self.canonical_id:
             raise ValueError("deprecated candidates require canonical_id")
 
