@@ -1,6 +1,6 @@
 # Agent Catalog v3 — Phase 28: Candidate Pipeline
 
-Phase 28 establishes the controlled lifecycle for external and generated taxonomy candidates.
+Phase 28 establishes a controlled lifecycle for external and generated taxonomy candidates.
 
 ## Lifecycle
 
@@ -8,21 +8,28 @@ Phase 28 establishes the controlled lifecycle for external and generated taxonom
 
 Deprecated entries leave the canonical set through `CANONICAL → DEPRECATED`.
 
-This module implements the structural portion of the lifecycle. Clustering, human review, and canonical publication remain separate gates.
+Every transition is explicit and forward-only. The implementation rejects skipped, reversed, or fabricated lifecycle transitions, including direct construction of non-discovered states. Review state also requires a non-empty governance evidence reference, and canonical IDs are constrained to a stable lowercase identifier grammar.
 
 ## Hard controls
 
-Every candidate requires non-empty identity and domain, at least one capability, explicit provenance/source references, deterministic normalization, a SHA-256 semantic fingerprint, structural validation before review, an explicit review transition, and a stable canonical identifier before canonical state.
+Every candidate requires:
 
-Capability and skill collections, when present, must contain non-blank values. Provenance must contain only non-blank references; malformed provenance is rejected at the candidate trust boundary rather than silently discarded.
+- non-empty identity and domain;
+- at least one capability;
+- explicit provenance/source references;
+- deterministic normalization;
+- a SHA-256 semantic fingerprint;
+- structural validation before review;
+- explicit governance review state with a review evidence reference before canonical publication;
+- a stable canonical identifier at publication.
 
-A candidate cannot jump directly from discovery to canonical publication.
+Canonical publication is exposed only through `publish_canonical()` and requires `REVIEWED` state plus a stable canonical ID. The candidate module never executes work or grants authority.
 
 ## Deduplication
 
-Deduplication uses normalized domain, name, description, capabilities and skills. The representative is deterministic and prefers the candidate with the larger provenance set; fingerprint ordering breaks remaining ties.
+Initial deduplication operates only on normalized structural identity: domain, name, description, capabilities and skills. The representative is deterministic and prefers the larger provenance set; fingerprint ordering breaks remaining ties.
 
-This is intentionally conservative: semantic equivalence beyond normalized identity is a future clustering/evaluation concern, not an assumption hidden inside string matching.
+This is intentionally conservative. Deeper semantic equivalence, clustering quality, and cross-source ontology reconciliation belong to later phases and must not be hidden inside candidate ingestion.
 
 ## Security boundary
 
@@ -30,12 +37,33 @@ Candidate data is untrusted descriptive metadata. It does not grant authority, s
 
 ## Research alignment
 
-NIST identifies functionality, access patterns, risk, reliability, modality, monitoring and autonomy as complementary dimensions and recommends multidimensional approaches rather than a single taxonomy axis. A2A's current Agent Card model likewise describes agent identity, capabilities, skills and security requirements for discovery; discovery metadata is not equivalent to execution authority.
+NIST's current [TEVV-Athlon framework](https://www.nist.gov/artificial-intelligence/ai-research/tevv-athlon-framework-evaluating-ai-systems) emphasizes context-specific, repeatable measurement and structured evidence for AI-system evaluation. NIST's [agentic evaluation probes](https://www.nist.gov/programs-projects/building-evaluation-probes-agentic-ai) emphasize machine-readable audit trails and evidence grounding. OWASP's [agentic security guidance](https://genai.owasp.org/llmrisk/llm062025-excessive-agency/) reinforces least functionality, least privilege, human approval for high-impact actions, and complete mediation. Candidate lifecycle controls therefore remain deterministic and governance-gated rather than LLM-authoritative.
 
-## Post-merge forensic remediation
+A2A-style discovery metadata can inform candidate inputs, but discovery metadata is not execution authority. MCP metadata likewise remains descriptive input to governed ingestion.
 
-The merged Phase 28 implementation was re-audited before Phase 29 advancement. The audit identified and corrected a fail-open metadata condition in which a source-reference tuple containing blank values could pass the initial non-empty tuple check and then be silently filtered during normalization. The remediation also hardens blank capability/skill values and blank canonical identifiers.
+## Phase boundary
+
+Phase 28 owns candidate lifecycle and structural validation.
+
+It does not own:
+
+- external corpus ingestion (Phase 23);
+- semantic deduplication/clustering quality (Phase 24);
+- broad domain expansion (Phase 25);
+- evaluation/retrieval ranking (Phase 27);
+- security/trust classification (Phase 31);
+- A2A/MCP interoperability mapping (Phase 32);
+- Platform authorization or admission.
 
 ## Gate
 
-Phase 28 may merge only when full PR CI is green. After merge, main CI must be green and the merged state must pass a forensic audit before Phase 29 begins.
+Phase 28 may merge only when full PR CI is green. After merge, merged-main CI must be green/observable and a post-merge forensic audit must confirm the lifecycle, review-evidence gate, tests, docs, workflow integrity, and authority boundary before Phase 29 begins.
+
+
+## CI release gate
+
+No Phase 28 merge is valid without a completed GitHub Actions CI run for the exact PR head SHA, with every required job successful. A missing, pending, or unobservable workflow is a blocker, not an implicit pass.
+
+## Base-branch reconciliation
+
+The Phase 28 branch is based directly on the current `main` tip so lifecycle changes are evaluated against all previously merged Catalog controls. Existing blank-value trust-boundary checks are preserved rather than regressed during phase work.
