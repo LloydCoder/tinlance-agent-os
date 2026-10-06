@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import StrEnum
 
 _CANONICAL_ID_RE = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$")
@@ -48,15 +48,14 @@ class TaxonomyCandidate:
     state: CandidateState = CandidateState.DISCOVERED
     canonical_id: str = ""
     review_ref: str = ""
-    _transitioned: bool = field(default=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         if not self.name.strip() or not self.description.strip() or not self.domain.strip():
             raise ValueError("candidate name, description and domain are required")
         if not self.capabilities or any(not value.strip() for value in self.capabilities):
             raise ValueError("candidate capabilities must be non-empty")
-        if self.state is not CandidateState.DISCOVERED and not self._transitioned:
-            raise ValueError("non-discovered state requires an explicit lifecycle transition")
+        if any(not value.strip() for value in self.skills):
+            raise ValueError("candidate skills must be non-empty when supplied")
         if not self.source_refs or any(not ref.strip() for ref in self.source_refs):
             raise ValueError("candidate provenance must contain non-empty references")
         if self.state is CandidateState.REVIEWED and not self.review_ref.strip():
@@ -69,7 +68,7 @@ class TaxonomyCandidate:
             if not self.review_ref.strip():
                 raise ValueError("canonical candidates require review_ref")
         if (
-            self.state not in {CandidateState.REVIEWED, CandidateState.CANONICAL}
+            self.state not in {CandidateState.REVIEWED, CandidateState.CANONICAL, CandidateState.DEPRECATED}
             and self.review_ref
         ):
             raise ValueError("review_ref is only valid for reviewed or canonical candidates")
@@ -145,7 +144,6 @@ class TaxonomyCandidate:
                 if target in {CandidateState.CANONICAL, CandidateState.DEPRECATED}
                 else ""
             ),
-            _transitioned=True,
         )
 
     def normalized(self) -> TaxonomyCandidate:
