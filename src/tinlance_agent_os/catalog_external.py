@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, cast
+from typing import Any
 from urllib.parse import urlparse
 
 from .catalog_candidates import TaxonomyCandidate
