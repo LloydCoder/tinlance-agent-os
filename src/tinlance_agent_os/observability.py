@@ -145,7 +145,7 @@ class AgentOSTelemetry:
         output_tokens: int | None = None,
         cost_usd: float | None = None,
     ) -> None:
-        attrs: dict[str, object] = {"gen_ai.operation.name": operation}
+        attrs: dict[str, str] = {"gen_ai.operation.name": operation}
         if model:
             attrs["gen_ai.request.model"] = model
         if provider:

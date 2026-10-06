@@ -28,6 +28,10 @@ flowchart LR
     S --> P[Tinlance Agent Platform]
     P --> X[Governed execution]
     P --> V[Authoritative evidence + audit]
+    C[Ecosystem Conformance] -. verifies .-> D
+    C -. verifies .-> O
+    C -. verifies .-> S
+    C -. verifies .-> P
 ```
 
 Agent OS remains the lifecycle/control plane. The Platform SDK is the typed client boundary; Agent Platform remains the sole authority plane.
@@ -162,6 +166,7 @@ Use the architecture and integration references before connecting consequential 
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Ecosystem conformance](docs/integration/CONFORMANCE.md)
 - [Agent Platform integration](docs/architecture/agent-platform-integration.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Security controls](docs/SECURITY-CONTROLS.md)
