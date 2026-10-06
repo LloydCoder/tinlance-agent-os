@@ -58,3 +58,8 @@ It does not own:
 ## Gate
 
 Phase 28 may merge only when full PR CI is green. After merge, merged-main CI must be green/observable and a post-merge forensic audit must confirm the lifecycle, tests, docs, workflow integrity, and authority boundary before Phase 29 begins.
+
+
+## CI release gate
+
+No Phase 28 merge is valid without a completed GitHub Actions CI run for the exact PR head SHA, with every required job successful. A missing, pending, or unobservable workflow is a blocker, not an implicit pass.
