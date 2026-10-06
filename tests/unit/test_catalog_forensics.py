@@ -44,17 +44,20 @@ def test_forensic_audit_reports_multiple_failures() -> None:
     records = list(inventory(20_000))
     original = records[-1]
     duplicate = records[-2]
-    records[-1] = TaxonomyCandidate(
+    corrupt = TaxonomyCandidate(
         name=original.name,
         description=original.description,
         domain=duplicate.domain,
         capabilities=duplicate.capabilities,
         skills=duplicate.skills,
-        source_refs=(),
+        source_refs=("source:corrupt",),
         state=CandidateState.CANONICAL,
         canonical_id=duplicate.canonical_id,
-        review_ref="",
+        review_ref="review:corrupt",
     )
+    object.__setattr__(corrupt, "source_refs", ())
+    object.__setattr__(corrupt, "review_ref", "")
+    records[-1] = corrupt
     report = audit_canonical_inventory(records)
     assert not report.passed
     assert "duplicate canonical" in " ".join(report.failures)
