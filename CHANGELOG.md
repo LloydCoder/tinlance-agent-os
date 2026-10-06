@@ -6,6 +6,11 @@ The format follows Keep a Changelog principles, and the project uses Semantic Ve
 
 ## [Unreleased]
 
+### Maintenance
+
+- Updated pinned release-workflow actions to `actions/checkout` 7.0.1, `actions/setup-python` 7.0.0, and `sigstore/cosign-installer` 4.1.2.
+
+
 ### Changed
 
 - Documentation and repository community-health overhaul for 2026 GitHub standards.
