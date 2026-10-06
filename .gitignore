@@ -216,3 +216,21 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Secrets and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+*.secrets
+credentials.json
+secrets.json
+**/.env.*
+!.env.example
+
+# Local agent/runtime state
+.agentos/
+.agent-os/

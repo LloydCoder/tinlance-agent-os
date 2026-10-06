@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+title: "Tinlance Agent OS"
+message: "If you use Tinlance Agent OS in research or published work, please cite the repository."
+type: software
+authors:
+  - family-names: "Nwachukwu"
+    given-names: "Chinaemerem"
+    alias: "LloydCoder"
+repository-code: "https://github.com/LloydCoder/tinlance-agent-os"
+license: Apache-2.0
+version: 0.1.0
+date-released: 2026-10-06
