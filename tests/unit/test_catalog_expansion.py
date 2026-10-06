@@ -17,9 +17,7 @@ def test_phase_26_reaches_2k_without_duplicate_identity() -> None:
 
 def test_phase_26_uses_all_domains_and_work_patterns() -> None:
     catalog = build_phase_26_catalog()
-    assert {item.domain_id for item in catalog} == {
-        item.id for item in build_domain_catalog()
-    }
+    assert {item.domain_id for item in catalog} == {item.id for item in build_domain_catalog()}
     assert len(_WORK_PATTERNS) == 42
     assert len(catalog) == len(build_domain_catalog()) * len(_WORK_PATTERNS)
 
