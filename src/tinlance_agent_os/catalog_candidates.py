@@ -68,13 +68,11 @@ class TaxonomyCandidate:
                 raise ValueError("canonical_id has invalid format")
             if not self.review_ref.strip():
                 raise ValueError("canonical candidates require review_ref")
-        if self.state not in {CandidateState.REVIEWED, CandidateState.CANONICAL} and self.review_ref:
+        if (\n            self.state not in {CandidateState.REVIEWED, CandidateState.CANONICAL}\n            and self.review_ref\n        ):
             raise ValueError(
                 "review_ref is only valid for reviewed or canonical candidates"
             )
-        if self.state is not CandidateState.CANONICAL and self.canonical_id:
-            if self.state is not CandidateState.DEPRECATED:
-                raise ValueError("canonical_id is only valid for canonical or deprecated candidates")
+        if (\n            self.state is not CandidateState.CANONICAL\n            and self.state is not CandidateState.DEPRECATED\n            and self.canonical_id\n        ):\n            raise ValueError(\n                "canonical_id is only valid for canonical or deprecated candidates"\n            )
         if self.state is CandidateState.DEPRECATED and not self.canonical_id:
             raise ValueError("deprecated candidates require canonical_id")
 
@@ -114,7 +112,7 @@ class TaxonomyCandidate:
                 raise ValueError("canonical publication requires review_ref")
         elif canonical_id:
             raise ValueError("canonical_id is only accepted when publishing canonical state")
-        if target is not CandidateState.REVIEWED and target is not CandidateState.CANONICAL and review_ref:
+        if (\n            target is not CandidateState.REVIEWED\n            and target is not CandidateState.CANONICAL\n            and review_ref\n        ):
             raise ValueError("review_ref is only accepted for review or canonical transitions")
         return TaxonomyCandidate(
             name=self.name,
