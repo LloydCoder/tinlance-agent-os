@@ -28,4 +28,8 @@ Production deployment seams—durable PostgreSQL, external secrets, sandbox supe
 
 ## Conformance
 
-The TADL-hosted ecosystem conformance suite is the executable compatibility gate for the four repositories. It validates the shared API 1.1 contract, SDK/OS interoperability, identity binding, idempotency, trace propagation, transport security, and authority dependency direction against pinned revisions. Production infrastructure certification remains separate.
+The Agent Developer-hosted ecosystem conformance suite is the executable compatibility gate for the four repositories. It validates the shared API 1.1 contract, SDK/OS interoperability, identity binding, idempotency, trace propagation, transport security, and authority dependency direction against pinned revisions. Production infrastructure certification remains separate.
+
+## Milestone vocabulary
+
+M0–M14 remain the canonical Agent Platform roadmap. The supplemental M13.1–M13.3 production-runtime hardening labels are implementation traceability only; they do not redefine canonical milestone meaning. Post-M14 production maturity is governed by M15–M29.
