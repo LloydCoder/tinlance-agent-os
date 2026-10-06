@@ -1,9 +1,11 @@
 """Controlled candidate lifecycle for Agent Catalog v3."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
 from .catalog_taxonomy import CanonicalAgentArchetype, TaxonomyStatus
+
 
 _ALLOWED_TRANSITIONS: dict[TaxonomyStatus, frozenset[TaxonomyStatus]] = {
     TaxonomyStatus.DISCOVERED: frozenset({TaxonomyStatus.NORMALIZED}),
@@ -15,6 +17,7 @@ _ALLOWED_TRANSITIONS: dict[TaxonomyStatus, frozenset[TaxonomyStatus]] = {
     TaxonomyStatus.CANONICAL: frozenset({TaxonomyStatus.DEPRECATED}),
     TaxonomyStatus.DEPRECATED: frozenset(),
 }
+
 
 @dataclass(frozen=True, slots=True)
 class TaxonomyTransition:
@@ -29,10 +32,20 @@ class TaxonomyTransition:
         if self.to_status not in _ALLOWED_TRANSITIONS[self.from_status]:
             raise ValueError("invalid taxonomy lifecycle transition")
 
+
 class CandidatePipeline:
     """Apply governed lifecycle transitions; never grant runtime authority."""
 
     @staticmethod
-    def transition(archetype: CanonicalAgentArchetype, to_status: TaxonomyStatus, reason: str) -> tuple[CanonicalAgentArchetype, TaxonomyTransition]:
-        event = TaxonomyTransition(archetype.id, archetype.status, to_status, reason)
+    def transition(
+        archetype: CanonicalAgentArchetype,
+        to_status: TaxonomyStatus,
+        reason: str,
+    ) -> tuple[CanonicalAgentArchetype, TaxonomyTransition]:
+        event = TaxonomyTransition(
+            archetype.id,
+            archetype.status,
+            to_status,
+            reason,
+        )
         return replace(archetype, status=to_status), event
