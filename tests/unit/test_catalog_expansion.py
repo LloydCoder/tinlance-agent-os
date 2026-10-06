@@ -8,7 +8,6 @@ from tinlance_agent_os.catalog_expansion import (
 )
 
 
-
 def test_phase_26_reaches_2k_without_duplicate_identity() -> None:
     catalog = build_phase_26_catalog()
     assert len(catalog) == 2016
