@@ -6,7 +6,9 @@ def inventory(count: int = 20_000, domains: int = 50) -> tuple[TaxonomyCandidate
     return tuple(
         TaxonomyCandidate(
             name=f"Canonical Archetype {index}",
-            description=f"Performs a distinct governed archetype capability for forensic audit {index}.",
+            description=(
+                f"Performs a distinct governed archetype capability for forensic audit {index}."
+            ),
             domain=f"domain-{index % domains}",
             capabilities=(f"capability.{index}",),
             skills=(f"skill.{index}",),
