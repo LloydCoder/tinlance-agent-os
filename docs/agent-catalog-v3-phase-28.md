@@ -14,6 +14,8 @@ This module implements the structural portion of the lifecycle. Clustering, huma
 
 Every candidate requires non-empty identity and domain, at least one capability, explicit provenance/source references, deterministic normalization, a SHA-256 semantic fingerprint, structural validation before review, an explicit review transition, and a stable canonical identifier before canonical state.
 
+Capability and skill collections, when present, must contain non-blank values. Provenance must contain only non-blank references; malformed provenance is rejected at the candidate trust boundary rather than silently discarded.
+
 A candidate cannot jump directly from discovery to canonical publication.
 
 ## Deduplication
@@ -29,6 +31,10 @@ Candidate data is untrusted descriptive metadata. It does not grant authority, s
 ## Research alignment
 
 NIST identifies functionality, access patterns, risk, reliability, modality, monitoring and autonomy as complementary dimensions and recommends multidimensional approaches rather than a single taxonomy axis. A2A's current Agent Card model likewise describes agent identity, capabilities, skills and security requirements for discovery; discovery metadata is not equivalent to execution authority.
+
+## Post-merge forensic remediation
+
+The merged Phase 28 implementation was re-audited before Phase 29 advancement. The audit identified and corrected a fail-open metadata condition in which a source-reference tuple containing blank values could pass the initial non-empty tuple check and then be silently filtered during normalization. The remediation also hardens blank capability/skill values and blank canonical identifiers.
 
 ## Gate
 
