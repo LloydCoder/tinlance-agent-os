@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from .catalog_candidates import CandidateState, TaxonomyCandidate
 
@@ -68,7 +68,8 @@ def build_10k_release_manifest(
     if len(set(semantic_keys)) != len(semantic_keys):
         raise ValueError("10K release requires semantic uniqueness")
 
-    provenance_coverage = sum(bool(candidate.source_refs) for candidate in inventory) / len(inventory)
+    provenance_count = sum(bool(candidate.source_refs) for candidate in inventory)
+    provenance_coverage = provenance_count / len(inventory)
     if provenance_coverage != 1.0:
         raise ValueError("10K release requires 100% provenance coverage")
 
