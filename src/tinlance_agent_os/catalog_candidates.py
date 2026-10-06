@@ -69,7 +69,9 @@ class TaxonomyCandidate:
             if not self.review_ref.strip():
                 raise ValueError("canonical candidates require review_ref")
         if self.state not in {CandidateState.REVIEWED, CandidateState.CANONICAL} and self.review_ref:
-            raise ValueError("review_ref is only valid for reviewed or canonical candidates")
+            raise ValueError(
+                "review_ref is only valid for reviewed or canonical candidates"
+            )
         if self.state is not CandidateState.CANONICAL and self.canonical_id:
             if self.state is not CandidateState.DEPRECATED:
                 raise ValueError("canonical_id is only valid for canonical or deprecated candidates")
@@ -188,7 +190,9 @@ def mark_candidate(candidate: TaxonomyCandidate) -> TaxonomyCandidate:
     return candidate.transition(CandidateState.CANDIDATE)
 
 
-def validate_candidates(candidates: tuple[TaxonomyCandidate, ...]) -> tuple[TaxonomyCandidate, ...]:
+def validate_candidates(
+    candidates: tuple[TaxonomyCandidate, ...],
+) -> tuple[TaxonomyCandidate, ...]:
     """Advance candidate records to VALIDATED only when structural gates pass."""
     validated: list[TaxonomyCandidate] = []
     for candidate in candidates:
@@ -204,7 +208,9 @@ def validate_candidates(candidates: tuple[TaxonomyCandidate, ...]) -> tuple[Taxo
     return tuple(validated)
 
 
-def promote_for_review(candidate: TaxonomyCandidate, *, review_ref: str) -> TaxonomyCandidate:
+def promote_for_review(
+    candidate: TaxonomyCandidate, *, review_ref: str
+) -> TaxonomyCandidate:
     """Record an explicit governance-review evidence reference."""
     return candidate.transition(CandidateState.REVIEWED, review_ref=review_ref)
 
