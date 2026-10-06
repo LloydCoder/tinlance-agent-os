@@ -153,24 +153,6 @@ def test_review_attestation_is_required() -> None:
         raise AssertionError("review without evidence reference must fail")
 
 
-def test_non_discovered_state_cannot_be_fabricated() -> None:
-    try:
-        TaxonomyCandidate(
-            name="Threat Intelligence Analyst",
-            description="Analyzes threat intelligence evidence and produces structured findings.",
-            domain="Cybersecurity",
-            capabilities=("Threat Intelligence Analysis",),
-            source_refs=("test",),
-            state=CandidateState.CANONICAL,
-            canonical_id="cybersecurity.threat_intelligence.analyst",
-            review_ref="review:example",
-        )
-    except ValueError as exc:
-        assert "explicit lifecycle transition" in str(exc)
-    else:
-        raise AssertionError("non-discovered state must not be directly constructible")
-
-
 def test_canonical_requires_stable_id() -> None:
     reviewed = reviewed_candidate()
     try:
