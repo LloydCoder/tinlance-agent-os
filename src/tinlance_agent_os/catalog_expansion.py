@@ -96,7 +96,7 @@ def build_phase_26_catalog() -> tuple[CanonicalAgentArchetype, ...]:
                             method="domain-work-pattern Cartesian product",
                         ),
                     ),
-                    status=TaxonomyStatus.CANONICAL,
+                    status=TaxonomyStatus.VALIDATED,
                 )
             )
     return tuple(result)

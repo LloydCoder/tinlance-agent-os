@@ -23,9 +23,9 @@ def test_phase_26_uses_all_domains_and_work_patterns() -> None:
     assert len(catalog) == len(build_domain_catalog()) * len(_WORK_PATTERNS)
 
 
-def test_phase_26_entries_are_provenanced_and_canonical() -> None:
+def test_phase_26_entries_are_provenanced_and_review_gated() -> None:
     sample = build_phase_26_catalog()[0]
-    assert sample.status.value == "canonical"
+    assert sample.status.value == "validated"
     assert sample.provenance[0].source_id == "agent-catalog-v3-phase-26"
     assert sample.exclusion_criteria
 
