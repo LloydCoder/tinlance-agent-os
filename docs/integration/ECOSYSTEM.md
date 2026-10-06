@@ -8,6 +8,10 @@ flowchart LR
     O --> S[Tinlance Agent Platform SDK]
     S --> P[Tinlance Agent Platform]
     P --> E[Governed execution + evidence]
+    C[Ecosystem Conformance] -. gates .-> D
+    C -. gates .-> O
+    C -. gates .-> S
+    C -. gates .-> P
 ```
 
 TADL declares and validates developer artifacts. Agent OS owns workspace, session, task, workflow, memory, application, and lifecycle composition. The official Platform SDK owns the typed client contract and transport surface. Agent Platform alone owns consequential authority.
@@ -21,3 +25,7 @@ The shared wire contract is **Platform API 1.1**, using **POST /v1/agent-platfor
 Agent OS already contains a concrete `AgentPlatformAdapter` and `HttpPlatformTransport`. They are contract adapters, not a second authority engine. The cross-repository integration gate in TADL validates this adapter against the same Platform reference boundary consumed by the official SDK.
 
 Production deployment seams—durable PostgreSQL, external secrets, sandbox supervision, enterprise identity, and telemetry—remain explicitly outside this repository.
+
+## Conformance
+
+The TADL-hosted ecosystem conformance suite is the executable compatibility gate for the four repositories. It validates the shared API 1.1 contract, SDK/OS interoperability, identity binding, idempotency, trace propagation, transport security, and authority dependency direction against pinned revisions. Production infrastructure certification remains separate.
