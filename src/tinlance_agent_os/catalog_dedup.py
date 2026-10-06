@@ -183,4 +183,4 @@ class SemanticDeduplicator:
         for index, left in enumerate(archetypes):
             for right in archetypes[index + 1 :]:
                 matches.append(cls.compare(left, right))
-        return DeduplicationReport(tuple(matches), len(archetypes))
+        return DeduplicationReport(tuple(matches), len(matches))

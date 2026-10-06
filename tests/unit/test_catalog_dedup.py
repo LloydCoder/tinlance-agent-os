@@ -137,6 +137,11 @@ def test_report_compares_each_pair_once() -> None:
     assert report.compared == 3
     assert len(report.matches) == 3
 
+    fourth = archetype("research.d", "Another Research Agent")
+    expanded = SemanticDeduplicator.report(entries + (fourth,))
+    assert expanded.compared == 6
+    assert len(expanded.matches) == 6
+
 
 def test_match_rejects_self_comparison_and_bad_score() -> None:
     with pytest.raises(ValueError, match="itself"):
