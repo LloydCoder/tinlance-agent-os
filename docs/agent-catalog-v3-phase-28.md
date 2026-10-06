@@ -8,7 +8,7 @@ Phase 28 establishes a controlled lifecycle for external and generated taxonomy 
 
 Deprecated entries leave the canonical set through `CANONICAL → DEPRECATED`.
 
-Every transition is explicit and forward-only. The implementation rejects skipped, reversed, or fabricated lifecycle transitions. Review state also requires a non-empty governance evidence reference, and canonical IDs are constrained to a stable lowercase identifier grammar.
+Every transition is explicit and forward-only. The implementation rejects skipped, reversed, or fabricated lifecycle transitions, including direct construction of non-discovered states. Review state also requires a non-empty governance evidence reference, and canonical IDs are constrained to a stable lowercase identifier grammar.
 
 ## Hard controls
 
