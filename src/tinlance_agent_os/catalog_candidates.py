@@ -79,9 +79,7 @@ class TaxonomyCandidate:
             self.state not in {CandidateState.CANONICAL, CandidateState.DEPRECATED}
             and self.canonical_id
         ):
-            raise ValueError(
-                "canonical_id is only valid for canonical or deprecated candidates"
-            )
+            raise ValueError("canonical_id is only valid for canonical or deprecated candidates")
         if self.state is CandidateState.DEPRECATED and not self.canonical_id:
             raise ValueError("deprecated candidates require canonical_id")
 
