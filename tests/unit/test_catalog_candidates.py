@@ -75,7 +75,7 @@ def test_full_lifecycle_requires_each_gate() -> None:
     assert reviewed.state is CandidateState.REVIEWED
     assert canonical.state is CandidateState.CANONICAL
     assert canonical.canonical_id == "cybersecurity.threat_intelligence.analyst"
-    assert deprecated.state is CandidateState.DEPRECATED
+    assert deprecated.state is CandidateState.DEPRECATED\n    assert deprecated.canonical_id == canonical.canonical_id
 
 
 def test_cannot_skip_lifecycle_gates() -> None:
