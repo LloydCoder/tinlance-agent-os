@@ -52,7 +52,10 @@ class SecurityTrustProfile:
             raise ValueError("destructive actions require human approval metadata")
         if self.credential_required and not self.network_access:
             raise ValueError("credential requirement requires network access metadata")
-        if (\n            self.risk_class in {RiskClass.HIGH, RiskClass.CRITICAL}\n            and not self.isolation_required\n        ):
+        if (
+            self.risk_class in {RiskClass.HIGH, RiskClass.CRITICAL}
+            and not self.isolation_required
+        ):
             raise ValueError("high and critical risk profiles require isolation metadata")
 
     @property
@@ -69,7 +72,8 @@ class SecurityTrustProfile:
             "evidence_required": self.evidence_required,
             "isolation_required": self.isolation_required,
         }
-        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")\n        return hashlib.sha256(encoded).hexdigest()
+        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest()
 
 def classify_security_trust(**kwargs: object) -> SecurityTrustProfile:
     return SecurityTrustProfile(**kwargs)
