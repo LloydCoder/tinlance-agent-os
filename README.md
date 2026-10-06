@@ -21,29 +21,16 @@ Tinlance Agent OS provides those composition primitives without creating a secon
 
 ## Architecture
 
-```text
-Human / organization
-        |
-        v
-+-----------------------------+
-|       Tinlance Agent OS     |
-| workspace / session / task  |
-| workflow / memory / agents  |
-| apps / extensions / fleet   |
-+--------------+--------------+
-               |
-        governed adapter
-               v
-+-----------------------------+
-|   Tinlance Agent Platform   |
-| identity / authz / policy   |
-| approvals / budgets / runs  |
-| sandbox / tools / evidence  |
-+--------------+--------------+
-               |
-               v
-       Tools / MCP / APIs
+```mermaid
+flowchart LR
+    D[Tinlance Agent Developer] --> O[Tinlance Agent OS]
+    O --> S[Tinlance Agent Platform SDK]
+    S --> P[Tinlance Agent Platform]
+    P --> X[Governed execution]
+    P --> V[Authoritative evidence + audit]
 ```
+
+Agent OS remains the lifecycle/control plane. The Platform SDK is the typed client boundary; Agent Platform remains the sole authority plane.
 
 The consequential path is:
 
