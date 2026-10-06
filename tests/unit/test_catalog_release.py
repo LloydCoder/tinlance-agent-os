@@ -130,6 +130,7 @@ def test_10k_release_requires_domain_diversity() -> None:
             source_refs=(f"source:{index}",),
             state=CandidateState.CANONICAL,
             canonical_id=f"agent.catalog.{index:05d}",
+            review_ref=f"review:catalog:{index}",
         )
         for index in range(10_000)
     )
