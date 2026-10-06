@@ -53,3 +53,8 @@ M13.6–M13.8 reconciliation: OS orchestration may propagate execution-scoped se
 ## M13.6 — Secrets and credential governance
 
 M13.6 secret governance: OS secret references are non-authoritative. Consequential resolution must use Platform-scoped handles; the Platform enforces tenant, execution, capability, purpose, audience and validity-window constraints.
+
+
+## M13.7 — Evidence, audit and non-repudiation
+
+M13.7 evidence/audit boundary: OS execution metadata remains non-authoritative. Platform owns attributable evidence, sequence-integrity audit chains and cryptographic attestations; OS cannot elevate evidence into authority.
