@@ -15,7 +15,6 @@ def candidate(
     name: str = "Threat Intelligence Analyst",
     *,
     sources: tuple[str, ...] = ("nist:tool-taxonomy",),
-    state: CandidateState = CandidateState.DISCOVERED,
     description: str = "Analyzes threat intelligence evidence and produces structured findings.",
 ) -> TaxonomyCandidate:
     return TaxonomyCandidate(
@@ -25,7 +24,6 @@ def candidate(
         capabilities=("Threat Intelligence Analysis",),
         skills=("Indicator Correlation",),
         source_refs=sources,
-        state=state,
     )
 
 
@@ -86,7 +84,6 @@ def test_cannot_skip_lifecycle_gates() -> None:
     invalid = (
         (candidate(), CandidateState.CANONICAL),
         (candidate(), CandidateState.CLUSTERED),
-        (candidate(state=CandidateState.NORMALIZED), CandidateState.CANONICAL),
     )
     for record, target in invalid:
         try:
@@ -124,6 +121,24 @@ def test_review_attestation_is_required() -> None:
         assert "review_ref" in str(exc)
     else:
         raise AssertionError("review without evidence reference must fail")
+
+
+def test_non_discovered_state_cannot_be_fabricated() -> None:
+    try:
+        TaxonomyCandidate(
+            name="Threat Intelligence Analyst",
+            description="Analyzes threat intelligence evidence and produces structured findings.",
+            domain="Cybersecurity",
+            capabilities=("Threat Intelligence Analysis",),
+            source_refs=("test",),
+            state=CandidateState.CANONICAL,
+            canonical_id="cybersecurity.threat_intelligence.analyst",
+            review_ref="review:example",
+        )
+    except ValueError as exc:
+        assert "explicit lifecycle transition" in str(exc)
+    else:
+        raise AssertionError("non-discovered state must not be directly constructible")
 
 
 def test_canonical_requires_stable_id() -> None:
