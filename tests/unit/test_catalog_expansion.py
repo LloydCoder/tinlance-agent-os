@@ -7,6 +7,7 @@ from tinlance_agent_os.catalog_expansion import (
     phase_26_count,
 )
 
+
 def test_phase_26_reaches_2k_without_duplicate_identity() -> None:
     catalog = build_phase_26_catalog()
     assert len(catalog) == 2016
@@ -16,7 +17,9 @@ def test_phase_26_reaches_2k_without_duplicate_identity() -> None:
 
 def test_phase_26_uses_all_domains_and_work_patterns() -> None:
     catalog = build_phase_26_catalog()
-    assert {item.domain_id for item in catalog} == {item.id for item in build_domain_catalog()}
+    assert {item.domain_id for item in catalog} == {
+        item.id for item in build_domain_catalog()
+    }
     assert len(_WORK_PATTERNS) == 42
     assert len(catalog) == len(build_domain_catalog()) * len(_WORK_PATTERNS)
 
@@ -37,6 +40,7 @@ def test_phase_26_does_not_create_authority_from_scale() -> None:
 
 def test_phase_26_cardinality_is_stable() -> None:
     assert phase_26_count() == 48 * 42
+
 
 @pytest.mark.parametrize("pattern_id,description", _WORK_PATTERNS)
 def test_work_pattern_has_semantic_description(pattern_id: str, description: str) -> None:
