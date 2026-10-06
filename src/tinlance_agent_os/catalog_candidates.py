@@ -68,7 +68,8 @@ class TaxonomyCandidate:
             if not self.review_ref.strip():
                 raise ValueError("canonical candidates require review_ref")
         if (
-            self.state\n            not in {CandidateState.REVIEWED, CandidateState.CANONICAL, CandidateState.DEPRECATED}
+            self.state
+            not in {CandidateState.REVIEWED, CandidateState.CANONICAL, CandidateState.DEPRECATED}
             and self.review_ref
         ):
             raise ValueError(
