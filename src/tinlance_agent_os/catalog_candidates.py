@@ -72,16 +72,12 @@ class TaxonomyCandidate:
             self.state not in {CandidateState.REVIEWED, CandidateState.CANONICAL}
             and self.review_ref
         ):
-            raise ValueError(
-                "review_ref is only valid for reviewed or canonical candidates"
-            )
+            raise ValueError("review_ref is only valid for reviewed or canonical candidates")
         if (
             self.state not in {CandidateState.CANONICAL, CandidateState.DEPRECATED}
             and self.canonical_id
         ):
-            raise ValueError(
-                "canonical_id is only valid for canonical or deprecated candidates"
-            )
+            raise ValueError("canonical_id is only valid for canonical or deprecated candidates")
         if self.state is CandidateState.DEPRECATED and not self.canonical_id:
             raise ValueError("deprecated candidates require canonical_id")
 
@@ -219,9 +215,7 @@ def validate_candidates(
     return tuple(validated)
 
 
-def promote_for_review(
-    candidate: TaxonomyCandidate, *, review_ref: str
-) -> TaxonomyCandidate:
+def promote_for_review(candidate: TaxonomyCandidate, *, review_ref: str) -> TaxonomyCandidate:
     """Record an explicit governance-review evidence reference."""
     return candidate.transition(CandidateState.REVIEWED, review_ref=review_ref)
 
