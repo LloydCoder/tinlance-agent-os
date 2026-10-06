@@ -57,7 +57,8 @@ class ExternalAgentManifest:
 
 
 def normalize_a2a_agent_card(
-    card: dict[str, object], source_ref: str
+    card: dict[str, object],
+    source_ref: str,
 ) -> ExternalAgentManifest:
     """Normalize an A2A Agent Card without trusting its declarations."""
 
