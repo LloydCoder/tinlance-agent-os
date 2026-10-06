@@ -52,10 +52,7 @@ class SecurityTrustProfile:
             raise ValueError("destructive actions cannot be classified as low risk")
         if self.data_sensitivity is DataSensitivity.RESTRICTED and self.risk_class is RiskClass.LOW:
             raise ValueError("restricted data cannot be classified as low risk")
-        if (
-            self.autonomy_class is AutonomyClass.AUTONOMOUS
-            and not self.evidence_required
-        ):
+        if self.autonomy_class is AutonomyClass.AUTONOMOUS and not self.evidence_required:
             raise ValueError("autonomous profiles require evidence")
         if self.destructive_action_potential and not self.human_approval_required:
             raise ValueError("destructive actions require human approval metadata")
