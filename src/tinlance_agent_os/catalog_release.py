@@ -25,11 +25,22 @@ class CatalogReleaseManifest:
     inventory_digest: str
 
 
+def _semantic_archetype_key(candidate: TaxonomyCandidate) -> str:
+    """Identity for an archetype, independent of display name/description."""
+    return "|".join(
+        (
+            candidate.domain.strip().lower(),
+            ",".join(sorted(value.strip().lower() for value in candidate.capabilities)),
+            ",".join(sorted(value.strip().lower() for value in candidate.skills)),
+        )
+    )
+
+
 def _canonical_key(candidate: TaxonomyCandidate) -> str:
     return "|".join(
         (
             candidate.canonical_id.strip(),
-            candidate.fingerprint,
+            _semantic_archetype_key(candidate),
             ",".join(sorted(ref.strip() for ref in candidate.source_refs)),
         )
     )
@@ -64,7 +75,7 @@ def build_10k_release_manifest(
     if len(set(canonical_ids)) != len(canonical_ids):
         raise ValueError("10K release requires unique canonical identifiers")
 
-    semantic_keys = [candidate.semantic_key for candidate in inventory]
+    semantic_keys = [_semantic_archetype_key(candidate) for candidate in inventory]
     if len(set(semantic_keys)) != len(semantic_keys):
         raise ValueError("10K release requires semantic uniqueness")
 

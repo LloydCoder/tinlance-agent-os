@@ -71,6 +71,28 @@ def test_10k_release_rejects_duplicate_identity_and_semantics() -> None:
         raise AssertionError("duplicate identity must block release")
 
 
+def test_10k_release_rejects_renamed_semantic_duplicate() -> None:
+    inventory = list(canonical_inventory(10_000))
+    original = inventory[-1]
+    semantic_source = inventory[-2]
+    inventory[-1] = TaxonomyCandidate(
+        name="Renamed Agent",
+        description="A different description must not create a new semantic archetype.",
+        domain=semantic_source.domain,
+        capabilities=semantic_source.capabilities,
+        skills=semantic_source.skills,
+        source_refs=original.source_refs,
+        state=CandidateState.CANONICAL,
+        canonical_id=original.canonical_id,
+    )
+    try:
+        build_10k_release_manifest(inventory)
+    except ValueError as exc:
+        assert "semantic uniqueness" in str(exc)
+    else:
+        raise AssertionError("renamed semantic duplicate must block release")
+
+
 def test_10k_release_digest_is_order_independent() -> None:
     inventory = canonical_inventory(10_000)
     first = build_10k_release_manifest(inventory)
