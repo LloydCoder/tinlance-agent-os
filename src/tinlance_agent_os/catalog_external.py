@@ -56,14 +56,28 @@ class ExternalAgentManifest:
             raise ValueError("A2A production discovery requires HTTPS")
 
 
+def _a2a_endpoint(card: dict[str, object]) -> str:
+    """Return the preferred A2A v1 interface URL; never trust legacy endpoint fields."""
+    interfaces = card.get("supportedInterfaces")
+    if not isinstance(interfaces, list) or not interfaces:
+        raise ValueError("A2A Agent Card requires supportedInterfaces")
+    first = interfaces[0]
+    if not isinstance(first, dict):
+        raise ValueError("A2A supported interface must be an object")
+    endpoint = first.get("url")
+    if not isinstance(endpoint, str) or not endpoint.strip():
+        raise ValueError("A2A supported interface requires a URL")
+    return endpoint
+
+
 def normalize_a2a_agent_card(
     card: dict[str, object],
     source_ref: str,
 ) -> ExternalAgentManifest:
-    """Normalize an A2A Agent Card without trusting its declarations."""
+    """Normalize an A2A 1.0 Agent Card without trusting its declarations."""
 
-    required = ("name", "description", "version", "skills", "url")
-    if any(not card.get(key) for key in required):
+    required = ("name", "description", "version")
+    if any(not isinstance(card.get(key), str) or not str(card[key]).strip() for key in required):
         raise ValueError("A2A Agent Card is missing required discovery fields")
 
     raw_skills = card["skills"]
@@ -95,7 +109,7 @@ def normalize_a2a_agent_card(
         name=str(card["name"]),
         description=str(card["description"]),
         version=str(card["version"]),
-        endpoint=str(card["url"]),
+        endpoint=_a2a_endpoint(card),
         skills=tuple(skills),
         security_schemes=security_schemes,
         signed=bool(card.get("signatures")),

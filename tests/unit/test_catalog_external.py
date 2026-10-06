@@ -12,7 +12,13 @@ def card() -> dict[str, object]:
         "name": "Threat Research Agent",
         "description": "Performs bounded threat research.",
         "version": "1.0.0",
-        "url": "https://agents.example.test/a2a",
+        "supportedInterfaces": [
+            {
+                "url": "https://agents.example.test/a2a",
+                "protocolBinding": "HTTP+JSON",
+                "protocolVersion": "1.0",
+            }
+        ],
         "securitySchemes": {"oauth2": {}},
         "skills": [
             {
@@ -25,16 +31,30 @@ def card() -> dict[str, object]:
     }
 
 
-def test_normalizes_a2a_without_granting_authority() -> None:
+def test_normalizes_a2a_v1_without_granting_authority() -> None:
     manifest = normalize_a2a_agent_card(card(), "a2a:https://agents.example.test/card")
     assert manifest.source is ExternalDiscoverySource.A2A_AGENT_CARD
+    assert manifest.endpoint == "https://agents.example.test/a2a"
     assert manifest.security_schemes == ("oauth2",)
     assert manifest.signed is False
 
 
+def test_a2a_v1_requires_supported_interfaces() -> None:
+    invalid = card()
+    invalid.pop("supportedInterfaces")
+    with pytest.raises(ValueError, match="supportedInterfaces"):
+        normalize_a2a_agent_card(invalid, "a2a:missing-interface")
+
+
 def test_a2a_requires_https() -> None:
     invalid = card()
-    invalid["url"] = "http://agents.example.test/a2a"
+    invalid["supportedInterfaces"] = [
+        {
+            "url": "http://agents.example.test/a2a",
+            "protocolBinding": "HTTP+JSON",
+            "protocolVersion": "1.0",
+        }
+    ]
     with pytest.raises(ValueError, match="HTTPS"):
         normalize_a2a_agent_card(invalid, "a2a:insecure")
 
@@ -47,5 +67,5 @@ def test_external_skill_rejects_duplicate_tags() -> None:
 def test_a2a_requires_skills() -> None:
     invalid = card()
     invalid["skills"] = []
-    with pytest.raises(ValueError, match="required"):
+    with pytest.raises(ValueError, match="at least one skill"):
         normalize_a2a_agent_card(invalid, "a2a:no-skills")
