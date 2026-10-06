@@ -118,8 +118,7 @@ app = sdk.scaffold(
     version="1.0.0",
     entrypoint="research.main",
     capabilities=(
-        CapabilityDeclaration("research.read", "Read approved research sources"),
-    ),
+        CapabilityDeclaration("research.read", "Read approved research sources"),)
 )
 print(app.scaffold.definition.agent_id)
 ```
