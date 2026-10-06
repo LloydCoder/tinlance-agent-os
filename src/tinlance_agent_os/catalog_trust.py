@@ -75,8 +75,8 @@ class SecurityTrustProfile:
             "evidence_required": self.evidence_required,
             "isolation_required": self.isolation_required,
         }
-        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-        encoded = encoded.encode("utf-8")
+        serialized = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        encoded = serialized.encode("utf-8")
         return hashlib.sha256(encoded).hexdigest()
 
 
