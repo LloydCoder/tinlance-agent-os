@@ -137,7 +137,9 @@ class ExternalCatalogRecord:
             raise ValueError("external catalog identity is required")
         if not self.description.strip() or not self.domain.strip():
             raise ValueError("external catalog metadata is incomplete")
-        if not self.capabilities or any(not value.strip() for value in self.capabilities):
+        if not self.capabilities:
+            raise ValueError("external catalog capabilities must be non-empty")
+        if any(not value.strip() for value in self.capabilities):
             raise ValueError("external catalog capabilities must be non-empty")
         if any(not value.strip() for value in self.skills):
             raise ValueError("external catalog skills must be non-empty")
@@ -159,7 +161,7 @@ def _bounded_text(value: Any, field: str, *, max_length: int = 4096) -> str:
     value = value.strip()
     if len(value) > max_length:
         raise ValueError(f"{field} exceeds maximum length")
-    return str(value)
+    return value
 
 
 def _bounded_strings(value: Any, field: str, *, max_items: int = 256) -> tuple[str, ...]:
