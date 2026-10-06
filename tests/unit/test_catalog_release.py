@@ -51,7 +51,6 @@ def test_10k_release_rejects_noncanonical_entries() -> None:
         skills=inventory[-1].skills,
         source_refs=inventory[-1].source_refs,
         state=CandidateState.REVIEWED,
-        canonical_id=inventory[-1].canonical_id,
         review_ref="review:catalog:9999",
     )
     try:
