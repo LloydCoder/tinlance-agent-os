@@ -50,10 +50,7 @@ class SecurityTrustProfile:
     def __post_init__(self) -> None:
         if self.destructive_action_potential and self.risk_class is RiskClass.LOW:
             raise ValueError("destructive actions cannot be classified as low risk")
-        if (
-            self.data_sensitivity is DataSensitivity.RESTRICTED
-            and self.risk_class is RiskClass.LOW
-        ):
+        if self.data_sensitivity is DataSensitivity.RESTRICTED and self.risk_class is RiskClass.LOW:
             raise ValueError("restricted data cannot be classified as low risk")
         if (
             self.autonomy_class is AutonomyClass.AUTONOMOUS
