@@ -76,7 +76,7 @@ def normalize_a2a_agent_card(
 ) -> ExternalAgentManifest:
     """Normalize an A2A 1.0 Agent Card without trusting its declarations."""
 
-    required = ("name", "description", "version", "skills")
+    required = ("name", "description", "version")
     if any(not isinstance(card.get(key), str) or not str(card[key]).strip() for key in required):
         raise ValueError("A2A Agent Card is missing required discovery fields")
 
