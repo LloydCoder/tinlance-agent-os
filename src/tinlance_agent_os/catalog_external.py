@@ -164,8 +164,7 @@ def _bounded_strings(value: Any, field: str, *, max_items: int = 256) -> tuple[s
     if len(value) > max_items:
         raise ValueError(f"{field} exceeds maximum item count")
     result = tuple(
-        _bounded_text(item, f"{field}[{index}]", max_length=512)
-        for index, item in enumerate(value)
+        _bounded_text(item, f"{field}[{index}]", max_length=512) for index, item in enumerate(value)
     )
     return result
 
