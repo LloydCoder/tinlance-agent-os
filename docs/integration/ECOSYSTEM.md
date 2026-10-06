@@ -58,3 +58,8 @@ M13.6 secret governance: OS secret references are non-authoritative. Consequenti
 ## M13.7 — Evidence, audit and non-repudiation
 
 M13.7 evidence/audit boundary: OS execution metadata remains non-authoritative. Platform owns attributable evidence, sequence-integrity audit chains and cryptographic attestations; OS cannot elevate evidence into authority.
+
+
+## M13.8 — Observability and incident correlation
+
+M13.8 observability boundary: OS telemetry is non-authoritative. Platform owns W3C trust-boundary correlation, tenant-bound incident links and security-event outcomes; telemetry cannot grant execution authority.
