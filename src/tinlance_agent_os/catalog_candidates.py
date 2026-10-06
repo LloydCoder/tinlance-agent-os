@@ -89,7 +89,7 @@ class TaxonomyCandidate:
             skills=self.skills,
             source_refs=self.source_refs,
             state=target,
-            canonical_id=canonical_id if target is CandidateState.CANONICAL else "",
+            canonical_id=canonical_id if target is CandidateState.CANONICAL else (self.canonical_id if target is CandidateState.DEPRECATED else ""),
         )
 
     def normalized(self) -> TaxonomyCandidate:
@@ -168,4 +168,4 @@ def publish_canonical(candidate: TaxonomyCandidate, canonical_id: str) -> Taxono
 
 def deprecate(candidate: TaxonomyCandidate) -> TaxonomyCandidate:
     """Remove a canonical record from the active canonical set."""
-    return candidate.transition(CandidateState.DEPRECATED)
+    return candidate.transition(CandidateState.DEPRECATED, canonical_id=candidate.canonical_id)
