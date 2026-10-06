@@ -14,7 +14,7 @@ The gate is therefore a proof boundary, not a synthetic taxonomy generator.
 - every entry is in CANONICAL lifecycle state;
 - every entry has a stable canonical identifier;
 - canonical identifiers are unique;
-- semantic keys are unique;
+- semantic archetype keys (domain + capabilities + skills) are unique independent of display name/description;
 - 100% of entries retain provenance;
 - at least 30 distinct domains are represented;
 - deterministic SHA-256 inventory digest;
@@ -24,11 +24,15 @@ The gate is therefore a proof boundary, not a synthetic taxonomy generator.
 
 The manifest records the release name, target count, actual canonical count, domain diversity, provenance coverage, semantic uniqueness, and deterministic inventory digest.
 
-The digest is order-independent so the release artifact is reproducible.
+The digest is order-independent so the release artifact is reproducible. Display-name or prose changes cannot manufacture a distinct archetype when the governed semantic dimensions are unchanged.
 
 ## Security and architecture boundary
 
 This module is descriptive release validation only. Platform remains the runtime authority. Directory and Registry semantics remain outside Catalog. Candidate ingestion remains governed by Phase 28, and external discovery remains governed by Phase 29.
+
+## Post-merge forensic remediation
+
+The merged Phase 30 gate was re-audited after release. A semantic deduplication weakness was found: the inherited candidate fingerprint included display name and description, so a renamed/reworded duplicate could evade the release gate. The remediation defines release identity from domain, capabilities and skills, with stable IDs and provenance retained separately for inventory integrity.
 
 ## Gate
 
