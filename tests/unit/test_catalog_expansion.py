@@ -1,7 +1,11 @@
 import pytest
 
 from tinlance_agent_os.catalog_domains import build_domain_catalog
-from tinlance_agent_os.catalog_expansion import _WORK_PATTERNS, build_phase_26_catalog, phase_26_count
+from tinlance_agent_os.catalog_expansion import (
+    _WORK_PATTERNS,
+    build_phase_26_catalog,
+    phase_26_count,
+)
 
 def test_phase_26_reaches_2k_without_duplicate_identity() -> None:
     catalog = build_phase_26_catalog()
@@ -24,7 +28,9 @@ def test_phase_26_entries_are_provenanced_and_canonical() -> None:
 
 def test_phase_26_does_not_create_authority_from_scale() -> None:
     for entry in build_phase_26_catalog()[::137]:
-        text = " ".join((entry.description, *entry.inclusion_criteria, *entry.exclusion_criteria)).casefold()
+        text = " ".join(
+            (entry.description, *entry.inclusion_criteria, *entry.exclusion_criteria)
+        ).casefold()
         assert "authorization" in text
         assert "tool" in text
         assert "provider" in text
