@@ -6,24 +6,13 @@ Phase 28 establishes the controlled lifecycle for external and generated taxonom
 
 `DISCOVERED → NORMALIZED → CLUSTERED → CANDIDATE → VALIDATED → REVIEWED → CANONICAL`
 
-Deprecated entries leave the canonical set through:
+Deprecated entries leave the canonical set through `CANONICAL → DEPRECATED`.
 
-`CANONICAL → DEPRECATED`
-
-This module implements the structural portion of that lifecycle. Clustering, human review, and canonical publication remain separate gates.
+This module implements the structural portion of the lifecycle. Clustering, human review, and canonical publication remain separate gates.
 
 ## Hard controls
 
-Every candidate requires:
-
-- non-empty identity and domain;
-- at least one capability;
-- explicit provenance/source references;
-- deterministic normalization;
-- a SHA-256 semantic fingerprint;
-- structural validation before review;
-- an explicit review transition;
-- a stable canonical identifier before canonical state.
+Every candidate requires non-empty identity and domain, at least one capability, explicit provenance/source references, deterministic normalization, a SHA-256 semantic fingerprint, structural validation before review, an explicit review transition, and a stable canonical identifier before canonical state.
 
 A candidate cannot jump directly from discovery to canonical publication.
 
@@ -35,17 +24,7 @@ This is intentionally conservative: semantic equivalence beyond normalized ident
 
 ## Security boundary
 
-Candidate data is untrusted descriptive metadata. It does not:
-
-- grant authority;
-- select tools;
-- authorize actions;
-- create delegation;
-- change Platform policy;
-- execute code;
-- admit an agent to the runtime.
-
-This separation follows the project's existing Catalog/Directory/Registry/Platform boundaries and current agent-security guidance.
+Candidate data is untrusted descriptive metadata. It does not grant authority, select tools, authorize actions, create delegation, change Platform policy, execute code, or admit an agent to the runtime.
 
 ## Research alignment
 
