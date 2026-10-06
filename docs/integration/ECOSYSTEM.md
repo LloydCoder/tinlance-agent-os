@@ -4,10 +4,13 @@ Agent OS is the lifecycle/control-plane layer in the canonical four-repository s
 
 ```mermaid
 flowchart LR
-    D[Tinlance Agent Developer] --> O[Tinlance Agent OS]
+    D[Tinlance Agent Developer / TADL] --> O[Tinlance Agent OS]
     O --> S[Tinlance Agent Platform SDK]
     S --> P[Tinlance Agent Platform]
-    P --> E[Governed execution + evidence]
+    P --> A[Identity / tenancy]
+    P --> Z[Authorization / policy / approvals]
+    P --> X[Budgets / sandbox / tools / MCP]
+    P --> V[Evidence / audit / observability]
     C[Ecosystem Conformance] -. gates .-> D
     C -. gates .-> O
     C -. gates .-> S
@@ -28,4 +31,8 @@ Production deployment seams—durable PostgreSQL, external secrets, sandbox supe
 
 ## Conformance
 
-The TADL-hosted ecosystem conformance suite is the executable compatibility gate for the four repositories. It validates the shared API 1.1 contract, SDK/OS interoperability, identity binding, idempotency, trace propagation, transport security, and authority dependency direction against pinned revisions. Production infrastructure certification remains separate.
+The Agent Developer-hosted ecosystem conformance suite is the executable compatibility gate for the four repositories. It validates the shared API 1.1 contract, SDK/OS interoperability, identity binding, idempotency, trace propagation, transport security, and authority dependency direction against pinned revisions. Production infrastructure certification remains separate.
+
+## Milestone vocabulary
+
+M0–M14 remain the canonical Agent Platform roadmap. The supplemental M13.1–M13.3 production-runtime hardening labels are implementation traceability only; they do not redefine canonical milestone meaning. Post-M14 production maturity is governed by M15–M29.
