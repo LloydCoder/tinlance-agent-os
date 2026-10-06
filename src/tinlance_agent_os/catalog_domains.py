@@ -88,6 +88,11 @@ _DOMAIN_SEEDS: tuple[tuple[str, DomainFamily, str], ...] = (
         "Hardware engineering and embedded systems",
     ),
     (
+        "engineering.networking",
+        DomainFamily.ENGINEERING,
+        "Network engineering, connectivity and distributed communication systems",
+    ),
+    (
         "security.cybersecurity",
         DomainFamily.SECURITY,
         "Cybersecurity defense, assessment and response",
