@@ -6,7 +6,9 @@ def canonical_inventory(count: int) -> tuple[TaxonomyCandidate, ...]:
     return tuple(
         TaxonomyCandidate(
             name=f"Canonical Agent {index}",
-            description=f"Performs a distinct governed catalog capability for release validation {index}.",
+            description=(
+                f"Performs a distinct governed catalog capability for release validation {index}."
+            ),
             domain=f"domain-{index % 30}",
             capabilities=(f"capability.{index}",),
             skills=(f"skill.{index}",),
