@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 _CANONICAL_ID_RE = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$")
@@ -48,12 +48,15 @@ class TaxonomyCandidate:
     state: CandidateState = CandidateState.DISCOVERED
     canonical_id: str = ""
     review_ref: str = ""
+    _transitioned: bool = field(default=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         if not self.name.strip() or not self.description.strip() or not self.domain.strip():
             raise ValueError("candidate name, description and domain are required")
         if not self.capabilities:
             raise ValueError("candidate requires at least one capability")
+        if self.state is not CandidateState.DISCOVERED and not self._transitioned:
+            raise ValueError("non-discovered state requires an explicit lifecycle transition")
         if not self.source_refs:
             raise ValueError("candidate provenance is required")
         if self.state is CandidateState.REVIEWED and not self.review_ref.strip():
@@ -133,6 +136,7 @@ class TaxonomyCandidate:
                 if target in {CandidateState.CANONICAL, CandidateState.DEPRECATED}
                 else ""
             ),
+            _transitioned=True,
         )
 
     def normalized(self) -> TaxonomyCandidate:
@@ -146,6 +150,7 @@ class TaxonomyCandidate:
             skills=tuple(sorted({normalize(value) for value in self.skills})),
             source_refs=tuple(sorted({ref.strip() for ref in self.source_refs if ref.strip()})),
             state=CandidateState.NORMALIZED,
+            _transitioned=True,
         )
 
 
