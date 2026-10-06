@@ -5,12 +5,12 @@ Phase 26 establishes the first large-scale, machine-generated canonical archetyp
 ## Result
 
 - 48 canonical domains from Phase 25.
-- 42 bounded semantic work patterns.
-- 2,016 canonical archetypes (48 × 42).
+- 43 bounded semantic work patterns.
+- 2,064 canonical archetypes (48 × 43).
 - Deterministic IDs, semantic boundaries, provenance, and canonical status.
 - No model, provider, geography, customer, deployment, tool, protocol, cost, latency, or authorization dimension is part of archetype identity.
 
-The 2,016 records are generated from an explicit semantic matrix rather than a list of arbitrary names. A domain/work-pattern pair is a taxonomy unit only because the work boundary changes with the domain; implementation choices remain profile/instance metadata.
+The 2,064 records are generated from an explicit semantic matrix rather than a list of arbitrary names. A domain/work-pattern pair is a taxonomy unit only because the work boundary changes with the domain; implementation choices remain profile/instance metadata.
 
 ## Research basis
 
@@ -34,4 +34,4 @@ Phase 26 is complete only when unit and architecture tests pass; Python 3.12/3.1
 
 ## Scale interpretation
 
-2,016 is a validated taxonomy milestone, not a permanent ceiling. Later phases may expand the controlled domain/work vocabulary, introduce richer capability/skill composition, and add evaluation-backed variants without multiplying entries for implementation-only differences.
+2,064 is a validated taxonomy milestone, not a permanent ceiling. Later phases may expand the controlled domain/work vocabulary, introduce richer capability/skill composition, and add evaluation-backed variants without multiplying entries for implementation-only differences.
