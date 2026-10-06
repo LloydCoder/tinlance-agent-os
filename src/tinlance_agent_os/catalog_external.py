@@ -29,6 +29,8 @@ class ExternalSkill:
     def __post_init__(self) -> None:
         if not self.id.strip() or not self.name.strip() or not self.description.strip():
             raise ValueError("external skill identity and description are required")
+        if any(not tag.strip() for tag in self.tags):
+            raise ValueError("external skill tags must be non-empty")
         if len(set(self.tags)) != len(self.tags):
             raise ValueError("duplicate external skill tags are not permitted")
 
@@ -135,8 +137,10 @@ class ExternalCatalogRecord:
             raise ValueError("external catalog identity is required")
         if not self.description.strip() or not self.domain.strip():
             raise ValueError("external catalog metadata is incomplete")
-        if not self.capabilities:
-            raise ValueError("external catalog records require capabilities")
+        if not self.capabilities or any(not value.strip() for value in self.capabilities):
+            raise ValueError("external catalog capabilities must be non-empty")
+        if any(not value.strip() for value in self.skills):
+            raise ValueError("external catalog skills must be non-empty")
 
     def to_candidate(self) -> TaxonomyCandidate:
         return TaxonomyCandidate(
@@ -176,8 +180,10 @@ def normalize_curated_catalog_record(
     if not isinstance(record, dict):
         raise ValueError("external catalog record must be an object")
     capabilities = _bounded_strings(record.get("capabilities"), "capabilities")
-    skills_value = record.get("skills", [])
-    skills = _bounded_strings(skills_value, "skills") if skills_value else ()
+    if "skills" in record:
+        skills = _bounded_strings(record["skills"], "skills")
+    else:
+        skills = ()
     return ExternalCatalogRecord(
         source_ref=_bounded_text(source_ref, "source_ref", max_length=2048),
         name=_bounded_text(record.get("name"), "name"),
