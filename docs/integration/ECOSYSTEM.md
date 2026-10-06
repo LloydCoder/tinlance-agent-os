@@ -40,3 +40,7 @@ M0–M14 remain the canonical Agent Platform roadmap. The supplemental M13.1–M
 ## Budget governance boundary
 
 Consequential execution budget is Platform authority. Requests may carry declared execution limits, but only the Platform execution boundary can reserve, consume or release budget. Reservations are bound to tenant, agent, run, action and resource; quota exhaustion and scope/replay conflicts fail closed. SDK/OS/TADL layers must not implement local budget authority or treat client-side estimates as authorization.
+
+## M13.5 tool authority reconciliation
+
+The OS may orchestrate tool lifecycle and sandbox configuration, but it never grants tool authority. Consequential execution must traverse the Platform policy boundary and consume a Platform-issued single-use permit; sandbox workspace roots are Platform-governed policy inputs.
