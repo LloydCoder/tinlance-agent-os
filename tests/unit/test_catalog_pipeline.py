@@ -21,7 +21,10 @@ def candidate(status: TaxonomyStatus) -> CanonicalAgentArchetype:
         exclusion_criteria=("does not authorize response actions",),
         provenance=(
             TaxonomyProvenance(
-                "seed-v1", "taxonomy", "seed:420", "forensic-reconciliation"
+                "seed-v1",
+                "taxonomy",
+                "seed:420",
+                "forensic-reconciliation",
             ),
         ),
         status=status,
