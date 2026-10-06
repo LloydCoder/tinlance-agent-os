@@ -45,7 +45,6 @@ def test_candidate_requires_provenance() -> None:
             raise AssertionError("blank provenance must fail")
 
 
-
 def test_candidate_rejects_blank_capability_or_skill() -> None:
     try:
         TaxonomyCandidate(
