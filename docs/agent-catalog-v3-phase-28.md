@@ -8,7 +8,7 @@ Phase 28 establishes a controlled lifecycle for external and generated taxonomy 
 
 Deprecated entries leave the canonical set through `CANONICAL → DEPRECATED`.
 
-Every transition is explicit and forward-only. The implementation rejects skipped, reversed, or fabricated lifecycle transitions.
+Every transition is explicit and forward-only. The implementation rejects skipped, reversed, or fabricated lifecycle transitions. Review state also requires a non-empty governance evidence reference, and canonical IDs are constrained to a stable lowercase identifier grammar.
 
 ## Hard controls
 
@@ -20,7 +20,7 @@ Every candidate requires:
 - deterministic normalization;
 - a SHA-256 semantic fingerprint;
 - structural validation before review;
-- explicit human/governance review state before canonical publication;
+- explicit governance review state with a review evidence reference before canonical publication;
 - a stable canonical identifier at publication.
 
 Canonical publication is exposed only through `publish_canonical()` and requires `REVIEWED` state plus a stable canonical ID. The candidate module never executes work or grants authority.
@@ -57,7 +57,7 @@ It does not own:
 
 ## Gate
 
-Phase 28 may merge only when full PR CI is green. After merge, merged-main CI must be green/observable and a post-merge forensic audit must confirm the lifecycle, tests, docs, workflow integrity, and authority boundary before Phase 29 begins.
+Phase 28 may merge only when full PR CI is green. After merge, merged-main CI must be green/observable and a post-merge forensic audit must confirm the lifecycle, review-evidence gate, tests, docs, workflow integrity, and authority boundary before Phase 29 begins.
 
 
 ## CI release gate
