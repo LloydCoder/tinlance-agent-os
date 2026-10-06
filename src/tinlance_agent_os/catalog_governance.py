@@ -61,7 +61,10 @@ def prepare_evolution_release(
     base_ids = {candidate.canonical_id.strip() for candidate in base}
     proposed_ids = {candidate.canonical_id.strip() for candidate in proposed}
 
-    if any(candidate.state not in {CandidateState.CANONICAL, CandidateState.DEPRECATED} for candidate in proposed):
+    if any(
+        candidate.state not in {CandidateState.CANONICAL, CandidateState.DEPRECATED}
+        for candidate in proposed
+    ):
         raise ValueError("evolution inventories may contain only canonical or deprecated records")
     if any(not candidate.review_ref.strip() for candidate in proposed):
         raise ValueError("every evolved record requires review evidence")
