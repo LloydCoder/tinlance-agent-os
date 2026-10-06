@@ -160,7 +160,6 @@ class TaxonomyCandidate:
             skills=tuple(sorted({normalize(value) for value in self.skills})),
             source_refs=tuple(sorted({ref.strip() for ref in self.source_refs if ref.strip()})),
             state=CandidateState.NORMALIZED,
-            _transitioned=True,
         )
 
 
