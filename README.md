@@ -225,7 +225,7 @@ The repository currently records implementation through M41 and the Agent Catalo
 <details>
 <summary>Troubleshooting</summary>
 
-If the editable install fails, verify Python 3.12+ and rerun the install command. If tests fail, run the failing test directly with `pytest path/to/test.py -q`. For architecture failures, inspect the relevant contract and ADR before changing dependency direction.
+If the editable install fails, verify Python 3.12+ and rerun the install command. The CI workflow runs on pull requests targeting `main`. If tests fail, run the failing test directly with `pytest path/to/test.py -q`. For architecture failures, inspect the relevant contract and ADR before changing dependency direction.
 
 </details>
 
