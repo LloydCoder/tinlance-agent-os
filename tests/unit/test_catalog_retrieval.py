@@ -99,7 +99,9 @@ def test_retrieval_rejects_missing_capability_and_invalid_limit() -> None:
         RetrievalRequirement(frozenset({"research.search"})),
     )
     try:
-        retrieve_profiles((profile("x"),), RetrievalRequirement(frozenset({"research.search"})), limit=0)
+        retrieve_profiles(
+            (profile("x"),), RetrievalRequirement(frozenset({"research.search"})), limit=0
+        )
     except ValueError as exc:
         assert "limit" in str(exc)
     else:
