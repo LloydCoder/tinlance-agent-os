@@ -182,10 +182,7 @@ def normalize_curated_catalog_record(
     if not isinstance(record, dict):
         raise ValueError("external catalog record must be an object")
     capabilities = _bounded_strings(record.get("capabilities"), "capabilities")
-    if "skills" in record:
-        skills = _bounded_strings(record["skills"], "skills")
-    else:
-        skills = ()
+    skills = _bounded_strings(record["skills"], "skills") if "skills" in record else ()
     return ExternalCatalogRecord(
         source_ref=_bounded_text(source_ref, "source_ref", max_length=2048),
         name=_bounded_text(record.get("name"), "name"),
