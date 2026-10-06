@@ -126,15 +126,15 @@ def test_retrieval_excludes_inactive_profiles() -> None:
 
 
 def test_retrieval_rejects_invalid_requirements_and_limit() -> None:
-    invalid_requirements = (
-        RetrievalRequirement(frozenset({"research.search"}), min_evaluation_score=-0.1),
-        RetrievalRequirement(frozenset({"research.search"}), min_trust_score=1.1),
-        RetrievalRequirement(frozenset({"research.search"}), max_cost_microunits=-1),
-        RetrievalRequirement(frozenset({"research.search"}), max_latency_ms=-1),
+    invalid_cases = (
+        {"min_evaluation_score": -0.1},
+        {"min_trust_score": 1.1},
+        {"max_cost_microunits": -1},
+        {"max_latency_ms": -1},
     )
-    for requirement in invalid_requirements:
+    for case in invalid_cases:
         try:
-            _ = requirement
+            RetrievalRequirement(frozenset({"research.search"}), **case)
         except ValueError:
             pass
         else:
