@@ -63,3 +63,12 @@ M13.7 evidence/audit boundary: OS execution metadata remains non-authoritative. 
 ## M13.8 — Observability and incident correlation
 
 M13.8 observability boundary: OS telemetry is non-authoritative. Platform owns W3C trust-boundary correlation, tenant-bound incident links and security-event outcomes; telemetry cannot grant execution authority.
+
+
+## Final M13.4-M13.8 authority reconciliation
+
+Agent OS owns workspace, lifecycle, orchestration and user-facing agent operations; it does not grant consequential authority.
+
+Before any consequential tool/MCP action, OS orchestration must re-enter the Platform authority boundary. Platform controls budgets, single-use tool/MCP permits, sandbox roots, secrets, evidence/audit and observability.
+
+The 2026 MCP direction is increasingly stateless and authorization-hardened; OS adapters must treat each request as independently authorized and must not infer authority from discovery, cached tool metadata, Agent Cards, or prior calls.
