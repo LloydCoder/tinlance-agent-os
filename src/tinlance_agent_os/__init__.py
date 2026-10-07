@@ -2,6 +2,8 @@
 
 __version__ = "0.1.0"
 
+from .transformation import Transformation, TransformationContext, TransformationOutcome
+
 from .agent_directory import (
     AgentDirectory,
     AgentObservation,
@@ -231,6 +233,9 @@ __all__ = [
     "GACheck",
     "GAReadiness",
     "GARelease",
+    "Transformation",
+    "TransformationContext",
+    "TransformationOutcome",
 ]
 
 from .sdk import (
