@@ -229,3 +229,4 @@ See [SUPPORT.md](SUPPORT.md). Security vulnerabilities must follow [SECURITY.md]
 
 
 - [P4 — 20K Canonical Catalog Milestone](docs/P4-20K-CANONICAL-MILESTONE.md)
+- [P10 — Replication & Agent System GA](docs/ecosystem/P10-REPLICATION-GA.md)
