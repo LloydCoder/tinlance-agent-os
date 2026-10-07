@@ -61,7 +61,7 @@ class Transformation:
         *,
         run_ref: str | None = None,
         outcome: TransformationOutcome | None = None,
-    ) -> "Transformation":
+    ) -> Transformation:
         return Transformation(
             transformation_id=self.transformation_id,
             version=self.version + 1,
