@@ -226,3 +226,6 @@ If the editable install fails, verify Python 3.12+ and rerun the install command
 See [SUPPORT.md](SUPPORT.md). Security vulnerabilities must follow [SECURITY.md](SECURITY.md), not a public issue.
 
 </details>
+
+
+- [P4 — 20K Canonical Catalog Milestone](docs/P4-20K-CANONICAL-MILESTONE.md)
