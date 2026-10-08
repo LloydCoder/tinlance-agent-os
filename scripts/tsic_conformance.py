@@ -7,7 +7,9 @@ import json
 from urllib.request import Request, urlopen
 
 TSIC_REVISION = "ae53c58afd78b48b1f0b95640ca0db698018cd7d"
-RAW_ROOT = f"https://raw.githubusercontent.com/LloydCoder/tinlance-system-integration/{TSIC_REVISION}"
+RAW_ROOT = (
+    f"https://raw.githubusercontent.com/LloydCoder/tinlance-system-integration/{TSIC_REVISION}"
+)
 REQUIRED = {
     "identity-context",
     "agent-registration",
@@ -22,7 +24,10 @@ REQUIRED = {
 def fetch_json(path: str) -> dict:
     request = Request(
         f"{RAW_ROOT}/{path}",
-        headers={"Accept": "application/json", "User-Agent": "tinlance-agent-os-ci"},
+        headers={
+            "Accept": "application/json",
+            "User-Agent": "tinlance-agent-os-ci",
+        },
     )
     with urlopen(request, timeout=15) as response:
         if response.status != 200:
@@ -73,7 +78,10 @@ def main() -> None:
     if invariants != required_invariants:
         raise AssertionError("TSIC Agent OS invariant drift")
 
-    print("PASS TSIC Agent OS conformance:", f"revision={TSIC_REVISION} contracts={len(bindings)}")
+    print(
+        "PASS TSIC Agent OS conformance:",
+        f"revision={TSIC_REVISION} contracts={len(bindings)}",
+    )
 
 
 if __name__ == "__main__":
