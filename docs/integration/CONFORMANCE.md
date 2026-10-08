@@ -1,6 +1,6 @@
 # Tinlance Agent Ecosystem Conformance
 
-Agent OS participates in the ecosystem conformance gate maintained by TADL.
+Agent OS consumes TSIC as the canonical ecosystem integration and certification authority. TADL remains the developer-plane validation consumer.
 
 ```mermaid
 flowchart LR
@@ -25,7 +25,7 @@ The conformance gate verifies that the OS:
 - interoperates with the same Platform reference boundary as the official SDK; and
 - does not import Platform authority-kernel packages.
 
-The suite is executed from the TADL repository against pinned commit SHAs in ecosystem.lock.json. A green repository-local CI run is necessary but not sufficient for ecosystem compatibility.
+The TADL-hosted suite remains a developer-plane compatibility gate. The Agent OS repository additionally consumes the immutable TSIC adapter directly in CI. A green repository-local CI run is necessary but not sufficient for ecosystem compatibility.
 
 ## Production boundary
 
