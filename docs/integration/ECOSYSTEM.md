@@ -31,7 +31,7 @@ Production deployment seams—durable PostgreSQL, external secrets, sandbox supe
 
 ## Conformance
 
-The Agent Developer-hosted ecosystem conformance suite is the executable compatibility gate for the four repositories. It validates the shared API 1.1 contract, SDK/OS interoperability, identity binding, idempotency, trace propagation, transport security, and authority dependency direction against pinned revisions. Production infrastructure certification remains separate.
+The Agent Developer-hosted suite remains the developer-system compatibility gate, while TSIC is the canonical ecosystem integration and certification authority. Agent OS consumes the pinned TSIC contract directly and validates API 1.1 interoperability, SDK/OS transport behavior, identity binding, idempotency, trace propagation, transport security, and authority dependency direction against reviewed revisions. Production infrastructure certification remains separate.
 
 ## Milestone vocabulary
 
