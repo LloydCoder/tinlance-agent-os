@@ -1,6 +1,6 @@
 # Tinlance Agent Ecosystem Integration
 
-Agent OS is the lifecycle/control-plane layer in the canonical four-repository stack:
+Agent OS is the lifecycle/control-plane layer in the canonical four-repository stack. TSIC is the canonical ecosystem integration and certification authority:
 
 ```mermaid
 flowchart LR
