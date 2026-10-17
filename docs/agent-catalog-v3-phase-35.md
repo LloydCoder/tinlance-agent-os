@@ -13,6 +13,8 @@ The model is append-and-deprecate rather than destructive deletion. Deprecated c
 - every evolved record is CANONICAL or DEPRECATED;
 - every evolved record retains review evidence;
 - additions and deprecations cannot overlap in one release;
+- every base identifier remains present in the next snapshot; removal requires explicit deprecation;
+- deprecated identifiers cannot be reactivated;
 - addition/deprecation identifier lists are unique and deterministic;
 - release and inventory digests are deterministic;
 - governance evidence is mandatory;
