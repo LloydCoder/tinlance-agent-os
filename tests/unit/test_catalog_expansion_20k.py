@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from tinlance_agent_os.catalog_candidates import CandidateState, TaxonomyCandidate
 from tinlance_agent_os.catalog_expansion_20k import build_20k_expansion_manifest
 
@@ -67,3 +69,26 @@ def test_20k_manifest_rejects_low_domain_diversity() -> None:
         assert "domains" in str(exc)
     else:
         raise AssertionError("low domain diversity must fail closed")
+
+
+
+def test_20k_manifest_rejects_duplicate_tokens_used_to_inflate_semantic_identity() -> None:
+    records = list(inventory())
+    first = records[0]
+    same_domain = records[50]
+    records[0] = replace(
+        first,
+        capabilities=(first.capabilities[0], first.capabilities[0]),
+        skills=(first.skills[0], first.skills[0]),
+    )
+    records[50] = replace(
+        same_domain,
+        capabilities=first.capabilities,
+        skills=first.skills,
+    )
+    try:
+        build_20k_expansion_manifest(records)
+    except ValueError as exc:
+        assert "semantic uniqueness" in str(exc)
+    else:
+        raise AssertionError("repeated capability/skill tokens must not inflate canonical count")
