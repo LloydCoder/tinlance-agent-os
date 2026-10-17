@@ -9,12 +9,8 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from .catalog_candidates import (
-    CandidateState,
-    TaxonomyCandidate,
-    canonical_semantic_key,
-    normalize_semantic_token,
-)
+from .catalog_candidates import CandidateState, TaxonomyCandidate
+from .catalog_semantics import canonical_semantic_key, normalize_semantic_token
 
 TARGET_COUNT = 20_000
 MIN_DOMAINS = 50
