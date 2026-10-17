@@ -12,6 +12,8 @@ from enum import StrEnum
 import hashlib
 import re
 
+from .catalog_semantics import canonical_semantic_key, normalize_semantic_token
+
 
 _ID_RE = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$")
 
@@ -67,6 +69,18 @@ class CanonicalAgentArchetype:
             raise ValueError("invalid domain id")
         if not self.capability_ids:
             raise ValueError("at least one capability is required")
+        if any(not value.strip() for value in self.capability_ids):
+            raise ValueError("capability IDs must be non-empty")
+        if any(not value.strip() for value in self.skill_ids):
+            raise ValueError("skill IDs must be non-empty when supplied")
+        if len({normalize_semantic_token(value) for value in self.capability_ids}) != len(
+            self.capability_ids
+        ):
+            raise ValueError("duplicate capability IDs are not permitted")
+        if len({normalize_semantic_token(value) for value in self.skill_ids}) != len(
+            self.skill_ids
+        ):
+            raise ValueError("duplicate skill IDs are not permitted")
         if not self.provenance:
             raise ValueError("canonical taxonomy entries require provenance")
         if not self.inclusion_criteria:
@@ -80,13 +94,12 @@ class CanonicalAgentArchetype:
 
     @property
     def semantic_key(self) -> str:
-        parts = (
+        """Stable identity independent of names, descriptions and token ordering."""
+        return canonical_semantic_key(
             self.domain_id,
-            *sorted(self.capability_ids),
-            *sorted(self.skill_ids),
-            self.name.casefold().strip(),
+            self.capability_ids,
+            self.skill_ids,
         )
-        return "|".join(parts)
 
     @property
     def semantic_digest(self) -> str:
