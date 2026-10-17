@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from tinlance_agent_os.catalog_candidates import CandidateState, TaxonomyCandidate
 from tinlance_agent_os.catalog_release import build_10k_release_manifest
 
@@ -140,3 +142,26 @@ def test_10k_release_requires_domain_diversity() -> None:
         assert "domains" in str(exc)
     else:
         raise AssertionError("low domain diversity must block release")
+
+
+
+def test_10k_release_rejects_duplicate_tokens_used_to_inflate_semantics() -> None:
+    inventory = list(canonical_inventory(10_000))
+    first = inventory[0]
+    same_domain = inventory[30]
+    inventory[0] = replace(
+        first,
+        capabilities=(first.capabilities[0], first.capabilities[0]),
+        skills=(first.skills[0], first.skills[0]),
+    )
+    inventory[30] = replace(
+        same_domain,
+        capabilities=first.capabilities,
+        skills=first.skills,
+    )
+    try:
+        build_10k_release_manifest(inventory)
+    except ValueError as exc:
+        assert "semantic uniqueness" in str(exc)
+    else:
+        raise AssertionError("duplicate tokens must not inflate the 10K canonical count")
