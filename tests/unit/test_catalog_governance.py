@@ -162,3 +162,31 @@ def test_evolution_release_rejects_untrimmed_identity() -> None:
         assert "release_id" in str(exc)
     else:
         raise AssertionError("untrimmed release identity must fail closed")
+
+
+def test_evolution_rejects_destructive_deletion_of_historical_ids() -> None:
+    try:
+        prepare_evolution_release(
+            base=(candidate(1), candidate(2)),
+            proposed=(candidate(1),),
+            release_id="catalog-v3-35.7",
+            governance_ref="review:ga",
+        )
+    except ValueError as exc:
+        assert "cannot delete historical IDs" in str(exc)
+    else:
+        raise AssertionError("historical entries must be explicitly deprecated, not deleted")
+
+
+def test_evolution_rejects_reactivation_of_deprecated_ids() -> None:
+    try:
+        prepare_evolution_release(
+            base=(candidate(1, CandidateState.DEPRECATED),),
+            proposed=(candidate(1, CandidateState.CANONICAL),),
+            release_id="catalog-v3-35.8",
+            governance_ref="review:ga",
+        )
+    except ValueError as exc:
+        assert "cannot be reactivated" in str(exc)
+    else:
+        raise AssertionError("deprecated canonical IDs must not be reactivated")
