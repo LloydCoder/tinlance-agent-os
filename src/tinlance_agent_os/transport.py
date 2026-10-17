@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import http.client
 import json
+import re
 import time
 import urllib.error
 import urllib.request
@@ -24,6 +25,7 @@ from .errors import (
 API_VERSION = "1.1"
 MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 RETRYABLE_STATUS_CODES = frozenset({429, 502, 503, 504})
+_TRACEPARENT = re.compile(r"^[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +36,8 @@ class PlatformRequestContext:
     subject_id: str
     request_id: str
     trace_id: str | None = None
+    span_id: str | None = None
+    traceparent: str | None = None
 
     def __post_init__(self) -> None:
         values = (
@@ -48,6 +52,33 @@ class PlatformRequestContext:
             not self.trace_id or self.trace_id != self.trace_id.strip()
         ):
             raise ValueError("trace_id must be normalized when provided")
+        if self.span_id is not None and (
+            not self.span_id or self.span_id != self.span_id.strip()
+        ):
+            raise ValueError("span_id must be normalized when provided")
+        if self.traceparent is not None:
+            if not self._valid_trace_context():
+                raise ValueError("traceparent must match the explicit trace_id and span_id")
+        elif self.span_id is not None:
+            raise ValueError("span_id requires a matching traceparent")
+    
+    def _valid_trace_context(self) -> bool:
+        value = self.traceparent
+        if (
+            value is None
+            or self.trace_id is None
+            or self.span_id is None
+            or not _TRACEPARENT.fullmatch(value)
+        ):
+            return False
+        trace_id = value[3:35]
+        span_id = value[36:52]
+        return (
+            trace_id != "0" * 32
+            and span_id != "0" * 16
+            and self.trace_id == trace_id
+            and self.span_id == span_id
+        )
 
 
 class AccessTokenProvider(Protocol):
@@ -139,8 +170,8 @@ class HttpPlatformTransport:
             "X-Request-ID": context.request_id,
             "Idempotency-Key": context.request_id,
         }
-        if context.trace_id:
-            headers["traceparent"] = context.trace_id
+        if context.traceparent:
+            headers["traceparent"] = context.traceparent
         attempts = 1 + (self.max_retries if idempotent else 0)
         last_error: PlatformTransportError | None = None
         for attempt in range(attempts):
