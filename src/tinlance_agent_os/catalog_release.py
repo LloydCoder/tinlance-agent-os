@@ -11,7 +11,7 @@ import json
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from .catalog_candidates import CandidateState, TaxonomyCandidate
+from .catalog_candidates import CandidateState, TaxonomyCandidate, canonical_semantic_key
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,12 +27,10 @@ class CatalogReleaseManifest:
 
 def _semantic_archetype_key(candidate: TaxonomyCandidate) -> str:
     """Identity for an archetype, independent of display name/description."""
-    return "|".join(
-        (
-            candidate.domain.strip().lower(),
-            ",".join(sorted(value.strip().lower() for value in candidate.capabilities)),
-            ",".join(sorted(value.strip().lower() for value in candidate.skills)),
-        )
+    return canonical_semantic_key(
+        candidate.domain,
+        candidate.capabilities,
+        candidate.skills,
     )
 
 
