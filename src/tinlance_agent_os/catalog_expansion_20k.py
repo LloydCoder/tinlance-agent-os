@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
@@ -11,6 +12,7 @@ from .catalog_candidates import CandidateState, TaxonomyCandidate, canonical_sem
 
 TARGET_COUNT = 20_000
 MIN_DOMAINS = 50
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,6 +26,25 @@ class ExpansionManifest:
     semantic_uniqueness: float
     inventory_digest: str
 
+    def __post_init__(self) -> None:
+        if not self.release or self.release != self.release.strip():
+            raise ValueError("release identifier must be non-empty and normalized")
+        if self.target_count != TARGET_COUNT:
+            raise ValueError("target_count must match the canonical 20K milestone")
+        if self.canonical_count < self.target_count:
+            raise ValueError("canonical_count must meet the 20K release target")
+        if self.domain_count < MIN_DOMAINS:
+            raise ValueError("domain_count must meet the minimum domain diversity")
+        for name, value in (
+            ("provenance_coverage", self.provenance_coverage),
+            ("review_coverage", self.review_coverage),
+            ("semantic_uniqueness", self.semantic_uniqueness),
+        ):
+            if value != 1.0:
+                raise ValueError(f"{name} must be 1.0 for a release-qualified inventory")
+        if not _SHA256_RE.fullmatch(self.inventory_digest):
+            raise ValueError("inventory_digest must be lowercase SHA-256 hex")
+
 
 def _semantic_key(candidate: TaxonomyCandidate) -> str:
     return canonical_semantic_key(
@@ -34,18 +55,25 @@ def _semantic_key(candidate: TaxonomyCandidate) -> str:
 
 
 def _inventory_digest(candidates: Iterable[TaxonomyCandidate]) -> str:
+    """Digest all release-relevant content, not only matching dimensions."""
     payload = [
-        "|".join(
-            (
-                candidate.canonical_id.strip(),
-                _semantic_key(candidate),
-                ",".join(sorted(ref.strip() for ref in candidate.source_refs)),
-                candidate.review_ref.strip(),
-            )
-        )
+        {
+            "canonical_id": candidate.canonical_id.strip(),
+            "name": normalize_semantic_token(candidate.name),
+            "description": normalize_semantic_token(candidate.description),
+            "semantic_key": _semantic_key(candidate),
+            "source_refs": sorted({ref.strip() for ref in candidate.source_refs}),
+            "review_ref": candidate.review_ref.strip(),
+            "state": candidate.state.value,
+        }
         for candidate in candidates
     ]
-    encoded = json.dumps(sorted(payload), separators=(",", ":")).encode("utf-8")
+    encoded = json.dumps(
+        sorted(payload, key=lambda item: item["canonical_id"]),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
 
@@ -58,8 +86,8 @@ def build_20k_expansion_manifest(
     inventory = tuple(candidates)
     if len(inventory) < TARGET_COUNT:
         raise ValueError(f"20K expansion requires at least {TARGET_COUNT} canonical entries")
-    if not release.strip():
-        raise ValueError("release identifier is required")
+    if not release or release != release.strip():
+        raise ValueError("release identifier must be non-empty and normalized")
     if any(candidate.state is not CandidateState.CANONICAL for candidate in inventory):
         raise ValueError("20K expansion requires every entry to be canonical")
     if any(not candidate.canonical_id.strip() for candidate in inventory):
