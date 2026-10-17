@@ -112,15 +112,8 @@ class TaxonomyCandidate:
 
     @property
     def semantic_key(self) -> str:
-        return "|".join(
-            (
-                normalize(self.domain),
-                normalize(self.name),
-                normalize(self.description),
-                ",".join(sorted(normalize(value) for value in self.capabilities)),
-                ",".join(sorted(normalize(value) for value in self.skills)),
-            )
-        )
+        """Canonical identity independent of display labels and duplicate tokens."""
+        return canonical_semantic_key(self.domain, self.capabilities, self.skills)
 
     @property
     def fingerprint(self) -> str:
@@ -203,10 +196,14 @@ def deduplicate(candidates: tuple[TaxonomyCandidate, ...]) -> tuple[TaxonomyCand
         current = representatives.get(key)
         if current is None or (
             len(normalized.source_refs),
-            normalized.fingerprint,
+            normalized.source_refs,
+            normalized.name,
+            normalized.description,
         ) > (
             len(current.source_refs),
-            current.fingerprint,
+            current.source_refs,
+            current.name,
+            current.description,
         ):
             representatives[key] = normalized
     return tuple(sorted(representatives.values(), key=lambda item: item.fingerprint))
