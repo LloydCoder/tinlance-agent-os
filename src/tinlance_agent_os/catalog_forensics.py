@@ -8,7 +8,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from .catalog_candidates import CandidateState, TaxonomyCandidate, canonical_semantic_key
+from .catalog_candidates import CandidateState, TaxonomyCandidate, canonical_semantic_key, normalize_semantic_token
 
 _CANONICAL_ID_RE = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$")
 
@@ -92,7 +92,7 @@ def audit_canonical_inventory(
     if review_coverage != 1.0:
         failures.append("review evidence coverage is below 100 percent")
 
-    domains = {candidate.domain.strip().lower() for candidate in inventory}
+    domains = {normalize_semantic_token(candidate.domain) for candidate in inventory}
     if len(domains) < minimum_domains:
         failures.append(f"domain diversity below required minimum {minimum_domains}")
 
