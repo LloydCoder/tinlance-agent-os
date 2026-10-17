@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 import pytest
 
 from tinlance_agent_os.catalog_taxonomy import (
@@ -79,3 +81,34 @@ def test_compatibility_relations_are_constrained() -> None:
 def test_alias_requires_reason() -> None:
     with pytest.raises(ValueError, match="required"):
         TaxonomyAlias("", "canonical", "rename")
+
+
+def test_semantic_digest_ignores_display_name_and_description() -> None:
+    original = archetype()
+    renamed = replace(
+        original,
+        name="A different display name",
+        description="Display copy can change without changing semantic identity.",
+    )
+    assert original.semantic_key == renamed.semantic_key
+    assert original.semantic_digest == renamed.semantic_digest
+
+
+def test_canonical_archetype_rejects_duplicate_normalized_capabilities_and_skills() -> None:
+    original = archetype()
+    with pytest.raises(ValueError, match="duplicate capability"):
+        replace(
+            original,
+            capability_ids=(
+                original.capability_ids[0],
+                f"  {original.capability_ids[0].upper()}  ",
+            ),
+        )
+    with pytest.raises(ValueError, match="duplicate skill"):
+        replace(
+            original,
+            skill_ids=(
+                original.skill_ids[0],
+                f"  {original.skill_ids[0].upper()}  ",
+            ),
+        )

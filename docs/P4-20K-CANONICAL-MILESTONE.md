@@ -1,5 +1,11 @@
 # P4 — 20K Canonical Catalog Milestone
 
+This document defines release acceptance criteria, not a claim that a qualifying
+20,000-entry inventory currently exists. Synthetic test fixtures exercise the
+gate only. A release claim requires the actual immutable inventory artifact,
+its deterministic digest, per-entry provenance and review references, and the
+forensic audit report for that exact artifact.
+
 The Agent Catalog v3 20K boundary is a **GA release milestone**, not a permanent maximum.
 
 ## Release proof
@@ -12,6 +18,25 @@ A 20K release requires:
 - review evidence for every entry;
 - at least 50 distinct domains;
 - deterministic inventory digest.
+
+## Semantic identity normalization
+
+Semantic uniqueness is computed from the normalized domain plus the set of normalized capabilities and skills. Tokens use Unicode NFKC normalization, whitespace collapsing, and case-folding; duplicate capability/skill tokens are collapsed before comparison. The key is encoded as deterministic structured JSON, not delimiter concatenation, so delimiter-bearing labels cannot collide.
+
+The release gate and forensic auditor must use the same semantic-key function. Regression tests cover duplicate-token inflation, case/whitespace normalization, and delimiter-collision attempts. Display names and descriptions are never semantic identity.
+
+## Evidence boundary
+
+Generated fixtures exercise the release gate at scale; they are not represented as a real-world reviewed 20,000-entry catalog. A release claim requires an explicit persisted canonical inventory and independently verifiable provenance/review evidence for each entry.
+
+## Semantic identity
+
+Semantic uniqueness is computed from normalized domain, capability and skill
+tokens using Unicode NFKC, whitespace normalization and case folding. Repeated
+capability/skill tokens are collapsed, token order is not significant, and the
+key uses structured JSON encoding rather than delimiter concatenation. Display
+names and descriptions do not create a new archetype, but their exact stored
+values remain covered by the release inventory digest.
 
 ## Non-inflation rule
 

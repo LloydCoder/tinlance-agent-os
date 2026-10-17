@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from tinlance_agent_os.catalog_candidates import CandidateState, TaxonomyCandidate
 from tinlance_agent_os.catalog_release import build_10k_release_manifest
 
@@ -140,3 +142,76 @@ def test_10k_release_requires_domain_diversity() -> None:
         assert "domains" in str(exc)
     else:
         raise AssertionError("low domain diversity must block release")
+
+
+def test_10k_release_rejects_duplicate_tokens_used_to_inflate_semantics() -> None:
+    inventory = list(canonical_inventory(10_000))
+    first = inventory[0]
+    same_domain = inventory[30]
+    inventory[0] = replace(
+        first,
+        capabilities=(first.capabilities[0], first.capabilities[0]),
+        skills=(first.skills[0], first.skills[0]),
+    )
+    inventory[30] = replace(
+        same_domain,
+        capabilities=first.capabilities,
+        skills=first.skills,
+    )
+    try:
+        build_10k_release_manifest(inventory)
+    except ValueError as exc:
+        assert "semantic uniqueness" in str(exc)
+    else:
+        raise AssertionError("duplicate tokens must not inflate the 10K canonical count")
+
+
+def test_10k_release_digest_covers_review_evidence_and_display_metadata() -> None:
+    inventory = list(canonical_inventory(10_000))
+    original = build_10k_release_manifest(inventory)
+    inventory[0] = replace(
+        inventory[0],
+        review_ref="review:catalog:updated",
+        description="Reviewed description update",
+    )
+    changed = build_10k_release_manifest(inventory)
+    assert original.inventory_digest != changed.inventory_digest
+
+
+def test_10k_manifest_rejects_unqualified_coverage_and_malformed_digest() -> None:
+    manifest = build_10k_release_manifest(canonical_inventory(10_000))
+    for kwargs, expected in (
+        ({"provenance_coverage": 0.99}, "provenance_coverage"),
+        ({"inventory_digest": "not-a-sha256-digest"}, "SHA-256"),
+    ):
+        try:
+            replace(manifest, **kwargs)
+        except ValueError as exc:
+            assert expected in str(exc)
+        else:
+            raise AssertionError("unqualified release manifest must fail closed")
+
+
+def test_10k_manifest_rejects_noninteger_counts_and_boolean_coverage() -> None:
+    manifest = build_10k_release_manifest(canonical_inventory(10_000))
+    for kwargs, expected in (
+        ({"domain_count": 30.5}, "domain_count"),
+        ({"semantic_uniqueness": True}, "semantic_uniqueness"),
+    ):
+        try:
+            replace(manifest, **kwargs)
+        except ValueError as exc:
+            assert expected in str(exc)
+        else:
+            raise AssertionError("malformed manifest values must fail closed")
+
+
+def test_10k_release_rejects_missing_review_evidence_even_if_record_is_corrupted() -> None:
+    inventory = list(canonical_inventory(10_000))
+    object.__setattr__(inventory[0], "review_ref", "")
+    try:
+        build_10k_release_manifest(inventory)
+    except ValueError as exc:
+        assert "review evidence" in str(exc)
+    else:
+        raise AssertionError("missing review evidence must block release")

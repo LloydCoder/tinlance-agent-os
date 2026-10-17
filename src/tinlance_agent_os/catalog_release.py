@@ -8,10 +8,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
 from .catalog_candidates import CandidateState, TaxonomyCandidate
+from .catalog_semantics import canonical_semantic_key, normalize_semantic_token
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,33 +27,68 @@ class CatalogReleaseManifest:
     semantic_uniqueness: float
     inventory_digest: str
 
+    def __post_init__(self) -> None:
+        if not self.release or self.release != self.release.strip():
+            raise ValueError("release identifier must be non-empty and normalized")
+        for count_name, count_value in (
+            ("target_count", self.target_count),
+            ("canonical_count", self.canonical_count),
+            ("domain_count", self.domain_count),
+        ):
+            if isinstance(count_value, bool) or not isinstance(count_value, int):
+                raise ValueError(f"{count_name} must be an integer")
+        if self.target_count != 10_000:
+            raise ValueError("target_count must match the canonical 10K milestone")
+        if self.canonical_count < self.target_count:
+            raise ValueError("canonical_count must meet the 10K release target")
+        if self.domain_count < 30:
+            raise ValueError("domain_count must meet the minimum domain diversity")
+        for coverage_name, coverage_value in (
+            ("provenance_coverage", self.provenance_coverage),
+            ("semantic_uniqueness", self.semantic_uniqueness),
+        ):
+            if (
+                isinstance(coverage_value, bool)
+                or not isinstance(coverage_value, (int, float))
+                or not math.isfinite(coverage_value)
+            ):
+                raise ValueError(f"{coverage_name} must be a finite numeric coverage value")
+            if coverage_value != 1.0:
+                raise ValueError(f"{coverage_name} must be 1.0 for a qualified release")
+        if not re.fullmatch(r"[0-9a-f]{64}", self.inventory_digest):
+            raise ValueError("inventory_digest must be lowercase SHA-256 hex")
+
 
 def _semantic_archetype_key(candidate: TaxonomyCandidate) -> str:
     """Identity for an archetype, independent of display name/description."""
-    return "|".join(
-        (
-            candidate.domain.strip().lower(),
-            ",".join(sorted(value.strip().lower() for value in candidate.capabilities)),
-            ",".join(sorted(value.strip().lower() for value in candidate.skills)),
-        )
-    )
-
-
-def _canonical_key(candidate: TaxonomyCandidate) -> str:
-    return "|".join(
-        (
-            candidate.canonical_id.strip(),
-            _semantic_archetype_key(candidate),
-            ",".join(sorted(ref.strip() for ref in candidate.source_refs)),
-        )
+    return canonical_semantic_key(
+        candidate.domain,
+        candidate.capabilities,
+        candidate.skills,
     )
 
 
 def _inventory_digest(candidates: Iterable[TaxonomyCandidate]) -> str:
-    payload = [_canonical_key(candidate) for candidate in candidates]
-    return hashlib.sha256(
-        json.dumps(sorted(payload), separators=(",", ":")).encode("utf-8")
-    ).hexdigest()
+    """Digest the complete release-relevant inventory, independent of input order."""
+    payload = [
+        {
+            "canonical_id": candidate.canonical_id.strip(),
+            "name": candidate.name,
+            "description": candidate.description,
+            "semantic_key": _semantic_archetype_key(candidate),
+            "source_refs": sorted({ref.strip() for ref in candidate.source_refs}),
+            "review_ref": candidate.review_ref.strip(),
+            "state": candidate.state.value,
+        }
+        for candidate in candidates
+    ]
+    encoded = json.dumps(
+        sorted(payload, key=lambda item: item["canonical_id"]),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def build_10k_release_manifest(
@@ -85,8 +123,10 @@ def build_10k_release_manifest(
     provenance_coverage = provenance_count / len(inventory)
     if provenance_coverage != 1.0:
         raise ValueError("10K release requires 100% provenance coverage")
+    if any(not candidate.review_ref.strip() for candidate in inventory):
+        raise ValueError("10K release requires review evidence for every entry")
 
-    domains = {candidate.domain.strip().lower() for candidate in inventory}
+    domains = {normalize_semantic_token(candidate.domain) for candidate in inventory}
     if len(domains) < min_domains:
         raise ValueError(f"10K release requires at least {min_domains} distinct domains")
 
