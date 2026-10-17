@@ -56,9 +56,7 @@ class ExpansionManifest:
             ):
                 raise ValueError(f"{coverage_name} must be a finite numeric coverage value")
             if coverage_value != 1.0:
-                raise ValueError(
-                    f"{coverage_name} must be 1.0 for a release-qualified inventory"
-                )
+                raise ValueError(f"{coverage_name} must be 1.0 for a release-qualified inventory")
         if not _SHA256_RE.fullmatch(self.inventory_digest):
             raise ValueError("inventory_digest must be lowercase SHA-256 hex")
 
