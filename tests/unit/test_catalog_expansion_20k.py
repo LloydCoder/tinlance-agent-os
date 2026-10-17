@@ -128,3 +128,11 @@ def test_20k_manifest_requires_normalized_release_identifier() -> None:
         assert "normalized" in str(exc)
     else:
         raise AssertionError("release identifiers must be normalized")
+
+
+def test_20k_digest_covers_exact_display_metadata_not_only_normalized_text() -> None:
+    records = list(inventory())
+    original = build_20k_expansion_manifest(records)
+    records[0] = replace(records[0], name=records[0].name.lower())
+    changed = build_20k_expansion_manifest(records)
+    assert original.inventory_digest != changed.inventory_digest
