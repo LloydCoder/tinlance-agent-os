@@ -87,7 +87,10 @@ def _semantic_relation(
     left: CanonicalAgentArchetype,
     right: CanonicalAgentArchetype,
 ) -> tuple[SemanticRelation, float, str, bool]:
-    if left.semantic_digest == right.semantic_digest:
+    if (
+        left.semantic_digest == right.semantic_digest
+        and normalize_name(left.name) == normalize_name(right.name)
+    ):
         return (
             SemanticRelation.EQUIVALENT,
             1.0,
