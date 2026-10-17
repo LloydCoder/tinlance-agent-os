@@ -30,31 +30,31 @@ class CatalogReleaseManifest:
     def __post_init__(self) -> None:
         if not self.release or self.release != self.release.strip():
             raise ValueError("release identifier must be non-empty and normalized")
-        for name, value in (
+        for count_name, count_value in (
             ("target_count", self.target_count),
             ("canonical_count", self.canonical_count),
             ("domain_count", self.domain_count),
         ):
-            if isinstance(value, bool) or not isinstance(value, int):
-                raise ValueError(f"{name} must be an integer")
+            if isinstance(count_value, bool) or not isinstance(count_value, int):
+                raise ValueError(f"{count_name} must be an integer")
         if self.target_count != 10_000:
             raise ValueError("target_count must match the canonical 10K milestone")
         if self.canonical_count < self.target_count:
             raise ValueError("canonical_count must meet the 10K release target")
         if self.domain_count < 30:
             raise ValueError("domain_count must meet the minimum domain diversity")
-        for name, value in (
+        for coverage_name, coverage_value in (
             ("provenance_coverage", self.provenance_coverage),
             ("semantic_uniqueness", self.semantic_uniqueness),
         ):
             if (
-                isinstance(value, bool)
-                or not isinstance(value, (int, float))
-                or not math.isfinite(value)
+                isinstance(coverage_value, bool)
+                or not isinstance(coverage_value, (int, float))
+                or not math.isfinite(coverage_value)
             ):
-                raise ValueError(f"{name} must be a finite numeric coverage value")
-            if value != 1.0:
-                raise ValueError(f"{name} must be 1.0 for a qualified release")
+                raise ValueError(f"{coverage_name} must be a finite numeric coverage value")
+            if coverage_value != 1.0:
+                raise ValueError(f"{coverage_name} must be 1.0 for a qualified release")
         if not re.fullmatch(r"[0-9a-f]{64}", self.inventory_digest):
             raise ValueError("inventory_digest must be lowercase SHA-256 hex")
 
