@@ -4,6 +4,7 @@ Identity is based on the normalized domain/capability/skill set, never display
 labels. Structured encoding avoids delimiter collisions; duplicate tokens do
 not create additional archetypes.
 """
+
 from __future__ import annotations
 
 import json
@@ -26,6 +27,4 @@ def canonical_semantic_key(
         "capabilities": sorted({normalize_semantic_token(value) for value in capabilities}),
         "skills": sorted({normalize_semantic_token(value) for value in skills}),
     }
-    return json.dumps(
-        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    )
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
