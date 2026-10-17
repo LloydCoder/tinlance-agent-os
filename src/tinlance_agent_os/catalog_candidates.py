@@ -11,7 +11,7 @@ import re
 from dataclasses import dataclass
 from enum import StrEnum
 
-from .catalog_semantics import canonical_semantic_key, normalize_semantic_token
+from .catalog_semantics import canonical_semantic_key
 
 _CANONICAL_ID_RE = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$")
 
