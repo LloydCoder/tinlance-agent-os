@@ -92,3 +92,40 @@ def test_20k_manifest_rejects_duplicate_tokens_used_to_inflate_semantic_identity
         assert "semantic uniqueness" in str(exc)
     else:
         raise AssertionError("repeated capability/skill tokens must not inflate canonical count")
+
+
+def test_inventory_digest_covers_name_and_description() -> None:
+    records = list(inventory())
+    original = build_20k_expansion_manifest(records)
+    records[0] = replace(
+        records[0],
+        name="Renamed canonical archetype",
+        description="A reviewed description change must alter the inventory digest.",
+    )
+    changed = build_20k_expansion_manifest(records)
+    assert original.inventory_digest != changed.inventory_digest
+
+
+def test_manifest_rejects_unqualified_coverage_and_malformed_digest() -> None:
+    manifest = build_20k_expansion_manifest(inventory())
+    try:
+        replace(manifest, provenance_coverage=0.99)
+    except ValueError as exc:
+        assert "provenance_coverage" in str(exc)
+    else:
+        raise AssertionError("manifest must reject incomplete provenance coverage")
+    try:
+        replace(manifest, inventory_digest="not-a-sha256-digest")
+    except ValueError as exc:
+        assert "SHA-256" in str(exc)
+    else:
+        raise AssertionError("manifest must reject malformed inventory digests")
+
+
+def test_20k_manifest_requires_normalized_release_identifier() -> None:
+    try:
+        build_20k_expansion_manifest(inventory(), release=" catalog-v3-20k")
+    except ValueError as exc:
+        assert "normalized" in str(exc)
+    else:
+        raise AssertionError("release identifiers must be normalized")
