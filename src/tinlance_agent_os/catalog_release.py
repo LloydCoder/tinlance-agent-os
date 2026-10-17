@@ -13,12 +13,8 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from .catalog_candidates import (
-    CandidateState,
-    TaxonomyCandidate,
-    canonical_semantic_key,
-    normalize_semantic_token,
-)
+from .catalog_candidates import CandidateState, TaxonomyCandidate
+from .catalog_semantics import canonical_semantic_key, normalize_semantic_token
 
 
 @dataclass(frozen=True, slots=True)
