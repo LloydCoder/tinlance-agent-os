@@ -132,34 +132,33 @@ def test_evolution_digest_binds_display_metadata_and_review_evidence() -> None:
     assert release.base_digest != release.inventory_digest
 
 
-def test_evolution_release_rejects_malformed_digest_and_untrimmed_identity() -> None:
-    for kwargs, expected in (
-        (
-            {
-                "release_id": "catalog-v3-35.6",
-                "base_digest": "bad",
-                "inventory_digest": "a" * 64,
-                "added_ids": (),
-                "deprecated_ids": (),
-                "governance_ref": "review:ga",
-            },
-            "base_digest",
-        ),
-        (
-            {
-                "release_id": " catalog-v3-35.6",
-                "base_digest": "a" * 64,
-                "inventory_digest": "b" * 64,
-                "added_ids": (),
-                "deprecated_ids": (),
-                "governance_ref": "review:ga",
-            },
-            "release_id",
-        ),
-    ):
-        try:
-            EvolutionRelease(**kwargs)
-        except ValueError as exc:
-            assert expected in str(exc)
-        else:
-            raise AssertionError("malformed evolution release must fail closed")
+def test_evolution_release_rejects_malformed_digest() -> None:
+    try:
+        EvolutionRelease(
+            release_id="catalog-v3-35.6",
+            base_digest="bad",
+            inventory_digest="a" * 64,
+            added_ids=(),
+            deprecated_ids=(),
+            governance_ref="review:ga",
+        )
+    except ValueError as exc:
+        assert "base_digest" in str(exc)
+    else:
+        raise AssertionError("malformed evolution digest must fail closed")
+
+
+def test_evolution_release_rejects_untrimmed_identity() -> None:
+    try:
+        EvolutionRelease(
+            release_id=" catalog-v3-35.6",
+            base_digest="a" * 64,
+            inventory_digest="b" * 64,
+            added_ids=(),
+            deprecated_ids=(),
+            governance_ref="review:ga",
+        )
+    except ValueError as exc:
+        assert "release_id" in str(exc)
+    else:
+        raise AssertionError("untrimmed release identity must fail closed")
