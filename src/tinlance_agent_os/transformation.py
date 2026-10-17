@@ -3,6 +3,7 @@
 OS composes lifecycle and context. Transformation data is never an authorization
 grant; Platform remains authoritative for policy and consequential execution.
 """
+
 from __future__ import annotations
 
 import hashlib
