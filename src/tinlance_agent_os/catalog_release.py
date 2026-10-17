@@ -127,6 +127,8 @@ def build_10k_release_manifest(
     provenance_coverage = provenance_count / len(inventory)
     if provenance_coverage != 1.0:
         raise ValueError("10K release requires 100% provenance coverage")
+    if any(not candidate.review_ref.strip() for candidate in inventory):
+        raise ValueError("10K release requires review evidence for every entry")
 
     domains = {normalize_semantic_token(candidate.domain) for candidate in inventory}
     if len(domains) < min_domains:
