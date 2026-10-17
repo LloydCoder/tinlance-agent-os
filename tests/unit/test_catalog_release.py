@@ -204,3 +204,14 @@ def test_10k_manifest_rejects_noninteger_counts_and_boolean_coverage() -> None:
             assert expected in str(exc)
         else:
             raise AssertionError("malformed manifest values must fail closed")
+
+
+def test_10k_release_rejects_missing_review_evidence_even_if_record_is_corrupted() -> None:
+    inventory = list(canonical_inventory(10_000))
+    object.__setattr__(inventory[0], "review_ref", "")
+    try:
+        build_10k_release_manifest(inventory)
+    except ValueError as exc:
+        assert "review evidence" in str(exc)
+    else:
+        raise AssertionError("missing review evidence must block release")
