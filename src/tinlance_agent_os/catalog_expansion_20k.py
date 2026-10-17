@@ -7,7 +7,7 @@ import json
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from .catalog_candidates import CandidateState, TaxonomyCandidate, canonical_semantic_key
+from .catalog_candidates import CandidateState, TaxonomyCandidate, canonical_semantic_key, normalize_semantic_token
 
 TARGET_COUNT = 20_000
 MIN_DOMAINS = 50
@@ -77,7 +77,7 @@ def build_20k_expansion_manifest(
     if len(set(semantic_keys)) != len(semantic_keys):
         raise ValueError("20K expansion requires semantic uniqueness")
 
-    domains = {candidate.domain.strip().lower() for candidate in inventory}
+    domains = {normalize_semantic_token(candidate.domain) for candidate in inventory}
     if len(domains) < MIN_DOMAINS:
         raise ValueError(f"20K expansion requires at least {MIN_DOMAINS} distinct domains")
 
