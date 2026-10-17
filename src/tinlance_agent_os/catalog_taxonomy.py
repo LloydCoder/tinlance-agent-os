@@ -7,10 +7,10 @@ separate layers. Candidate generation is never equivalent to publication.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from enum import StrEnum
 import hashlib
 import re
+from dataclasses import dataclass
+from enum import StrEnum
 
 from .catalog_semantics import canonical_semantic_key, normalize_semantic_token
 
