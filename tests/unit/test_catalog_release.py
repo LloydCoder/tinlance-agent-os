@@ -144,7 +144,6 @@ def test_10k_release_requires_domain_diversity() -> None:
         raise AssertionError("low domain diversity must block release")
 
 
-
 def test_10k_release_rejects_duplicate_tokens_used_to_inflate_semantics() -> None:
     inventory = list(canonical_inventory(10_000))
     first = inventory[0]
@@ -165,3 +164,29 @@ def test_10k_release_rejects_duplicate_tokens_used_to_inflate_semantics() -> Non
         assert "semantic uniqueness" in str(exc)
     else:
         raise AssertionError("duplicate tokens must not inflate the 10K canonical count")
+
+
+def test_10k_release_digest_covers_review_evidence_and_display_metadata() -> None:
+    inventory = list(canonical_inventory(10_000))
+    original = build_10k_release_manifest(inventory)
+    inventory[0] = replace(
+        inventory[0],
+        review_ref="review:catalog:updated",
+        description="Reviewed description update",
+    )
+    changed = build_10k_release_manifest(inventory)
+    assert original.inventory_digest != changed.inventory_digest
+
+
+def test_10k_manifest_rejects_unqualified_coverage_and_malformed_digest() -> None:
+    manifest = build_10k_release_manifest(canonical_inventory(10_000))
+    for kwargs, expected in (
+        ({"provenance_coverage": 0.99}, "provenance_coverage"),
+        ({"inventory_digest": "not-a-sha256-digest"}, "SHA-256"),
+    ):
+        try:
+            replace(manifest, **kwargs)
+        except ValueError as exc:
+            assert expected in str(exc)
+        else:
+            raise AssertionError("unqualified release manifest must fail closed")
