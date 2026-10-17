@@ -29,6 +29,15 @@ The release gate and forensic auditor must use the same semantic-key function. R
 
 Generated fixtures exercise the release gate at scale; they are not represented as a real-world reviewed 20,000-entry catalog. A release claim requires an explicit persisted canonical inventory and independently verifiable provenance/review evidence for each entry.
 
+## Semantic identity
+
+Semantic uniqueness is computed from normalized domain, capability and skill
+tokens using Unicode NFKC, whitespace normalization and case folding. Repeated
+capability/skill tokens are collapsed, token order is not significant, and the
+key uses structured JSON encoding rather than delimiter concatenation. Display
+names and descriptions do not create a new archetype, but their exact stored
+values remain covered by the release inventory digest.
+
 ## Non-inflation rule
 
 Canonical count must not be multiplied by provider, model, geography, tool, protocol, locale, deployment mode, pricing tier, latency tier, customer, or language variants. Those are typed metadata/constraints, not independent semantic archetypes.
