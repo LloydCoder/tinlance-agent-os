@@ -53,7 +53,11 @@ class ExpansionManifest:
             ("review_coverage", self.review_coverage),
             ("semantic_uniqueness", self.semantic_uniqueness),
         ):
-            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not math.isfinite(value)
+            ):
                 raise ValueError(f"{name} must be a finite numeric coverage value")
             if value != 1.0:
                 raise ValueError(f"{name} must be 1.0 for a release-qualified inventory")
