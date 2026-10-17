@@ -97,7 +97,9 @@ class TransformationConstraints:
             _date_time(self.deadline, "deadline")
         if self.budget_ref is not None:
             _required(self.budget_ref, "budget_ref")
-        if self.data_classification not in (None, "public", "internal", "confidential", "restricted"):
+        if self.data_classification not in (
+            None, "public", "internal", "confidential", "restricted"
+        ):
             raise ValueError("unsupported data classification")
         if any(not ref.strip() for ref in self.resource_refs):
             raise ValueError("resource references must be non-empty")
@@ -274,7 +276,10 @@ class Transformation:
             _required(self.run_ref, "run_ref")
 
     def as_payload(self) -> dict[str, Any]:
-        intent: dict[str, Any] = {"objective": self.objective, "success_criteria": list(self.success_criteria)}
+        intent: dict[str, Any] = {
+            "objective": self.objective,
+            "success_criteria": list(self.success_criteria),
+        }
         if self.business_metric is not None:
             intent["business_metric"] = self.business_metric
         actor: dict[str, Any] = {
