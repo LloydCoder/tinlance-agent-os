@@ -132,8 +132,7 @@ def prepare_evolution_release(
     }
     if reactivated_ids:
         raise ValueError(
-            "deprecated canonical IDs cannot be reactivated: "
-            + ", ".join(sorted(reactivated_ids))
+            "deprecated canonical IDs cannot be reactivated: " + ", ".join(sorted(reactivated_ids))
         )
 
     if any(
