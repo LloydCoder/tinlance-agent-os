@@ -7,7 +7,7 @@ import json
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from .catalog_candidates import CandidateState, TaxonomyCandidate
+from .catalog_candidates import CandidateState, TaxonomyCandidate, canonical_semantic_key
 
 TARGET_COUNT = 20_000
 MIN_DOMAINS = 50
@@ -26,12 +26,10 @@ class ExpansionManifest:
 
 
 def _semantic_key(candidate: TaxonomyCandidate) -> str:
-    return "|".join(
-        (
-            candidate.domain.strip().lower(),
-            ",".join(sorted(value.strip().lower() for value in candidate.capabilities)),
-            ",".join(sorted(value.strip().lower() for value in candidate.skills)),
-        )
+    return canonical_semantic_key(
+        candidate.domain,
+        candidate.capabilities,
+        candidate.skills,
     )
 
 
