@@ -2,7 +2,17 @@
 
 __version__ = "0.1.0"
 
-from .transformation import Transformation, TransformationContext, TransformationOutcome
+from .transformation import (
+    Transformation,
+    TransformationCapability,
+    TransformationConstraints,
+    TransformationContext,
+    TransformationGovernance,
+    TransformationMetric,
+    TransformationOutcome,
+    TransformationProvenance,
+    TransformationReference,
+)
 
 from .agent_directory import (
     AgentDirectory,
@@ -234,8 +244,14 @@ __all__ = [
     "GAReadiness",
     "GARelease",
     "Transformation",
+    "TransformationCapability",
+    "TransformationConstraints",
     "TransformationContext",
+    "TransformationGovernance",
+    "TransformationMetric",
     "TransformationOutcome",
+    "TransformationProvenance",
+    "TransformationReference",
 ]
 
 from .sdk import (
