@@ -15,6 +15,7 @@ from enum import StrEnum
 
 _CANONICAL_ID_RE = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$")
 
+
 def normalize_semantic_token(value: str) -> str:
     """Normalize a taxonomy token independently of display formatting."""
     return " ".join(unicodedata.normalize("NFKC", value).split()).casefold()
@@ -37,7 +38,6 @@ def canonical_semantic_key(
         "skills": sorted({normalize_semantic_token(value) for value in skills}),
     }
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-
 
 
 class CandidateState(StrEnum):
