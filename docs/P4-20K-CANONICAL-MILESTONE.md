@@ -1,5 +1,11 @@
 # P4 — 20K Canonical Catalog Milestone
 
+This document defines release acceptance criteria, not a claim that a qualifying
+20,000-entry inventory currently exists. Synthetic test fixtures exercise the
+gate only. A release claim requires the actual immutable inventory artifact,
+its deterministic digest, per-entry provenance and review references, and the
+forensic audit report for that exact artifact.
+
 The Agent Catalog v3 20K boundary is a **GA release milestone**, not a permanent maximum.
 
 ## Release proof
