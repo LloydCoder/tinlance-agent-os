@@ -136,3 +136,17 @@ def test_20k_digest_covers_exact_display_metadata_not_only_normalized_text() -> 
     records[0] = replace(records[0], name=records[0].name.lower())
     changed = build_20k_expansion_manifest(records)
     assert original.inventory_digest != changed.inventory_digest
+
+
+def test_20k_manifest_rejects_noninteger_counts_and_boolean_coverage() -> None:
+    manifest = build_20k_expansion_manifest(inventory())
+    for kwargs, expected in (
+        ({"canonical_count": 20_000.5}, "canonical_count"),
+        ({"review_coverage": True}, "review_coverage"),
+    ):
+        try:
+            replace(manifest, **kwargs)
+        except ValueError as exc:
+            assert expected in str(exc)
+        else:
+            raise AssertionError("malformed manifest values must fail closed")
