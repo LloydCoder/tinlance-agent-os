@@ -106,3 +106,36 @@ def test_achieved_outcome_requires_consistent_status_and_flag() -> None:
 def test_provenance_requires_timezone_aware_recorded_at() -> None:
     with pytest.raises(ValueError):
         TransformationProvenance("tadl:p1", "2026-10-07T06:02:01")
+
+
+def test_new_execution_version_records_new_provenance_without_mutating_prior_version() -> None:
+    original = make_transformation()
+    next_provenance = TransformationProvenance(
+        "agent-os",
+        "2026-10-17T07:00:00Z",
+        ("source:execution-event",),
+    )
+    next_version = original.with_execution(
+        "running",
+        run_ref="run:001",
+        started_at="2026-10-17T07:00:00Z",
+        provenance=next_provenance,
+    )
+    assert original.version == 1
+    assert original.provenance.recorded_at == "2026-10-07T06:02:01Z"
+    assert original.provenance.declared_by == "tadl:p1"
+    assert next_version.version == 2
+    assert next_version.provenance == next_provenance
+    assert next_version.provenance.source_refs == ("source:execution-event",)
+
+
+def test_new_execution_version_refreshes_recorded_at_when_provenance_is_not_supplied() -> None:
+    original = make_transformation()
+    next_version = original.with_execution(
+        "running",
+        run_ref="run:001",
+        started_at="2026-10-17T07:00:00Z",
+    )
+    assert next_version.provenance.recorded_at != original.provenance.recorded_at
+    assert next_version.provenance.declared_by == original.provenance.declared_by
+    assert next_version.provenance.source_refs == original.provenance.source_refs

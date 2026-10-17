@@ -9,7 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Literal
 from uuid import UUID
 
@@ -342,6 +342,7 @@ class Transformation:
         started_at: str | None = None,
         completed_at: str | None = None,
         idempotency_key: str | None = None,
+        provenance: TransformationProvenance | None = None,
     ) -> Transformation:
         next_version = self.version + 1
         return Transformation(
@@ -359,7 +360,12 @@ class Transformation:
             idempotency_key=(
                 idempotency_key or f"transformation-{self.transformation_id}-v{next_version}"
             ),
-            provenance=self.provenance,
+            provenance=provenance
+            or TransformationProvenance(
+                declared_by=self.provenance.declared_by,
+                recorded_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+                source_refs=self.provenance.source_refs,
+            ),
             constraints=self.constraints,
             execution_state=state,
             run_ref=run_ref if run_ref is not None else self.run_ref,
