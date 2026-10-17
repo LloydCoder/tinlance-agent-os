@@ -77,7 +77,6 @@ def test_forensic_thresholds_fail_closed() -> None:
         raise AssertionError("invalid forensic threshold must fail")
 
 
-
 def test_forensic_audit_detects_semantic_inflation_from_duplicate_tokens() -> None:
     records = list(inventory())
     first = records[0]
@@ -96,3 +95,15 @@ def test_forensic_audit_detects_semantic_inflation_from_duplicate_tokens() -> No
     assert not report.passed
     assert "semantic archetype duplicates" in " ".join(report.failures)
     assert report.semantic_uniqueness == 0.0
+
+
+def test_forensic_digest_changes_when_canonical_metadata_changes() -> None:
+    records = list(inventory())
+    original = audit_canonical_inventory(records)
+    records[0] = replace(
+        records[0],
+        name="Renamed canonical archetype",
+        description="A reviewed description change must alter the audit digest.",
+    )
+    changed = audit_canonical_inventory(records)
+    assert original.audit_digest != changed.audit_digest
