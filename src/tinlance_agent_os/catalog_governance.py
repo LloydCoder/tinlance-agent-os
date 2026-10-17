@@ -114,6 +114,27 @@ def prepare_evolution_release(
 
     base_state_by_id = {candidate.canonical_id.strip(): candidate.state for candidate in base}
     base_ids = set(base_state_by_id)
+    proposed_state_by_id = {
+        candidate.canonical_id.strip(): candidate.state for candidate in proposed
+    }
+    proposed_ids = set(proposed_state_by_id)
+    missing_ids = base_ids - proposed_ids
+    if missing_ids:
+        raise ValueError(
+            "evolution release cannot delete historical IDs; deprecate them explicitly: "
+            + ", ".join(sorted(missing_ids))
+        )
+    reactivated_ids = {
+        canonical_id
+        for canonical_id, base_state in base_state_by_id.items()
+        if base_state is CandidateState.DEPRECATED
+        and proposed_state_by_id[canonical_id] is not CandidateState.DEPRECATED
+    }
+    if reactivated_ids:
+        raise ValueError(
+            "deprecated canonical IDs cannot be reactivated: "
+            + ", ".join(sorted(reactivated_ids))
+        )
 
     if any(
         candidate.state is CandidateState.DEPRECATED
