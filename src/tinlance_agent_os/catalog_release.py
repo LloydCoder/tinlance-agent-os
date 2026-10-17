@@ -11,7 +11,7 @@ import json
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from .catalog_candidates import CandidateState, TaxonomyCandidate, canonical_semantic_key
+from .catalog_candidates import CandidateState, TaxonomyCandidate, canonical_semantic_key, normalize_semantic_token
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,7 +84,7 @@ def build_10k_release_manifest(
     if provenance_coverage != 1.0:
         raise ValueError("10K release requires 100% provenance coverage")
 
-    domains = {candidate.domain.strip().lower() for candidate in inventory}
+    domains = {normalize_semantic_token(candidate.domain) for candidate in inventory}
     if len(domains) < min_domains:
         raise ValueError(f"10K release requires at least {min_domains} distinct domains")
 
