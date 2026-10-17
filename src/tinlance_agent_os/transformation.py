@@ -284,7 +284,10 @@ class Transformation:
         }
         if self.delegated_by is not None:
             actor["delegated_by"] = self.delegated_by
-        execution: dict[str, Any] = {"state": self.execution_state, "idempotency_key": self.idempotency_key}
+        execution: dict[str, Any] = {
+            "state": self.execution_state,
+            "idempotency_key": self.idempotency_key,
+        }
         if self.run_ref is not None:
             execution["run_ref"] = self.run_ref
         if self.started_at is not None:
@@ -313,7 +316,9 @@ class Transformation:
         payload = self.as_payload()
         payload["provenance"] = dict(payload["provenance"])
         payload["provenance"].pop("content_digest", None)
-        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+        encoded = json.dumps(
+            payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        ).encode()
         return hashlib.sha256(encoded).hexdigest()
 
     def with_execution(
@@ -341,7 +346,9 @@ class Transformation:
             context=self.context,
             requested_capabilities=self.requested_capabilities,
             governance=self.governance,
-            idempotency_key=idempotency_key or f"transformation-{self.transformation_id}-v{next_version}",
+            idempotency_key=(
+                idempotency_key or f"transformation-{self.transformation_id}-v{next_version}"
+            ),
             provenance=self.provenance,
             constraints=self.constraints,
             execution_state=state,
