@@ -8,12 +8,8 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from .catalog_candidates import (
-    CandidateState,
-    TaxonomyCandidate,
-    canonical_semantic_key,
-    normalize_semantic_token,
-)
+from .catalog_candidates import CandidateState, TaxonomyCandidate
+from .catalog_semantics import canonical_semantic_key, normalize_semantic_token
 
 _CANONICAL_ID_RE = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$")
 
