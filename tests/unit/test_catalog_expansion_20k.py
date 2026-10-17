@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from tinlance_agent_os.catalog_candidates import CandidateState, TaxonomyCandidate
 from tinlance_agent_os.catalog_expansion_20k import build_20k_expansion_manifest
 
@@ -67,3 +69,47 @@ def test_20k_manifest_rejects_low_domain_diversity() -> None:
         assert "domains" in str(exc)
     else:
         raise AssertionError("low domain diversity must fail closed")
+
+
+def test_semantic_uniqueness_cannot_be_bypassed_with_duplicate_labels() -> None:
+    records = list(inventory())
+    records[0] = replace(
+        records[0],
+        domain=records[1].domain,
+        capabilities=(records[1].capabilities[0], records[1].capabilities[0]),
+        skills=(records[1].skills[0], records[1].skills[0]),
+    )
+    try:
+        build_20k_expansion_manifest(records)
+    except ValueError as exc:
+        assert "semantic uniqueness" in str(exc)
+    else:
+        raise AssertionError("duplicate capability/skill labels must not bypass semantic uniqueness")
+
+
+def test_inventory_digest_covers_name_and_description() -> None:
+    records = list(inventory())
+    original = build_20k_expansion_manifest(records)
+    records[0] = replace(
+        records[0],
+        name="Renamed canonical archetype",
+        description="A reviewed description change must alter the inventory digest.",
+    )
+    changed = build_20k_expansion_manifest(records)
+    assert original.inventory_digest != changed.inventory_digest
+
+
+def test_manifest_rejects_unqualified_coverage_and_unormalized_release() -> None:
+    manifest = build_20k_expansion_manifest(inventory())
+    try:
+        replace(manifest, provenance_coverage=0.99)
+    except ValueError as exc:
+        assert "provenance_coverage" in str(exc)
+    else:
+        raise AssertionError("manifest must reject incomplete provenance coverage")
+    try:
+        build_20k_expansion_manifest(inventory(), release=" catalog-v3-20k")
+    except ValueError as exc:
+        assert "normalized" in str(exc)
+    else:
+        raise AssertionError("release identifiers must be normalized")
