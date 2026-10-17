@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -34,6 +35,13 @@ class ExpansionManifest:
     def __post_init__(self) -> None:
         if not self.release or self.release != self.release.strip():
             raise ValueError("release identifier must be non-empty and normalized")
+        for name, value in (
+            ("target_count", self.target_count),
+            ("canonical_count", self.canonical_count),
+            ("domain_count", self.domain_count),
+        ):
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise ValueError(f"{name} must be an integer")
         if self.target_count != TARGET_COUNT:
             raise ValueError("target_count must match the canonical 20K milestone")
         if self.canonical_count < self.target_count:
@@ -45,6 +53,8 @@ class ExpansionManifest:
             ("review_coverage", self.review_coverage),
             ("semantic_uniqueness", self.semantic_uniqueness),
         ):
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError(f"{name} must be a finite numeric coverage value")
             if value != 1.0:
                 raise ValueError(f"{name} must be 1.0 for a release-qualified inventory")
         if not _SHA256_RE.fullmatch(self.inventory_digest):
