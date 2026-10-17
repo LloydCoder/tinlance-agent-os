@@ -107,3 +107,16 @@ def test_forensic_digest_changes_when_canonical_metadata_changes() -> None:
     )
     changed = audit_canonical_inventory(records)
     assert original.audit_digest != changed.audit_digest
+
+
+def test_forensic_digest_is_order_independent_for_invalid_duplicate_ids() -> None:
+    records = list(inventory(2, domains=1))
+    records[1] = replace(
+        records[1],
+        canonical_id=records[0].canonical_id,
+        name="Conflicting duplicate identity",
+    )
+    first = audit_canonical_inventory(records, minimum_count=1, minimum_domains=1)
+    second = audit_canonical_inventory(reversed(records), minimum_count=1, minimum_domains=1)
+    assert not first.passed
+    assert first.audit_digest == second.audit_digest
