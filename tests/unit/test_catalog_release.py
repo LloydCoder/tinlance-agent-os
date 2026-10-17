@@ -190,3 +190,17 @@ def test_10k_manifest_rejects_unqualified_coverage_and_malformed_digest() -> Non
             assert expected in str(exc)
         else:
             raise AssertionError("unqualified release manifest must fail closed")
+
+
+def test_10k_manifest_rejects_noninteger_counts_and_boolean_coverage() -> None:
+    manifest = build_10k_release_manifest(canonical_inventory(10_000))
+    for kwargs, expected in (
+        ({"domain_count": 30.5}, "domain_count"),
+        ({"semantic_uniqueness": True}, "semantic_uniqueness"),
+    ):
+        try:
+            replace(manifest, **kwargs)
+        except ValueError as exc:
+            assert expected in str(exc)
+        else:
+            raise AssertionError("malformed manifest values must fail closed")
