@@ -117,7 +117,6 @@ def prepare_evolution_release(
 
     base_state_by_id = {candidate.canonical_id.strip(): candidate.state for candidate in base}
     base_ids = set(base_state_by_id)
-    proposed_ids = {candidate.canonical_id.strip() for candidate in proposed}
 
     if any(
         candidate.state is CandidateState.DEPRECATED
