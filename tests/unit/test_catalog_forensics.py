@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from tinlance_agent_os.catalog_candidates import CandidateState, TaxonomyCandidate
 from tinlance_agent_os.catalog_forensics import audit_canonical_inventory
 
@@ -73,3 +75,24 @@ def test_forensic_thresholds_fail_closed() -> None:
         assert "positive" in str(exc)
     else:
         raise AssertionError("invalid forensic threshold must fail")
+
+
+
+def test_forensic_audit_detects_semantic_inflation_from_duplicate_tokens() -> None:
+    records = list(inventory())
+    first = records[0]
+    same_domain = records[50]
+    records[0] = replace(
+        first,
+        capabilities=(first.capabilities[0], first.capabilities[0]),
+        skills=(first.skills[0], first.skills[0]),
+    )
+    records[50] = replace(
+        same_domain,
+        capabilities=first.capabilities,
+        skills=first.skills,
+    )
+    report = audit_canonical_inventory(records)
+    assert not report.passed
+    assert "semantic archetype duplicates" in " ".join(report.failures)
+    assert report.semantic_uniqueness == 0.0
