@@ -64,8 +64,8 @@ def _inventory_digest(candidates: Iterable[TaxonomyCandidate]) -> str:
     payload = [
         {
             "canonical_id": candidate.canonical_id.strip(),
-            "name": normalize_semantic_token(candidate.name),
-            "description": normalize_semantic_token(candidate.description),
+            "name": candidate.name,
+            "description": candidate.description,
             "semantic_key": _semantic_key(candidate),
             "source_refs": sorted({ref.strip() for ref in candidate.source_refs}),
             "review_ref": candidate.review_ref.strip(),
