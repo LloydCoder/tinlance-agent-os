@@ -7,11 +7,37 @@ explicitly review-gated and never grants execution authority.
 from __future__ import annotations
 
 import hashlib
+import json
 import re
+import unicodedata
 from dataclasses import dataclass
 from enum import StrEnum
 
 _CANONICAL_ID_RE = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$")
+
+def normalize_semantic_token(value: str) -> str:
+    """Normalize a taxonomy token independently of display formatting."""
+    return " ".join(unicodedata.normalize("NFKC", value).split()).casefold()
+
+
+def canonical_semantic_key(
+    domain: str,
+    capabilities: tuple[str, ...],
+    skills: tuple[str, ...],
+) -> str:
+    """Return a collision-safe semantic identity with duplicate tokens collapsed.
+
+    Display names/descriptions and repeated capability/skill labels must never
+    create a distinct canonical archetype. JSON encoding avoids delimiter
+    collisions between otherwise valid token strings.
+    """
+    payload = {
+        "domain": normalize_semantic_token(domain),
+        "capabilities": sorted({normalize_semantic_token(value) for value in capabilities}),
+        "skills": sorted({normalize_semantic_token(value) for value in skills}),
+    }
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
 
 
 class CandidateState(StrEnum):
