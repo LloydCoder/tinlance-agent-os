@@ -1,5 +1,7 @@
+from dataclasses import replace
+
 from tinlance_agent_os.catalog_candidates import CandidateState, TaxonomyCandidate
-from tinlance_agent_os.catalog_governance import prepare_evolution_release
+from tinlance_agent_os.catalog_governance import EvolutionRelease, prepare_evolution_release
 
 
 def candidate(
@@ -71,3 +73,93 @@ def test_evolution_rejects_unreviewed_records() -> None:
         assert "review evidence" in str(exc)
     else:
         raise AssertionError("unreviewed evolved record must fail")
+
+
+def test_evolution_rejects_duplicate_ids_and_active_semantic_duplicates() -> None:
+    first = candidate(1)
+    duplicate_id = candidate(2)
+    object.__setattr__(duplicate_id, "canonical_id", first.canonical_id)
+    try:
+        prepare_evolution_release(
+            base=(first,),
+            proposed=(first, duplicate_id),
+            release_id="catalog-v3-35.3",
+            governance_ref="review:ga",
+        )
+    except ValueError as exc:
+        assert "duplicate canonical IDs" in str(exc)
+    else:
+        raise AssertionError("duplicate canonical IDs must block evolution")
+
+    semantic_duplicate = TaxonomyCandidate(
+        name="Renamed Agent",
+        description="Different display text cannot create a distinct semantic archetype.",
+        domain=first.domain,
+        capabilities=first.capabilities,
+        skills=first.skills,
+        source_refs=("source:renamed",),
+        state=CandidateState.CANONICAL,
+        canonical_id="catalog.agent.renamed",
+        review_ref="review:renamed",
+    )
+    try:
+        prepare_evolution_release(
+            base=(first,),
+            proposed=(first, semantic_duplicate),
+            release_id="catalog-v3-35.4",
+            governance_ref="review:ga",
+        )
+    except ValueError as exc:
+        assert "semantic duplicates" in str(exc)
+    else:
+        raise AssertionError("active semantic duplicates must block evolution")
+
+
+def test_evolution_digest_binds_display_metadata_and_review_evidence() -> None:
+    first = candidate(1)
+    changed = replace(
+        first,
+        name="Renamed Agent",
+        description="Updated reviewed description.",
+        review_ref="review:updated",
+    )
+    release = prepare_evolution_release(
+        base=(first,),
+        proposed=(changed,),
+        release_id="catalog-v3-35.5",
+        governance_ref="review:ga",
+    )
+    assert release.base_digest != release.inventory_digest
+
+
+def test_evolution_release_rejects_malformed_digest_and_untrimmed_identity() -> None:
+    for kwargs, expected in (
+        (
+            {
+                "release_id": "catalog-v3-35.6",
+                "base_digest": "bad",
+                "inventory_digest": "a" * 64,
+                "added_ids": (),
+                "deprecated_ids": (),
+                "governance_ref": "review:ga",
+            },
+            "base_digest",
+        ),
+        (
+            {
+                "release_id": " catalog-v3-35.6",
+                "base_digest": "a" * 64,
+                "inventory_digest": "b" * 64,
+                "added_ids": (),
+                "deprecated_ids": (),
+                "governance_ref": "review:ga",
+            },
+            "release_id",
+        ),
+    ):
+        try:
+            EvolutionRelease(**kwargs)
+        except ValueError as exc:
+            assert expected in str(exc)
+        else:
+            raise AssertionError("malformed evolution release must fail closed")
