@@ -70,9 +70,21 @@ def test_transformation_round_trips_canonical_fields_and_versions_execution() ->
     assert item.execution_state == "planned"
     assert payload["schema_version"] == "transformation/v1"
     assert {
-        "schema_version", "transformation_id", "version", "tenant_ref", "intent", "actor",
-        "context", "requested_capabilities", "constraints", "governance", "execution",
-        "outputs", "evidence", "outcome", "provenance",
+        "schema_version",
+        "transformation_id",
+        "version",
+        "tenant_ref",
+        "intent",
+        "actor",
+        "context",
+        "requested_capabilities",
+        "constraints",
+        "governance",
+        "execution",
+        "outputs",
+        "evidence",
+        "outcome",
+        "provenance",
     }.issubset(payload)
     assert payload["intent"]["success_criteria"] == ["Produce a reconciled report"]
     assert payload["constraints"]["data_classification"] == "confidential"
