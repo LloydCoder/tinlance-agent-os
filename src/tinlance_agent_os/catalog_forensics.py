@@ -56,7 +56,13 @@ def _digest(candidates: Iterable[TaxonomyCandidate], failures: tuple[str, ...]) 
         for candidate in candidates
     ]
     payload = {
-        "entries": sorted(entries, key=lambda item: item["canonical_id"]),
+        "entries": sorted(
+            entries,
+            key=lambda item: (
+                item["canonical_id"],
+                json.dumps(item, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
+            ),
+        ),
         "failures": failures,
     }
     encoded = json.dumps(
