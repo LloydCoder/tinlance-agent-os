@@ -71,7 +71,6 @@ def test_20k_manifest_rejects_low_domain_diversity() -> None:
         raise AssertionError("low domain diversity must fail closed")
 
 
-
 def test_20k_manifest_rejects_duplicate_tokens_used_to_inflate_semantic_identity() -> None:
     records = list(inventory())
     first = records[0]
