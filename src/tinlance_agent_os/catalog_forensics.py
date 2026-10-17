@@ -8,7 +8,12 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from .catalog_candidates import CandidateState, TaxonomyCandidate, canonical_semantic_key, normalize_semantic_token
+from .catalog_candidates import (
+    CandidateState,
+    TaxonomyCandidate,
+    canonical_semantic_key,
+    normalize_semantic_token,
+)
 
 _CANONICAL_ID_RE = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$")
 
@@ -38,19 +43,28 @@ def _semantic_key(candidate: TaxonomyCandidate) -> str:
 
 
 def _digest(candidates: Iterable[TaxonomyCandidate], failures: tuple[str, ...]) -> str:
+    entries = [
+        {
+            "canonical_id": candidate.canonical_id.strip(),
+            "name": candidate.name,
+            "description": candidate.description,
+            "semantic_key": _semantic_key(candidate),
+            "source_refs": sorted({ref.strip() for ref in candidate.source_refs}),
+            "review_ref": candidate.review_ref.strip(),
+            "state": candidate.state.value,
+        }
+        for candidate in candidates
+    ]
     payload = {
-        "entries": sorted(
-            (
-                candidate.canonical_id.strip(),
-                _semantic_key(candidate),
-                tuple(sorted(candidate.source_refs)),
-                candidate.review_ref.strip(),
-            )
-            for candidate in candidates
-        ),
+        "entries": sorted(entries, key=lambda item: item["canonical_id"]),
         "failures": failures,
     }
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    encoded = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
 
