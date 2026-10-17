@@ -13,6 +13,16 @@ A 20K release requires:
 - at least 50 distinct domains;
 - deterministic inventory digest.
 
+## Semantic identity normalization
+
+Semantic uniqueness is computed from the normalized domain plus the set of normalized capabilities and skills. Tokens use Unicode NFKC normalization, whitespace collapsing, and case-folding; duplicate capability/skill tokens are collapsed before comparison. The key is encoded as deterministic structured JSON, not delimiter concatenation, so delimiter-bearing labels cannot collide.
+
+The release gate and forensic auditor must use the same semantic-key function. Regression tests cover duplicate-token inflation, case/whitespace normalization, and delimiter-collision attempts. Display names and descriptions are never semantic identity.
+
+## Evidence boundary
+
+Generated fixtures exercise the release gate at scale; they are not represented as a real-world reviewed 20,000-entry catalog. A release claim requires an explicit persisted canonical inventory and independently verifiable provenance/review evidence for each entry.
+
 ## Non-inflation rule
 
 Canonical count must not be multiplied by provider, model, geography, tool, protocol, locale, deployment mode, pricing tier, latency tier, customer, or language variants. Those are typed metadata/constraints, not independent semantic archetypes.
