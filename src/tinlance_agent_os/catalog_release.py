@@ -8,10 +8,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from .catalog_candidates import CandidateState, TaxonomyCandidate, canonical_semantic_key, normalize_semantic_token
+from .catalog_candidates import (
+    CandidateState,
+    TaxonomyCandidate,
+    canonical_semantic_key,
+    normalize_semantic_token,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,6 +30,22 @@ class CatalogReleaseManifest:
     semantic_uniqueness: float
     inventory_digest: str
 
+    def __post_init__(self) -> None:
+        if not self.release or self.release != self.release.strip():
+            raise ValueError("release identifier must be non-empty and normalized")
+        if self.target_count != 10_000:
+            raise ValueError("target_count must match the canonical 10K milestone")
+        if self.canonical_count < self.target_count:
+            raise ValueError("canonical_count must meet the 10K release target")
+        if self.domain_count < 30:
+            raise ValueError("domain_count must meet the minimum domain diversity")
+        if self.provenance_coverage != 1.0:
+            raise ValueError("provenance_coverage must be 1.0 for a qualified release")
+        if self.semantic_uniqueness != 1.0:
+            raise ValueError("semantic_uniqueness must be 1.0 for a qualified release")
+        if not re.fullmatch(r"[0-9a-f]{64}", self.inventory_digest):
+            raise ValueError("inventory_digest must be lowercase SHA-256 hex")
+
 
 def _semantic_archetype_key(candidate: TaxonomyCandidate) -> str:
     """Identity for an archetype, independent of display name/description."""
@@ -34,21 +56,27 @@ def _semantic_archetype_key(candidate: TaxonomyCandidate) -> str:
     )
 
 
-def _canonical_key(candidate: TaxonomyCandidate) -> str:
-    return "|".join(
-        (
-            candidate.canonical_id.strip(),
-            _semantic_archetype_key(candidate),
-            ",".join(sorted(ref.strip() for ref in candidate.source_refs)),
-        )
-    )
-
-
 def _inventory_digest(candidates: Iterable[TaxonomyCandidate]) -> str:
-    payload = [_canonical_key(candidate) for candidate in candidates]
-    return hashlib.sha256(
-        json.dumps(sorted(payload), separators=(",", ":")).encode("utf-8")
-    ).hexdigest()
+    """Digest the complete release-relevant inventory, independent of input order."""
+    payload = [
+        {
+            "canonical_id": candidate.canonical_id.strip(),
+            "name": candidate.name,
+            "description": candidate.description,
+            "semantic_key": _semantic_archetype_key(candidate),
+            "source_refs": sorted({ref.strip() for ref in candidate.source_refs}),
+            "review_ref": candidate.review_ref.strip(),
+            "state": candidate.state.value,
+        }
+        for candidate in candidates
+    ]
+    encoded = json.dumps(
+        sorted(payload, key=lambda item: item["canonical_id"]),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def build_10k_release_manifest(
