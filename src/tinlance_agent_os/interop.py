@@ -112,7 +112,11 @@ def from_a2a_card(card: dict[str, object]) -> ProtocolProfile:
         raise ValueError("A2A Agent Card must be an object")
     interfaces = card.get("supportedInterfaces")
     if interfaces is not None:
-        if not isinstance(interfaces, list) or not interfaces or not isinstance(interfaces[0], dict):
+        if (
+            not isinstance(interfaces, list)
+            or not interfaces
+            or not isinstance(interfaces[0], dict)
+        ):
             raise ValueError("A2A supportedInterfaces must contain an interface object")
         endpoint = interfaces[0].get("url")
         version = interfaces[0].get("protocolVersion", card.get("protocolVersion", "1.0"))
