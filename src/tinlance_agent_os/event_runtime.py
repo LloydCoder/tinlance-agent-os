@@ -11,6 +11,7 @@ import hashlib
 import json
 import random
 import re
+import secrets
 import sqlite3
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
@@ -168,7 +169,7 @@ class EventSignalRuntime:
             raise EventRuntimeError("trace_id must be a valid non-zero W3C trace identifier")
         if execution_id is not None:
             _required(execution_id, "execution_id")
-        span_id = span_id or uuid4().hex
+        span_id = span_id or secrets.token_hex(8)
         if not _SPAN_ID.fullmatch(span_id) or set(span_id) == {"0"}:
             raise EventRuntimeError("span_id must be a valid non-zero W3C span identifier")
         if parent_span_id is not None and (
