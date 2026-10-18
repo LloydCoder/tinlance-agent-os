@@ -119,7 +119,9 @@ class TraceLineageContext:
             seen.add(key)
             if key == "outcome" and value not in _OUTCOMES:
                 raise ValueError("unsupported trace outcome")
-            if key == "attempt" and (not isinstance(value, int) or isinstance(value, bool) or value < 0 or value > 1000):
+            if key == "attempt" and (
+                not isinstance(value, int) or isinstance(value, bool) or value < 0 or value > 1000
+            ):
                 raise ValueError("trace attempt must be an integer between 0 and 1000")
             if isinstance(value, str):
                 _required(value, f"trace attribute {key}", 256)
@@ -151,7 +153,7 @@ class TraceLineageContext:
             value["safe_attributes"] = {key: val for key, val in self.safe_attributes}
         return value
 
-    def child(self, *, span_id: str, operation: str, started_at: str) -> "TraceLineageContext":
+    def child(self, *, span_id: str, operation: str, started_at: str) -> TraceLineageContext:
         return TraceLineageContext(
             trace_id=self.trace_id, span_id=span_id, parent_span_id=self.span_id,
             correlation_id=self.correlation_id, request_id=self.request_id,
