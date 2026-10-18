@@ -12,12 +12,11 @@ import random
 import re
 import sqlite3
 from contextlib import contextmanager
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
-from typing import Iterator
 from uuid import uuid4
 
 
@@ -153,8 +152,9 @@ class EventSignalRuntime:
         occurred_at = datetime.now(UTC).isoformat().replace("+00:00", "Z")
         with self._db() as db:
             existing = db.execute(
-                "SELECT event_id,event_type,payload_digest,correlation_id,trace_id,execution_id,occurred_at "
-                "FROM os_events_p3 WHERE tenant_id=? AND workspace_id=? AND dedupe_key=?",
+                "SELECT event_id,event_type,payload_digest,correlation_id,trace_id,"
+                "execution_id,occurred_at FROM os_events_p3 "
+                "WHERE tenant_id=? AND workspace_id=? AND dedupe_key=?",
                 (tenant_id, workspace_id, dedupe_key),
             ).fetchone()
             if existing is not None:
@@ -166,8 +166,9 @@ class EventSignalRuntime:
                 ):
                     raise EventRuntimeError("dedupe key reused for a conflicting event")
                 return EventEnvelope(
-                    str(existing[0]), tenant_id, workspace_id, event_type, json.loads(encoded),
-                    correlation_id, str(existing[6]), dedupe_key, str(existing[4]), execution_id
+                    str(existing[0]), tenant_id, workspace_id, event_type,
+                    json.loads(encoded), correlation_id, str(existing[6]), dedupe_key,
+                    str(existing[4]), execution_id
                 )
             db.execute(
                 "INSERT INTO os_events_p3 "
@@ -224,7 +225,9 @@ class EventSignalRuntime:
                 "SET max_attempts=excluded.max_attempts",
                 (subscription_id, tenant_id, workspace_id, event_type, consumer_id, max_attempts),
             )
-        return Subscription(subscription_id, tenant_id, workspace_id, event_type, consumer_id, max_attempts)
+        return Subscription(
+            subscription_id, tenant_id, workspace_id, event_type, consumer_id, max_attempts
+        )
 
     def pending(self, tenant_id: str, workspace_id: str, limit: int = 100) -> tuple[Delivery, ...]:
         _required(tenant_id, "tenant_id")
@@ -264,13 +267,14 @@ class EventSignalRuntime:
         with self._db() as db:
             db.execute("BEGIN IMMEDIATE")
             db.execute(
-                "UPDATE os_event_deliveries_p3 SET lease_token=NULL,lease_owner=NULL,lease_expires_at=NULL "
-                "WHERE state=? AND lease_expires_at IS NOT NULL AND lease_expires_at<=?",
+                "UPDATE os_event_deliveries_p3 SET lease_token=NULL,lease_owner=NULL,"
+                "lease_expires_at=NULL WHERE state=? "
+                "AND lease_expires_at IS NOT NULL AND lease_expires_at<=?",
                 (DeliveryState.PENDING.value, now_text),
             )
             rows = db.execute(
-                "SELECT d.event_id,d.subscription_id,d.attempt,d.state FROM os_event_deliveries_p3 d "
-                "JOIN os_events_p3 e ON e.event_id=d.event_id "
+                "SELECT d.event_id,d.subscription_id,d.attempt,d.state "
+                "FROM os_event_deliveries_p3 d JOIN os_events_p3 e ON e.event_id=d.event_id "
                 "WHERE e.tenant_id=? AND e.workspace_id=? AND d.state=? "
                 "AND d.lease_token IS NULL AND d.next_attempt_at<=? "
                 "ORDER BY e.occurred_at LIMIT ?",
@@ -279,8 +283,9 @@ class EventSignalRuntime:
             for event_id, subscription_id, attempt, state in rows:
                 token = uuid4().hex
                 db.execute(
-                    "UPDATE os_event_deliveries_p3 SET lease_token=?,lease_owner=?,lease_expires_at=?,"
-                    "attempt=attempt+1 WHERE event_id=? AND subscription_id=? AND lease_token IS NULL",
+                    "UPDATE os_event_deliveries_p3 SET lease_token=?,lease_owner=?,"
+                    "lease_expires_at=?,attempt=attempt+1 "
+                    "WHERE event_id=? AND subscription_id=? AND lease_token IS NULL",
                     (token, worker_id, expires, event_id, subscription_id),
                 )
                 claimed.append(Delivery(
@@ -302,12 +307,15 @@ class EventSignalRuntime:
         now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
         with self._db() as db:
             result = db.execute(
-                "UPDATE os_event_deliveries_p3 SET state=?,lease_token=NULL,lease_owner=NULL,"
-                "lease_expires_at=NULL WHERE event_id=? AND subscription_id=? AND state=? "
-                "AND lease_token=? AND lease_owner=? AND lease_expires_at> ? "
+                "UPDATE os_event_deliveries_p3 SET state=?,lease_token=NULL,"
+                "lease_owner=NULL,lease_expires_at=NULL WHERE event_id=? "
+                "AND subscription_id=? AND state=? AND lease_token=? "
+                "AND lease_owner=? AND lease_expires_at> ? "
                 "AND event_id IN (SELECT event_id FROM os_events_p3 WHERE tenant_id=?)",
-                (DeliveryState.DELIVERED.value, event_id, subscription_id, DeliveryState.PENDING.value,
-                 lease_token, worker_id, now, tenant_id),
+                (
+                    DeliveryState.DELIVERED.value, event_id, subscription_id,
+                    DeliveryState.PENDING.value, lease_token, worker_id, now, tenant_id,
+                ),
             )
             if result.rowcount != 1:
                 raise EventRuntimeError("delivery lease is stale, unauthorized, or not pending")
@@ -331,7 +339,9 @@ class EventSignalRuntime:
                 raise EventRuntimeError("delivery lease is stale, unauthorized, or not pending")
             attempt, max_attempts = int(row[0]), int(row[1])
             state = DeliveryState.DEAD_LETTER if attempt >= max_attempts else DeliveryState.PENDING
-            delay = min(self.retry_base_seconds * (2 ** max(0, attempt - 1)), self.retry_max_seconds)
+            delay = min(
+                self.retry_base_seconds * (2 ** max(0, attempt - 1)), self.retry_max_seconds
+            )
             delay = random.uniform(delay / 2, delay) if delay else 0
             next_attempt = (now + timedelta(seconds=delay)).isoformat().replace("+00:00", "Z")
             db.execute(
@@ -359,8 +369,12 @@ class EventSignalRuntime:
                 result = db.execute(
                     "UPDATE os_event_deliveries_p3 SET state=?,attempt=0,next_attempt_at=?,"
                     "lease_token=NULL,lease_owner=NULL,lease_expires_at=NULL WHERE state=? "
-                    "AND event_id IN (SELECT event_id FROM os_events_p3 WHERE tenant_id=? AND workspace_id=?)",
-                    (DeliveryState.PENDING.value, now, DeliveryState.DEAD_LETTER.value, tenant_id, workspace_id),
+                    "AND event_id IN (SELECT event_id FROM os_events_p3 "
+                    "WHERE tenant_id=? AND workspace_id=?)",
+                    (
+                        DeliveryState.PENDING.value, now, DeliveryState.DEAD_LETTER.value,
+                        tenant_id, workspace_id,
+                    ),
                 )
             else:
                 result = db.execute(
