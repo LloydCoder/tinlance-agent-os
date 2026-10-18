@@ -13,11 +13,12 @@ import random
 import re
 import sqlite3
 from contextlib import contextmanager
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
+from types import MappingProxyType
 from uuid import uuid4
 
 
@@ -49,6 +50,12 @@ class EventEnvelope:
     execution_id: str | None = None
     source: str = "urn:tinlance:agent-os"
 
+    def __post_init__(self) -> None:
+        encoded = json.dumps(
+            dict(self.payload), sort_keys=True, separators=(",", ":"), allow_nan=False
+        )
+        object.__setattr__(self, "payload", _freeze_json(json.loads(encoded)))
+
     def as_payload(self) -> dict[str, object]:
         value: dict[str, object] = {
             "specversion": "1.0",
@@ -61,7 +68,7 @@ class EventEnvelope:
             "workspaceid": self.workspace_id,
             "traceid": self.trace_id,
             "correlationid": self.correlation_id,
-            "data": dict(self.payload),
+            "data": _thaw_json(self.payload),
         }
         if self.execution_id is not None:
             value["executionid"] = self.execution_id
@@ -94,6 +101,22 @@ def _required(value: str, name: str) -> None:
         raise EventRuntimeError(f"{name} must be normalized and non-empty")
 
 
+def _freeze_json(value: object) -> object:
+    if isinstance(value, dict):
+        return MappingProxyType({key: _freeze_json(item) for key, item in value.items()})
+    if isinstance(value, list):
+        return tuple(_freeze_json(item) for item in value)
+    return value
+
+
+def _thaw_json(value: object) -> object:
+    if isinstance(value, Mapping):
+        return {key: _thaw_json(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return [_thaw_json(item) for item in value]
+    return value
+
+
 class EventSignalRuntime:
     """SQLite-backed tenant-isolated event log, delivery inbox and replay audit."""
 
@@ -103,12 +126,14 @@ class EventSignalRuntime:
         *,
         retry_base_seconds: float = 0.25,
         retry_max_seconds: float = 30.0,
+        clock: Callable[[], datetime] | None = None,
     ) -> None:
         if retry_base_seconds < 0 or retry_max_seconds < retry_base_seconds:
             raise ValueError("invalid retry backoff bounds")
         self.path = path
         self.retry_base_seconds = retry_base_seconds
         self.retry_max_seconds = retry_max_seconds
+        self._clock = clock or (lambda: datetime.now(UTC))
         self._ensure_schema()
 
     def publish(
@@ -152,8 +177,9 @@ class EventSignalRuntime:
         event_id = hashlib.sha256(
             f"{tenant_id}:{workspace_id}:{event_type}:{dedupe_key}".encode()
         ).hexdigest()
-        occurred_at = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+        occurred_at = self._now().isoformat().replace("+00:00", "Z")
         with self._db() as db:
+            db.execute("BEGIN IMMEDIATE")
             existing = db.execute(
                 "SELECT event_id,event_type,payload_digest,correlation_id,trace_id,"
                 "execution_id,occurred_at FROM os_events_p3 "
@@ -295,7 +321,7 @@ class EventSignalRuntime:
             _required(value, name)
         if limit < 1 or limit > 1000 or lease_seconds < 1 or lease_seconds > 3600:
             raise EventRuntimeError("invalid claim limit or lease duration")
-        now = datetime.now(UTC)
+        now = self._now()
         now_text = now.isoformat().replace("+00:00", "Z")
         expires = (now + timedelta(seconds=lease_seconds)).isoformat().replace("+00:00", "Z")
         claimed: list[Delivery] = []
@@ -353,7 +379,7 @@ class EventSignalRuntime:
             (lease_token, "lease_token"),
         ):
             _required(value, name)
-        now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+        now = self._now().isoformat().replace("+00:00", "Z")
         with self._db() as db:
             result = db.execute(
                 "UPDATE os_event_deliveries_p3 SET state=?,lease_token=NULL,"
@@ -469,6 +495,12 @@ class EventSignalRuntime:
                 (tenant_id, workspace_id, operator_id, reason, event_type, count, now),
             )
             return count
+
+    def _now(self) -> datetime:
+        value = self._clock()
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise EventRuntimeError("clock must return a timezone-aware datetime")
+        return value.astimezone(UTC)
 
     @staticmethod
     def _delivery(row: tuple[object, ...]) -> Delivery:
