@@ -91,11 +91,14 @@ def test_delivery_lease_is_exclusive_and_ack_is_owner_bound(tmp_path: Path) -> N
     sub = subscribe(rt)
     event = publish(rt)
     lease = claim(rt, sub, worker="worker-a")
-    assert rt.claim_pending(
-        tenant_id="tenant-a",
-        workspace_id="ws-1",
-        worker_id="worker-b",
-    ) == ()
+    assert (
+        rt.claim_pending(
+            tenant_id="tenant-a",
+            workspace_id="ws-1",
+            worker_id="worker-b",
+        )
+        == ()
+    )
     with pytest.raises(EventRuntimeError, match="stale, unauthorized"):
         rt.acknowledge(
             tenant_id="tenant-a",
@@ -118,28 +121,37 @@ def test_rejection_dead_letters_after_max_attempts_and_replay_is_audited(tmp_pat
     sub = subscribe(rt, max_attempts=2)
     event = publish(rt)
     first = claim(rt, sub)
-    assert rt.reject(
-        tenant_id="tenant-a",
-        event_id=event.event_id,
-        subscription_id=sub.subscription_id,
-        worker_id="worker-a",
-        lease_token=first.lease_token,
-    ) is DeliveryState.PENDING
+    assert (
+        rt.reject(
+            tenant_id="tenant-a",
+            event_id=event.event_id,
+            subscription_id=sub.subscription_id,
+            worker_id="worker-a",
+            lease_token=first.lease_token,
+        )
+        is DeliveryState.PENDING
+    )
     second = claim(rt, sub)
-    assert rt.reject(
-        tenant_id="tenant-a",
-        event_id=event.event_id,
-        subscription_id=sub.subscription_id,
-        worker_id="worker-a",
-        lease_token=second.lease_token,
-    ) is DeliveryState.DEAD_LETTER
+    assert (
+        rt.reject(
+            tenant_id="tenant-a",
+            event_id=event.event_id,
+            subscription_id=sub.subscription_id,
+            worker_id="worker-a",
+            lease_token=second.lease_token,
+        )
+        is DeliveryState.DEAD_LETTER
+    )
     assert rt.pending("tenant-a", "ws-1") == ()
-    assert rt.replay(
-        tenant_id="tenant-a",
-        workspace_id="ws-1",
-        operator_id="operator-1",
-        reason="replay after consumer fix",
-    ) == 1
+    assert (
+        rt.replay(
+            tenant_id="tenant-a",
+            workspace_id="ws-1",
+            operator_id="operator-1",
+            reason="replay after consumer fix",
+        )
+        == 1
+    )
     assert rt.pending("tenant-a", "ws-1")[0].attempt == 0
 
 
