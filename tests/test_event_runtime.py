@@ -257,3 +257,35 @@ def test_returned_event_payload_is_recursively_immutable(tmp_path: Path) -> None
     with pytest.raises(TypeError):
         event.payload["nested"]["state"] = "mutated"
     assert event.as_payload()["data"]["nested"]["state"] == "succeeded"
+
+
+def test_event_runtime_persists_span_lineage_and_emits_span_id(tmp_path: Path) -> None:
+    rt = runtime(tmp_path)
+    span_id = "00f067aa0ba902b7"
+    parent_span_id = "1111111111111111"
+    event = publish(
+        rt,
+        trace_id="4bf92f3577b34da6a3ce929d0e0e4736",
+        span_id=span_id,
+        parent_span_id=parent_span_id,
+    )
+    assert event.span_id == span_id
+    assert event.parent_span_id == parent_span_id
+    assert event.as_payload()["spanid"] == span_id
+    duplicate = publish(
+        rt,
+        trace_id="4bf92f3577b34da6a3ce929d0e0e4736",
+        span_id="2222222222222222",
+        parent_span_id=parent_span_id,
+    )
+    assert duplicate.event_id == event.event_id
+    assert duplicate.span_id == span_id
+    assert duplicate.parent_span_id == parent_span_id
+
+
+def test_event_runtime_rejects_invalid_span_ids(tmp_path: Path) -> None:
+    rt = runtime(tmp_path)
+    with pytest.raises(EventRuntimeError, match="span_id"):
+        publish(rt, span_id="0" * 16)
+    with pytest.raises(EventRuntimeError, match="parent_span_id"):
+        publish(rt, parent_span_id="not-a-span")
