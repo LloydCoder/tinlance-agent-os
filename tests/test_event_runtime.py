@@ -307,13 +307,16 @@ def test_replay_is_tenant_scoped_and_cannot_release_another_tenants_dead_letter(
     delivery = rt.claim_pending(
         tenant_id="tenant-a", workspace_id="ws-a", worker_id="worker-a", limit=1
     )[0]
-    assert rt.reject(
-        tenant_id="tenant-a",
-        event_id=event.event_id,
-        subscription_id=sub.subscription_id,
-        worker_id="worker-a",
-        lease_token=delivery.lease_token,
-    ) is DeliveryState.DEAD_LETTER
+    assert (
+        rt.reject(
+            tenant_id="tenant-a",
+            event_id=event.event_id,
+            subscription_id=sub.subscription_id,
+            worker_id="worker-a",
+            lease_token=delivery.lease_token,
+        )
+        is DeliveryState.DEAD_LETTER
+    )
 
     assert rt.replay(
         tenant_id="tenant-b",
