@@ -142,7 +142,9 @@ class EventSignalRuntime:
                 dict(payload), sort_keys=True, separators=(",", ":"), allow_nan=False
             )
         except (TypeError, ValueError) as exc:
-            raise EventRuntimeError("payload must contain only finite JSON-compatible values") from exc
+            raise EventRuntimeError(
+                "payload must contain only finite JSON-compatible values"
+            ) from exc
         if len(encoded.encode("utf-8")) > _MAX_EVENT_BYTES:
             raise EventRuntimeError("event payload exceeds the 1 MiB limit")
         digest = hashlib.sha256(encoded.encode("utf-8")).hexdigest()
@@ -189,7 +191,10 @@ class EventSignalRuntime:
                     "INSERT INTO os_event_deliveries_p3 "
                     "(event_id,subscription_id,attempt,state,max_attempts,next_attempt_at) "
                     "VALUES (?,?,0,?,?,?)",
-                    (event_id, subscription_id, DeliveryState.PENDING.value, max_attempts, occurred_at),
+                    (
+                        event_id, subscription_id, DeliveryState.PENDING.value,
+                        max_attempts, occurred_at,
+                    ),
                 )
         return EventEnvelope(
             event_id, tenant_id, workspace_id, event_type, json.loads(encoded),
