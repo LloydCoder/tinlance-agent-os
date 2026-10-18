@@ -65,7 +65,9 @@ def test_protocol_profiles_reject_unsafe_remote_endpoints(endpoint: str) -> None
 
 def test_protocol_adapters_reject_malformed_metadata() -> None:
     with pytest.raises(ValueError):
-        from_a2a_card({"version": "1.0", "url": "https://agent.example.test/a2a", "skills": "research"})
+        from_a2a_card(
+            {"version": "1.0", "url": "https://agent.example.test/a2a", "skills": "research"}
+        )
     with pytest.raises(ValueError):
         from_mcp_metadata(
             {
