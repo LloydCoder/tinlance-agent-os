@@ -3,6 +3,7 @@
 This module only validates and describes remote protocol metadata. It does not
 create credentials, authorize tools, or confer execution authority.
 """
+
 from __future__ import annotations
 
 import ipaddress
@@ -85,8 +86,7 @@ def _capability_names(value: object) -> tuple[str, ...]:
         return _string_tuple(value, "capabilities")
     if isinstance(value, dict):
         names = tuple(
-            key for key, enabled in value.items()
-            if isinstance(key, str) and enabled is True
+            key for key, enabled in value.items() if isinstance(key, str) and enabled is True
         )
         if any(not isinstance(key, str) for key in value):
             raise ValueError("capability names must be strings")
