@@ -289,3 +289,53 @@ def test_event_runtime_rejects_invalid_span_ids(tmp_path: Path) -> None:
         publish(rt, span_id="0" * 16)
     with pytest.raises(EventRuntimeError, match="parent_span_id"):
         publish(rt, parent_span_id="not-a-span")
+
+
+def test_replay_is_tenant_scoped_and_cannot_release_another_tenants_dead_letter(
+    tmp_path: Path,
+) -> None:
+    rt = runtime(tmp_path)
+    sub = subscribe(rt, tenant_id="tenant-a", workspace_id="ws-a", max_attempts=1)
+    event = rt.publish(
+        tenant_id="tenant-a",
+        workspace_id="ws-a",
+        event_type="task.completed",
+        payload={"task": "private-a"},
+        correlation_id="corr-a",
+        dedupe_key="task:private-a:completed",
+    )
+    delivery = rt.claim_pending(
+        tenant_id="tenant-a", workspace_id="ws-a", worker_id="worker-a", limit=1
+    )[0]
+    assert (
+        rt.reject(
+            tenant_id="tenant-a",
+            event_id=event.event_id,
+            subscription_id=sub.subscription_id,
+            worker_id="worker-a",
+            lease_token=delivery.lease_token,
+        )
+        is DeliveryState.DEAD_LETTER
+    )
+
+    assert (
+        rt.replay(
+            tenant_id="tenant-b",
+            workspace_id="ws-a",
+            operator_id="operator-b",
+            reason="attempted cross-tenant recovery",
+        )
+        == 0
+    )
+    assert rt.pending("tenant-a", "ws-a") == ()
+    assert (
+        rt.replay(
+            tenant_id="tenant-a",
+            workspace_id="ws-a",
+            operator_id="operator-a",
+            reason="authorized tenant recovery",
+        )
+        == 1
+    )
+    assert len(rt.pending("tenant-a", "ws-a")) == 1
+    assert rt.pending("tenant-b", "ws-a") == ()
