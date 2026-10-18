@@ -74,6 +74,7 @@ def test_transport_propagates_authenticated_context(server) -> None:
     assert payload["ready"] is True
     assert Handler.last_headers["authorization"] == "Bearer secret"
     assert Handler.last_headers["x-tinlance-tenant-id"] == "tenant-1"
+    assert "traceparent" not in Handler.last_headers
     assert "api_version" not in Handler.last_body
     assert Handler.last_body["subject_id"] == "subject-1"
 
@@ -102,3 +103,30 @@ def test_non_json_fails_closed(server) -> None:
         HttpPlatformTransport(
             server, StaticAccessTokenProvider("secret"), allow_insecure_localhost=True
         ).send(operation="health", payload={}, context=context(), idempotent=True)
+
+
+def test_transport_propagates_only_valid_w3c_traceparent(server) -> None:
+    trace_id = "4bf92f3577b34da6a3ce929d0e0e4736"
+    traceparent = f"00-{trace_id}-00f067aa0ba902b7-01"
+    transport = HttpPlatformTransport(
+        server, StaticAccessTokenProvider("secret"), allow_insecure_localhost=True
+    )
+    transport.send(
+        operation="health",
+        payload={},
+        context=PlatformRequestContext(
+            "tenant-1", "subject-1", "request-1", trace_id=trace_id, traceparent=traceparent
+        ),
+        idempotent=True,
+    )
+    assert Handler.last_headers["traceparent"] == traceparent
+
+
+def test_transport_rejects_invalid_traceparent(server) -> None:
+    with pytest.raises(ValueError, match="traceparent"):
+        PlatformRequestContext(
+            "tenant-1",
+            "subject-1",
+            "request-1",
+            traceparent=f"00-{'0' * 32}-00f067aa0ba902b7-01",
+        )
