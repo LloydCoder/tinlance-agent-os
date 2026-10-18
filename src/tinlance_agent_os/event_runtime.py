@@ -472,10 +472,13 @@ class EventSignalRuntime:
 
     @staticmethod
     def _delivery(row: tuple[object, ...]) -> Delivery:
+        attempt = row[2]
+        if not isinstance(attempt, int):
+            raise EventRuntimeError("delivery attempt is not an integer")
         return Delivery(
             str(row[0]),
             str(row[1]),
-            int(row[2]),
+            attempt,
             DeliveryState(str(row[3])),
             str(row[4]) if row[4] is not None else None,
             str(row[5]) if row[5] is not None else None,
