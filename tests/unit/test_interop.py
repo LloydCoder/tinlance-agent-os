@@ -79,3 +79,33 @@ def test_protocol_adapters_reject_malformed_metadata() -> None:
                 "tools": [{"name": "search"}, {"name": "search"}],
             }
         )
+
+
+@pytest.mark.parametrize("version", ("2024-11-05", "2026-99-99", ""))
+def test_mcp_metadata_rejects_unsupported_protocol_versions(version: str) -> None:
+    with pytest.raises(ValueError, match="unsupported MCP protocol version"):
+        from_mcp_metadata(
+            {
+                "protocolVersion": version,
+                "serverInfo": {"name": "research", "version": "1.0.0"},
+                "endpoint": "https://mcp.example.test/mcp",
+                "tools": [{"name": "search"}],
+            }
+        )
+
+
+def test_a2a_card_rejects_unsupported_wire_protocol_version() -> None:
+    with pytest.raises(ValueError, match="unsupported A2A protocol version"):
+        from_a2a_card(
+            {
+                "name": "research-agent",
+                "supportedInterfaces": [
+                    {
+                        "url": "https://agent.example.test/a2a",
+                        "protocolBinding": "JSONRPC",
+                        "protocolVersion": "2.0",
+                    }
+                ],
+                "skills": [{"id": "research", "name": "Research"}],
+            }
+        )
