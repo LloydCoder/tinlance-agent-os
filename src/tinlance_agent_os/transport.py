@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import http.client
 import json
+import math
 import re
 import time
 import urllib.error
@@ -121,8 +122,16 @@ class HttpPlatformTransport:
         is_localhost = parsed.hostname in {"127.0.0.1", "::1", "localhost"}
         if parsed.scheme == "http" and not (self.allow_insecure_localhost and is_localhost):
             raise ValueError("HTTPS is required unless insecure localhost is explicitly enabled")
-        if self.timeout_seconds <= 0 or self.max_retries < 0 or self.retry_backoff_seconds < 0:
-            raise ValueError("transport limits must be valid")
+        if (
+            not math.isfinite(self.timeout_seconds)
+            or self.timeout_seconds <= 0
+            or isinstance(self.max_retries, bool)
+            or not isinstance(self.max_retries, int)
+            or self.max_retries < 0
+            or not math.isfinite(self.retry_backoff_seconds)
+            or self.retry_backoff_seconds < 0
+        ):
+            raise ValueError("transport limits must be finite and valid")
 
     def send(
         self,
