@@ -163,7 +163,7 @@ def from_mcp_metadata(meta: dict[str, object]) -> ProtocolProfile:
     endpoint = meta.get("endpoint")
     if endpoint is None and isinstance(transport, dict):
         endpoint = transport.get("endpoint")
-    version = meta.get("protocolVersion", meta.get("protocol_version"))
+    version = meta.get("protocolVersion", meta.get("protocol_version", meta.get("version")))
     if version is None and isinstance(server_info, dict):
         version = server_info.get("version")
     tools = _names_from_records(meta.get("tools"), "MCP tools")
