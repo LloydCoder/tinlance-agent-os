@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 from .errors import (
     PlatformAuthenticationError,
     PlatformAuthorizationError,
+    PlatformConflictError,
     PlatformProtocolError,
     PlatformTransportError,
     PlatformUnavailableError,
@@ -66,6 +67,28 @@ class PlatformRequestContext:
                 )
             ):
                 raise ValueError("traceparent must be a valid W3C Trace Context header")
+
+
+def _conflict_error(status: int, raw: bytes) -> PlatformConflictError:
+    if len(raw) > MAX_RESPONSE_BYTES:
+        raise PlatformProtocolError("Platform conflict response exceeds the maximum permitted size")
+    try:
+        decoded = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise PlatformProtocolError("Platform conflict response is not valid JSON") from exc
+    if not isinstance(decoded, dict):
+        raise PlatformProtocolError("Platform conflict response must be a JSON object")
+    code = decoded.get("error")
+    retryable = decoded.get("retryable", False)
+    if (
+        not isinstance(code, str)
+        or not code
+        or code != code.strip()
+        or len(code) > 128
+        or not isinstance(retryable, bool)
+    ):
+        raise PlatformProtocolError("Platform conflict response has invalid error metadata")
+    return PlatformConflictError(status_code=status, error_code=code, retryable=retryable)
 
 
 class AccessTokenProvider(Protocol):
@@ -207,6 +230,8 @@ class HttpPlatformTransport:
                 raise PlatformAuthorizationError("Platform authorization failed") from exc
             if exc.code == 426:
                 raise PlatformVersionError("Platform requires a different API version") from exc
+            if exc.code == 409:
+                raise _conflict_error(exc.code, exc.read(MAX_RESPONSE_BYTES + 1)) from exc
             raise PlatformTransportError(f"Platform returned HTTP {exc.code}") from exc
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             raise PlatformTransportError("Platform transport failed") from exc
@@ -218,6 +243,8 @@ class HttpPlatformTransport:
             raise PlatformAuthorizationError("Platform authorization failed")
         if status == 426:
             raise PlatformVersionError("Platform requires a different API version")
+        if status == 409:
+            raise _conflict_error(status, raw)
         if status < 200 or status >= 300:
             raise PlatformTransportError(f"Platform returned HTTP {status}")
         if len(raw) > MAX_RESPONSE_BYTES:

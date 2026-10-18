@@ -8,6 +8,7 @@ import pytest
 
 from tinlance_agent_os.errors import (
     PlatformAuthenticationError,
+    PlatformConflictError,
     PlatformProtocolError,
     PlatformVersionError,
 )
@@ -160,3 +161,24 @@ def test_transport_rejects_invalid_traceparent(server) -> None:
             "request-1",
             traceparent=f"00-{'0' * 32}-00f067aa0ba902b7-01",
         )
+
+
+def test_transport_preserves_budget_exceeded_conflict_metadata(server) -> None:
+    Handler.response_status = 409
+    Handler.response_body = {"error": "BUDGET_EXCEEDED", "retryable": False}
+    with pytest.raises(PlatformConflictError) as captured:
+        HttpPlatformTransport(
+            server, StaticAccessTokenProvider("secret"), allow_insecure_localhost=True
+        ).send(operation="tools.execute", payload={}, context=context(), idempotent=False)
+    assert captured.value.status_code == 409
+    assert captured.value.error_code == "BUDGET_EXCEEDED"
+    assert captured.value.retryable is False
+
+
+def test_transport_rejects_malformed_conflict_metadata(server) -> None:
+    Handler.response_status = 409
+    Handler.response_body = {"error": "BUDGET_EXCEEDED", "retryable": "false"}
+    with pytest.raises(PlatformProtocolError, match="invalid error metadata"):
+        HttpPlatformTransport(
+            server, StaticAccessTokenProvider("secret"), allow_insecure_localhost=True
+        ).send(operation="tools.execute", payload={}, context=context(), idempotent=False)
