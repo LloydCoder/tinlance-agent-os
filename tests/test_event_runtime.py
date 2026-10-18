@@ -1,3 +1,5 @@
+import sqlite3
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -153,6 +155,11 @@ def test_rejection_dead_letters_after_max_attempts_and_replay_is_audited(tmp_pat
         == 1
     )
     assert rt.pending("tenant-a", "ws-1")[0].attempt == 0
+    with sqlite3.connect(rt.path) as db:
+        audit = db.execute(
+            "SELECT operator_id,reason,replayed_count FROM os_event_replays_p3"
+        ).fetchone()
+    assert audit == ("operator-1", "replay after consumer fix", 1)
 
 
 def test_invalid_attempt_limit_and_trace_id_are_rejected(tmp_path: Path) -> None:
@@ -175,3 +182,78 @@ def test_replay_requires_audit_reason(tmp_path: Path) -> None:
     rt = runtime(tmp_path)
     with pytest.raises(EventRuntimeError, match="reason"):
         rt.replay(tenant_id="tenant-a", workspace_id="ws-1", operator_id="operator-1", reason=" ")
+
+
+def test_event_is_durable_across_runtime_restart(tmp_path: Path) -> None:
+    path = tmp_path / "restart.db"
+    first_runtime = EventSignalRuntime(path, retry_base_seconds=0, retry_max_seconds=0)
+    subscription = first_runtime.subscribe(
+        tenant_id="tenant-a",
+        workspace_id="ws-1",
+        event_type="task.completed",
+        consumer_id="scheduler",
+    )
+    event = first_runtime.publish(
+        tenant_id="tenant-a",
+        workspace_id="ws-1",
+        event_type="task.completed",
+        payload={"task": "t1"},
+        correlation_id="corr-restart",
+        dedupe_key="restart-task-completed",
+    )
+    reopened = EventSignalRuntime(path, retry_base_seconds=0, retry_max_seconds=0)
+    delivery = claim(reopened, subscription)
+    assert delivery.event_id == event.event_id
+    reopened.acknowledge(
+        tenant_id="tenant-a",
+        event_id=event.event_id,
+        subscription_id=subscription.subscription_id,
+        worker_id="worker-a",
+        lease_token=delivery.lease_token,
+    )
+    assert reopened.pending("tenant-a", "ws-1") == ()
+
+
+def test_expired_lease_cannot_ack_and_can_be_reclaimed(tmp_path: Path) -> None:
+    now = [datetime(2026, 10, 18, 4, 0, tzinfo=UTC)]
+    rt = EventSignalRuntime(
+        tmp_path / "lease-expiry.db",
+        retry_base_seconds=0,
+        retry_max_seconds=0,
+        clock=lambda: now[0],
+    )
+    sub = subscribe(rt)
+    event = publish(rt)
+    first = rt.claim_pending(
+        tenant_id="tenant-a", workspace_id="ws-1", worker_id="worker-a", lease_seconds=1
+    )[0]
+    now[0] += timedelta(seconds=2)
+    with pytest.raises(EventRuntimeError, match="stale, unauthorized"):
+        rt.acknowledge(
+            tenant_id="tenant-a",
+            event_id=event.event_id,
+            subscription_id=sub.subscription_id,
+            worker_id="worker-a",
+            lease_token=first.lease_token,
+        )
+    second = rt.claim_pending(
+        tenant_id="tenant-a", workspace_id="ws-1", worker_id="worker-b", lease_seconds=30
+    )[0]
+    assert second.lease_token != first.lease_token
+    rt.acknowledge(
+        tenant_id="tenant-a",
+        event_id=event.event_id,
+        subscription_id=sub.subscription_id,
+        worker_id="worker-b",
+        lease_token=second.lease_token,
+    )
+
+
+def test_returned_event_payload_is_recursively_immutable(tmp_path: Path) -> None:
+    rt = runtime(tmp_path)
+    original = {"nested": {"state": "succeeded"}}
+    event = publish(rt, payload=original)
+    original["nested"]["state"] = "failed"
+    with pytest.raises(TypeError):
+        event.payload["nested"]["state"] = "mutated"
+    assert event.as_payload()["data"]["nested"]["state"] == "succeeded"
