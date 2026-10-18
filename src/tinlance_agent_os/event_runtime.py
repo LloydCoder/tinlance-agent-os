@@ -12,8 +12,8 @@ import json
 import random
 import re
 import sqlite3
-from contextlib import contextmanager
 from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
@@ -410,7 +410,7 @@ class EventSignalRuntime:
         worker_id: str,
         lease_token: str,
     ) -> DeliveryState:
-        now = datetime.now(UTC)
+        now = self._now()
         now_text = now.isoformat().replace("+00:00", "Z")
         with self._db() as db:
             db.execute("BEGIN IMMEDIATE")
@@ -455,7 +455,7 @@ class EventSignalRuntime:
             _required(value, name)
         if len(reason) > 1000:
             raise EventRuntimeError("replay reason exceeds 1000 characters")
-        now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+        now = self._now().isoformat().replace("+00:00", "Z")
         with self._db() as db:
             db.execute("BEGIN IMMEDIATE")
             if event_type == "*":
