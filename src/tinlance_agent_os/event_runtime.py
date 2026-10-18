@@ -601,6 +601,11 @@ class EventSignalRuntime:
                 );
                 """
             )
+            columns = {row[1] for row in db.execute("PRAGMA table_info(os_events_p3)")}
+            if "span_id" not in columns:
+                db.execute("ALTER TABLE os_events_p3 ADD COLUMN span_id TEXT")
+            if "parent_span_id" not in columns:
+                db.execute("ALTER TABLE os_events_p3 ADD COLUMN parent_span_id TEXT")
 
     @contextmanager
     def _db(self) -> Iterator[sqlite3.Connection]:
