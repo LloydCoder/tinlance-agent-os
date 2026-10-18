@@ -71,6 +71,15 @@ class ProtocolProfile:
         if self.protocol not in {"mcp", "a2a"}:
             raise ValueError("unsupported external protocol")
         _required_string(self.version, "protocol version")
+        if self.protocol == "mcp" and self.version not in {
+            "2026-07-28",
+            "2025-11-25",
+            "2025-06-18",
+            "2025-03-26",
+        }:
+            raise ValueError("unsupported MCP protocol version")
+        if self.protocol == "a2a" and self.version != "1.0":
+            raise ValueError("unsupported A2A protocol version")
         _endpoint(self.endpoint)
         _string_tuple(self.capabilities, "capabilities")
         _string_tuple(self.skills, "skills")
