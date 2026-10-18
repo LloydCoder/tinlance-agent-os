@@ -61,8 +61,11 @@ def test_publish_is_deduplicated_and_uses_canonical_envelope(tmp_path: Path) -> 
     assert rt.pending("tenant-a", "ws-1")[0].subscription_id == sub.subscription_id
     delivery = claim(rt, sub)
     rt.acknowledge(
-        tenant_id="tenant-a", event_id=first.event_id, subscription_id=sub.subscription_id,
-        worker_id="worker-a", lease_token=delivery.lease_token,
+        tenant_id="tenant-a",
+        event_id=first.event_id,
+        subscription_id=sub.subscription_id,
+        worker_id="worker-a",
+        lease_token=delivery.lease_token,
     )
     assert rt.pending("tenant-a", "ws-1") == ()
 
@@ -89,16 +92,24 @@ def test_delivery_lease_is_exclusive_and_ack_is_owner_bound(tmp_path: Path) -> N
     event = publish(rt)
     lease = claim(rt, sub, worker="worker-a")
     assert rt.claim_pending(
-        tenant_id="tenant-a", workspace_id="ws-1", worker_id="worker-b"
+        tenant_id="tenant-a",
+        workspace_id="ws-1",
+        worker_id="worker-b",
     ) == ()
     with pytest.raises(EventRuntimeError, match="stale, unauthorized"):
         rt.acknowledge(
-            tenant_id="tenant-a", event_id=event.event_id, subscription_id=sub.subscription_id,
-            worker_id="worker-b", lease_token=lease.lease_token,
+            tenant_id="tenant-a",
+            event_id=event.event_id,
+            subscription_id=sub.subscription_id,
+            worker_id="worker-b",
+            lease_token=lease.lease_token,
         )
     rt.acknowledge(
-        tenant_id="tenant-a", event_id=event.event_id, subscription_id=sub.subscription_id,
-        worker_id="worker-a", lease_token=lease.lease_token,
+        tenant_id="tenant-a",
+        event_id=event.event_id,
+        subscription_id=sub.subscription_id,
+        worker_id="worker-a",
+        lease_token=lease.lease_token,
     )
 
 
@@ -108,18 +119,26 @@ def test_rejection_dead_letters_after_max_attempts_and_replay_is_audited(tmp_pat
     event = publish(rt)
     first = claim(rt, sub)
     assert rt.reject(
-        tenant_id="tenant-a", event_id=event.event_id, subscription_id=sub.subscription_id,
-        worker_id="worker-a", lease_token=first.lease_token,
+        tenant_id="tenant-a",
+        event_id=event.event_id,
+        subscription_id=sub.subscription_id,
+        worker_id="worker-a",
+        lease_token=first.lease_token,
     ) is DeliveryState.PENDING
     second = claim(rt, sub)
     assert rt.reject(
-        tenant_id="tenant-a", event_id=event.event_id, subscription_id=sub.subscription_id,
-        worker_id="worker-a", lease_token=second.lease_token,
+        tenant_id="tenant-a",
+        event_id=event.event_id,
+        subscription_id=sub.subscription_id,
+        worker_id="worker-a",
+        lease_token=second.lease_token,
     ) is DeliveryState.DEAD_LETTER
     assert rt.pending("tenant-a", "ws-1") == ()
     assert rt.replay(
-        tenant_id="tenant-a", workspace_id="ws-1", operator_id="operator-1",
-        reason="replay after consumer fix"
+        tenant_id="tenant-a",
+        workspace_id="ws-1",
+        operator_id="operator-1",
+        reason="replay after consumer fix",
     ) == 1
     assert rt.pending("tenant-a", "ws-1")[0].attempt == 0
 
