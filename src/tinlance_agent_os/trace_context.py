@@ -178,9 +178,15 @@ class TraceLineageContext:
 
     def child(self, *, span_id: str, operation: str, started_at: str) -> TraceLineageContext:
         return TraceLineageContext(
-            trace_id=self.trace_id, span_id=span_id, parent_span_id=self.span_id,
-            correlation_id=self.correlation_id, request_id=self.request_id,
-            tenant_id=self.tenant_id, workspace_id=self.workspace_id,
-            execution_id=self.execution_id, operation=operation, started_at=started_at,
+            trace_id=self.trace_id,
+            span_id=span_id,
+            parent_span_id=self.span_id,
+            correlation_id=self.correlation_id,
+            request_id=self.request_id,
+            tenant_id=self.tenant_id,
+            workspace_id=self.workspace_id,
+            execution_id=self.execution_id,
+            operation=operation,
+            started_at=started_at,
             data_classification=self.data_classification,
         )
