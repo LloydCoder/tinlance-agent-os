@@ -5,6 +5,7 @@ create credentials, authorize tools, or confer execution authority.
 """
 from __future__ import annotations
 
+import ipaddress
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlparse
@@ -46,6 +47,12 @@ def _endpoint(value: object) -> str:
     hostname = parsed.hostname.rstrip(".").lower()
     if hostname == "localhost" or hostname.endswith(".localhost"):
         raise ValueError("remote protocol endpoint must not target localhost")
+    try:
+        address = ipaddress.ip_address(hostname)
+    except ValueError:
+        address = None
+    if address is not None and not address.is_global:
+        raise ValueError("remote protocol endpoint must not target a non-public IP address")
     return endpoint
 
 
