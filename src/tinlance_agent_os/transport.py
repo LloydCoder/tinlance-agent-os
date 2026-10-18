@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import http.client
 import json
+import re
 import time
 import urllib.error
 import urllib.request
@@ -24,6 +25,8 @@ from .errors import (
 API_VERSION = "1.1"
 MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 RETRYABLE_STATUS_CODES = frozenset({429, 502, 503, 504})
+_TRACE_ID = re.compile(r"^[0-9a-f]{32}$")
+_TRACEPARENT = re.compile(r"^00-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +37,7 @@ class PlatformRequestContext:
     subject_id: str
     request_id: str
     trace_id: str | None = None
+    traceparent: str | None = None
 
     def __post_init__(self) -> None:
         values = (
@@ -48,6 +52,19 @@ class PlatformRequestContext:
             not self.trace_id or self.trace_id != self.trace_id.strip()
         ):
             raise ValueError("trace_id must be normalized when provided")
+        if self.traceparent is not None:
+            match = _TRACEPARENT.fullmatch(self.traceparent)
+            if (
+                match is None
+                or set(match.group(1)) == {"0"}
+                or set(match.group(2)) == {"0"}
+                or (
+                    self.trace_id is not None
+                    and _TRACE_ID.fullmatch(self.trace_id)
+                    and match.group(1) != self.trace_id
+                )
+            ):
+                raise ValueError("traceparent must be a valid W3C Trace Context header")
 
 
 class AccessTokenProvider(Protocol):
@@ -139,8 +156,8 @@ class HttpPlatformTransport:
             "X-Request-ID": context.request_id,
             "Idempotency-Key": context.request_id,
         }
-        if context.trace_id:
-            headers["traceparent"] = context.trace_id
+        if context.traceparent:
+            headers["traceparent"] = context.traceparent
         attempts = 1 + (self.max_retries if idempotent else 0)
         last_error: PlatformTransportError | None = None
         for attempt in range(attempts):
