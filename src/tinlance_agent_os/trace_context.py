@@ -3,6 +3,7 @@
 The OS may propagate observability context, but trace metadata is never an
 authorization boundary and cannot grant Platform execution authority.
 """
+
 from __future__ import annotations
 
 import re
@@ -154,8 +155,14 @@ class TraceLineageContext:
             "data_classification": self.data_classification,
         }
         for key in (
-            "parent_span_id", "workspace_id", "execution_id", "event_id",
-            "decision_id", "approval_id", "tool_call_id", "policy_decision_id",
+            "parent_span_id",
+            "workspace_id",
+            "execution_id",
+            "event_id",
+            "decision_id",
+            "approval_id",
+            "tool_call_id",
+            "policy_decision_id",
         ):
             current = getattr(self, key)
             if current is not None:
