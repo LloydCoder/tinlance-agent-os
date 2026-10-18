@@ -119,8 +119,6 @@ def test_a2a_card_rejects_unsupported_wire_protocol_version() -> None:
                     }
                 ],
                 "skills": [{"id": "research", "name": "Research"}],
-                "securitySchemes": {
-                    "bearer": {"httpAuthSecurityScheme": {"scheme": "Bearer"}}
-                },
+                "securitySchemes": {"bearer": {"httpAuthSecurityScheme": {"scheme": "Bearer"}}},
             }
         )
