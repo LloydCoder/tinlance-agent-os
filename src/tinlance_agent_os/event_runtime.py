@@ -168,17 +168,33 @@ class EventSignalRuntime:
                 ):
                     raise EventRuntimeError("dedupe key reused for a conflicting event")
                 return EventEnvelope(
-                    str(existing[0]), tenant_id, workspace_id, event_type,
-                    json.loads(encoded), correlation_id, str(existing[6]), dedupe_key,
-                    str(existing[4]), execution_id
+                    str(existing[0]),
+                    tenant_id,
+                    workspace_id,
+                    event_type,
+                    json.loads(encoded),
+                    correlation_id,
+                    str(existing[6]),
+                    dedupe_key,
+                    str(existing[4]),
+                    execution_id,
                 )
             db.execute(
                 "INSERT INTO os_events_p3 "
                 "(event_id,tenant_id,workspace_id,event_type,payload,correlation_id,occurred_at,"
                 "dedupe_key,trace_id,execution_id,payload_digest) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                 (
-                    event_id, tenant_id, workspace_id, event_type, encoded, correlation_id,
-                    occurred_at, dedupe_key, trace_id, execution_id, digest
+                    event_id,
+                    tenant_id,
+                    workspace_id,
+                    event_type,
+                    encoded,
+                    correlation_id,
+                    occurred_at,
+                    dedupe_key,
+                    trace_id,
+                    execution_id,
+                    digest,
                 ),
             )
             subscriptions = db.execute(
@@ -192,13 +208,24 @@ class EventSignalRuntime:
                     "(event_id,subscription_id,attempt,state,max_attempts,next_attempt_at) "
                     "VALUES (?,?,0,?,?,?)",
                     (
-                        event_id, subscription_id, DeliveryState.PENDING.value,
-                        max_attempts, occurred_at,
+                        event_id,
+                        subscription_id,
+                        DeliveryState.PENDING.value,
+                        max_attempts,
+                        occurred_at,
                     ),
                 )
         return EventEnvelope(
-            event_id, tenant_id, workspace_id, event_type, json.loads(encoded),
-            correlation_id, occurred_at, dedupe_key, trace_id, execution_id
+            event_id,
+            tenant_id,
+            workspace_id,
+            event_type,
+            json.loads(encoded),
+            correlation_id,
+            occurred_at,
+            dedupe_key,
+            trace_id,
+            execution_id,
         )
 
     def subscribe(
@@ -260,7 +287,9 @@ class EventSignalRuntime:
         lease_seconds: int = 30,
     ) -> tuple[Delivery, ...]:
         for value, name in (
-            (tenant_id, "tenant_id"), (workspace_id, "workspace_id"), (worker_id, "worker_id")
+            (tenant_id, "tenant_id"),
+            (workspace_id, "workspace_id"),
+            (worker_id, "worker_id"),
         ):
             _required(value, name)
         if limit < 1 or limit > 1000 or lease_seconds < 1 or lease_seconds > 3600:
@@ -293,19 +322,33 @@ class EventSignalRuntime:
                     "WHERE event_id=? AND subscription_id=? AND lease_token IS NULL",
                     (token, worker_id, expires, event_id, subscription_id),
                 )
-                claimed.append(Delivery(
-                    str(event_id), str(subscription_id), int(attempt) + 1, DeliveryState(state),
-                    token, worker_id, expires
-                ))
+                claimed.append(
+                    Delivery(
+                        str(event_id),
+                        str(subscription_id),
+                        int(attempt) + 1,
+                        DeliveryState(state),
+                        token,
+                        worker_id,
+                        expires,
+                    )
+                )
         return tuple(claimed)
 
     def acknowledge(
-        self, *, tenant_id: str, event_id: str, subscription_id: str,
-        worker_id: str, lease_token: str
+        self,
+        *,
+        tenant_id: str,
+        event_id: str,
+        subscription_id: str,
+        worker_id: str,
+        lease_token: str,
     ) -> None:
         for value, name in (
-            (tenant_id, "tenant_id"), (event_id, "event_id"),
-            (subscription_id, "subscription_id"), (worker_id, "worker_id"),
+            (tenant_id, "tenant_id"),
+            (event_id, "event_id"),
+            (subscription_id, "subscription_id"),
+            (worker_id, "worker_id"),
             (lease_token, "lease_token"),
         ):
             _required(value, name)
@@ -318,16 +361,27 @@ class EventSignalRuntime:
                 "AND lease_owner=? AND lease_expires_at> ? "
                 "AND event_id IN (SELECT event_id FROM os_events_p3 WHERE tenant_id=?)",
                 (
-                    DeliveryState.DELIVERED.value, event_id, subscription_id,
-                    DeliveryState.PENDING.value, lease_token, worker_id, now, tenant_id,
+                    DeliveryState.DELIVERED.value,
+                    event_id,
+                    subscription_id,
+                    DeliveryState.PENDING.value,
+                    lease_token,
+                    worker_id,
+                    now,
+                    tenant_id,
                 ),
             )
             if result.rowcount != 1:
                 raise EventRuntimeError("delivery lease is stale, unauthorized, or not pending")
 
     def reject(
-        self, *, tenant_id: str, event_id: str, subscription_id: str,
-        worker_id: str, lease_token: str
+        self,
+        *,
+        tenant_id: str,
+        event_id: str,
+        subscription_id: str,
+        worker_id: str,
+        lease_token: str,
     ) -> DeliveryState:
         now = datetime.now(UTC)
         now_text = now.isoformat().replace("+00:00", "Z")
@@ -361,8 +415,10 @@ class EventSignalRuntime:
         reason: str, event_type: str = "*"
     ) -> int:
         for value, name in (
-            (tenant_id, "tenant_id"), (workspace_id, "workspace_id"),
-            (operator_id, "operator_id"), (reason, "reason"),
+            (tenant_id, "tenant_id"),
+            (workspace_id, "workspace_id"),
+            (operator_id, "operator_id"),
+            (reason, "reason"),
         ):
             _required(value, name)
         if len(reason) > 1000:
@@ -377,8 +433,11 @@ class EventSignalRuntime:
                     "AND event_id IN (SELECT event_id FROM os_events_p3 "
                     "WHERE tenant_id=? AND workspace_id=?)",
                     (
-                        DeliveryState.PENDING.value, now, DeliveryState.DEAD_LETTER.value,
-                        tenant_id, workspace_id,
+                        DeliveryState.PENDING.value,
+                        now,
+                        DeliveryState.DEAD_LETTER.value,
+                        tenant_id,
+                        workspace_id,
                     ),
                 )
             else:
@@ -387,8 +446,14 @@ class EventSignalRuntime:
                     "lease_token=NULL,lease_owner=NULL,lease_expires_at=NULL WHERE state=? "
                     "AND event_id IN (SELECT event_id FROM os_events_p3 WHERE tenant_id=? "
                     "AND workspace_id=? AND event_type=?)",
-                    (DeliveryState.PENDING.value, now, DeliveryState.DEAD_LETTER.value,
-                     tenant_id, workspace_id, event_type),
+                    (
+                        DeliveryState.PENDING.value,
+                        now,
+                        DeliveryState.DEAD_LETTER.value,
+                        tenant_id,
+                        workspace_id,
+                        event_type,
+                    ),
                 )
             count = int(result.rowcount)
             db.execute(
@@ -402,7 +467,10 @@ class EventSignalRuntime:
     @staticmethod
     def _delivery(row: tuple[object, ...]) -> Delivery:
         return Delivery(
-            str(row[0]), str(row[1]), int(row[2]), DeliveryState(str(row[3])),
+            str(row[0]),
+            str(row[1]),
+            int(row[2]),
+            DeliveryState(str(row[3])),
             str(row[4]) if row[4] is not None else None,
             str(row[5]) if row[5] is not None else None,
             str(row[6]) if row[6] is not None else None,
