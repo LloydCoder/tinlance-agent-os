@@ -135,6 +135,8 @@ def from_a2a_card(card: dict[str, object]) -> ProtocolProfile:
         scheme_names = tuple(sorted(schemes))
     else:
         scheme_names = _string_tuple(schemes, "A2A security schemes")
+    if not scheme_names:
+        raise ValueError("A2A Agent Card must declare at least one security scheme")
     provider = card.get("provider", "")
     if isinstance(provider, dict):
         provider = provider.get("organization", provider.get("name", ""))
