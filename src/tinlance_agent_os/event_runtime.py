@@ -23,6 +23,7 @@ from uuid import uuid4
 
 
 _TRACE_ID = re.compile(r"^[0-9a-f]{32}$")
+_SPAN_ID = re.compile(r"^[0-9a-f]{16}$")
 _MAX_EVENT_BYTES = 1_048_576
 
 
@@ -49,6 +50,8 @@ class EventEnvelope:
     trace_id: str
     execution_id: str | None = None
     source: str = "urn:tinlance:agent-os"
+    span_id: str | None = None
+    parent_span_id: str | None = None
 
     def __post_init__(self) -> None:
         encoded = json.dumps(
@@ -72,6 +75,8 @@ class EventEnvelope:
         }
         if self.execution_id is not None:
             value["executionid"] = self.execution_id
+        if self.span_id is not None:
+            value["spanid"] = self.span_id
         return value
 
 
@@ -147,6 +152,8 @@ class EventSignalRuntime:
         dedupe_key: str,
         trace_id: str | None = None,
         execution_id: str | None = None,
+        span_id: str | None = None,
+        parent_span_id: str | None = None,
     ) -> EventEnvelope:
         for value, name in (
             (tenant_id, "tenant_id"),
@@ -161,6 +168,13 @@ class EventSignalRuntime:
             raise EventRuntimeError("trace_id must be a valid non-zero W3C trace identifier")
         if execution_id is not None:
             _required(execution_id, "execution_id")
+        span_id = span_id or uuid4().hex
+        if not _SPAN_ID.fullmatch(span_id) or set(span_id) == {"0"}:
+            raise EventRuntimeError("span_id must be a valid non-zero W3C span identifier")
+        if parent_span_id is not None and (
+            not _SPAN_ID.fullmatch(parent_span_id) or set(parent_span_id) == {"0"}
+        ):
+            raise EventRuntimeError("parent_span_id must be a valid non-zero W3C span identifier")
         if not isinstance(payload, Mapping):
             raise EventRuntimeError("event payload must be a JSON object")
         try:
@@ -182,7 +196,7 @@ class EventSignalRuntime:
             db.execute("BEGIN IMMEDIATE")
             existing = db.execute(
                 "SELECT event_id,event_type,payload_digest,correlation_id,trace_id,"
-                "execution_id,occurred_at FROM os_events_p3 "
+                "execution_id,occurred_at,span_id,parent_span_id FROM os_events_p3 "
                 "WHERE tenant_id=? AND workspace_id=? AND dedupe_key=?",
                 (tenant_id, workspace_id, dedupe_key),
             ).fetchone()
@@ -205,11 +219,14 @@ class EventSignalRuntime:
                     dedupe_key,
                     str(existing[4]),
                     execution_id,
+                    span_id=str(existing[7]) if existing[7] is not None else None,
+                    parent_span_id=str(existing[8]) if existing[8] is not None else None,
                 )
             db.execute(
                 "INSERT INTO os_events_p3 "
                 "(event_id,tenant_id,workspace_id,event_type,payload,correlation_id,occurred_at,"
-                "dedupe_key,trace_id,execution_id,payload_digest) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                "dedupe_key,trace_id,execution_id,span_id,parent_span_id,payload_digest) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (
                     event_id,
                     tenant_id,
@@ -221,6 +238,8 @@ class EventSignalRuntime:
                     dedupe_key,
                     trace_id,
                     execution_id,
+                    span_id,
+                    parent_span_id,
                     digest,
                 ),
             )
@@ -253,6 +272,8 @@ class EventSignalRuntime:
             dedupe_key,
             trace_id,
             execution_id,
+            span_id=span_id,
+            parent_span_id=parent_span_id,
         )
 
     def subscribe(
@@ -532,6 +553,8 @@ class EventSignalRuntime:
                     dedupe_key TEXT NOT NULL,
                     trace_id TEXT NOT NULL,
                     execution_id TEXT,
+                    span_id TEXT,
+                    parent_span_id TEXT,
                     payload_digest TEXT NOT NULL,
                     UNIQUE(tenant_id, workspace_id, dedupe_key)
                 );
