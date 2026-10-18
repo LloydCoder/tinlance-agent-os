@@ -446,8 +446,14 @@ class EventSignalRuntime:
                     lease_owner TEXT,
                     lease_expires_at TEXT,
                     PRIMARY KEY(event_id, subscription_id),
-                    CHECK((lease_token IS NULL AND lease_owner IS NULL AND lease_expires_at IS NULL)
-                       OR (lease_token IS NOT NULL AND lease_owner IS NOT NULL AND lease_expires_at IS NOT NULL))
+                    CHECK(
+                        (lease_token IS NULL AND lease_owner IS NULL AND lease_expires_at IS NULL)
+                        OR (
+                            lease_token IS NOT NULL
+                            AND lease_owner IS NOT NULL
+                            AND lease_expires_at IS NOT NULL
+                        )
+                    )
                 );
                 CREATE INDEX IF NOT EXISTS idx_os_p3_delivery_pending
                     ON os_event_deliveries_p3(state,next_attempt_at,lease_expires_at);
