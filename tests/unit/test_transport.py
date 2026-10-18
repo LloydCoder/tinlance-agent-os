@@ -66,6 +66,36 @@ def test_https_is_required_by_default() -> None:
         HttpPlatformTransport("http://example.com", StaticAccessTokenProvider("token"))
 
 
+@pytest.mark.parametrize("timeout_seconds", [0, -1, float("nan"), float("inf"), -float("inf")])
+def test_transport_rejects_non_finite_or_non_positive_timeouts(timeout_seconds: float) -> None:
+    with pytest.raises(ValueError, match="transport limits must be finite and valid"):
+        HttpPlatformTransport(
+            "https://platform.example",
+            StaticAccessTokenProvider("token"),
+            timeout_seconds=timeout_seconds,
+        )
+
+
+@pytest.mark.parametrize("retry_backoff_seconds", [-1, float("nan"), float("inf"), -float("inf")])
+def test_transport_rejects_invalid_retry_backoff(retry_backoff_seconds: float) -> None:
+    with pytest.raises(ValueError, match="transport limits must be finite and valid"):
+        HttpPlatformTransport(
+            "https://platform.example",
+            StaticAccessTokenProvider("token"),
+            retry_backoff_seconds=retry_backoff_seconds,
+        )
+
+
+@pytest.mark.parametrize("max_retries", [-1, True, 1.5])
+def test_transport_rejects_invalid_retry_count(max_retries: int) -> None:
+    with pytest.raises(ValueError, match="transport limits must be finite and valid"):
+        HttpPlatformTransport(
+            "https://platform.example",
+            StaticAccessTokenProvider("token"),
+            max_retries=max_retries,
+        )
+
+
 def test_transport_propagates_authenticated_context(server) -> None:
     transport = HttpPlatformTransport(
         server, StaticAccessTokenProvider("secret"), allow_insecure_localhost=True
