@@ -4,6 +4,7 @@ This module owns OS lifecycle notifications only. Event payloads are untrusted;
 the Agent Platform remains the sole authorization and execution authority.
 Delivery is at-least-once. Consumers must be idempotent.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -411,8 +412,13 @@ class EventSignalRuntime:
             return state
 
     def replay(
-        self, *, tenant_id: str, workspace_id: str, operator_id: str,
-        reason: str, event_type: str = "*"
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        operator_id: str,
+        reason: str,
+        event_type: str = "*",
     ) -> int:
         for value, name in (
             (tenant_id, "tenant_id"),
