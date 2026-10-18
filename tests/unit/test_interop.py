@@ -50,6 +50,8 @@ def test_protocol_adapters_remain_descriptive_and_accept_canonical_shapes() -> N
         "https://agent.example.test/a2a?token=unsafe",
         "https://agent.example.test/a2a#fragment",
         "https://localhost/a2a",
+        "https://127.0.0.1/a2a",
+        "https://10.0.0.8/a2a",
     ),
 )
 def test_protocol_profiles_reject_unsafe_remote_endpoints(endpoint: str) -> None:
