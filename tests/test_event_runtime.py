@@ -318,18 +318,24 @@ def test_replay_is_tenant_scoped_and_cannot_release_another_tenants_dead_letter(
         is DeliveryState.DEAD_LETTER
     )
 
-    assert rt.replay(
-        tenant_id="tenant-b",
-        workspace_id="ws-a",
-        operator_id="operator-b",
-        reason="attempted cross-tenant recovery",
-    ) == 0
+    assert (
+        rt.replay(
+            tenant_id="tenant-b",
+            workspace_id="ws-a",
+            operator_id="operator-b",
+            reason="attempted cross-tenant recovery",
+        )
+        == 0
+    )
     assert rt.pending("tenant-a", "ws-a") == ()
-    assert rt.replay(
-        tenant_id="tenant-a",
-        workspace_id="ws-a",
-        operator_id="operator-a",
-        reason="authorized tenant recovery",
-    ) == 1
+    assert (
+        rt.replay(
+            tenant_id="tenant-a",
+            workspace_id="ws-a",
+            operator_id="operator-a",
+            reason="authorized tenant recovery",
+        )
+        == 1
+    )
     assert len(rt.pending("tenant-a", "ws-a")) == 1
     assert rt.pending("tenant-b", "ws-a") == ()
