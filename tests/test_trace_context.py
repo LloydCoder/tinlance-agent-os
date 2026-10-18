@@ -31,6 +31,7 @@ def test_os_child_span_preserves_tenant_and_execution_lineage():
     assert payload["tenant_id"] == "tenant-a"
     assert payload["workspace_id"] == "workspace-a"
     assert payload["execution_id"] == "run-1"
+    assert child.as_headers()["traceparent"] == "00-4bf92f3577b34da6a3ce929d0e0e4736-1111111111111111-00"
 
 
 def test_os_trace_lineage_records_digest_not_raw_evidence():
