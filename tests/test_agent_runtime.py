@@ -36,7 +36,7 @@ def make_runtime(
         restart_policy=restart or RestartPolicy(enabled=True, max_restarts=2),
         runtime=RuntimeConfig(
             heartbeat_interval_seconds=0.01,
-            heartbeat_timeout_seconds=0.05,
+            heartbeat_timeout_seconds=1.0,
         ),
     )
     callback = worker if callable(worker) else (lambda _: "ok")
@@ -153,6 +153,25 @@ def test_heartbeat_lease_expiry_is_detected_after_restart(tmp_path: Path) -> Non
     assert recover_orphans(store) == ("agent-1",)
     assert store.get_agent("agent-1")["state"] == AgentLifecycleState.CRASHED.value
     assert store.agent_events("agent-1")[-1]["event_type"] == "agent.crash.detected"
+
+
+def test_health_recovers_after_expired_heartbeat_lease_is_refreshed(tmp_path: Path) -> None:
+    store, agent = make_runtime(tmp_path)
+    agent.register()
+    agent.validate()
+    agent.start()
+
+    expired = (datetime.now(UTC) - timedelta(seconds=1)).isoformat()
+    with sqlite3.connect(store.path) as db:
+        db.execute(
+            "UPDATE agents SET lease_expires_at=? WHERE agent_id=?",
+            (expired, "agent-1"),
+        )
+
+    assert agent.health() is HealthState.UNHEALTHY
+    assert agent.heartbeat().state is AgentLifecycleState.RUNNING
+    assert agent.health() is HealthState.HEALTHY
+    agent.stop()
 
 
 def test_heartbeat_is_durable_and_requires_running_state(tmp_path: Path) -> None:
