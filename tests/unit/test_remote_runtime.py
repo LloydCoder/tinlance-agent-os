@@ -273,3 +273,17 @@ def test_network_policy_allows_allowlisted_hostname_with_public_resolution(monke
     policy = NetworkPolicy(allowed_hosts=frozenset({"agent.example"}))
 
     policy.validate("https://agent.example/mcp")
+
+
+def test_network_policy_rejects_non_global_literal_ip():
+    policy = NetworkPolicy(allowed_hosts=frozenset({"10.20.30.40"}))
+
+    with pytest.raises(PermissionError, match="non-public"):
+        policy.validate("https://10.20.30.40/mcp")
+
+
+def test_network_policy_rejects_embedded_url_credentials():
+    policy = NetworkPolicy(allowed_hosts=frozenset({"8.8.8.8"}))
+
+    with pytest.raises(PermissionError, match="embedded credentials"):
+        policy.validate("https://agent:secret@8.8.8.8/mcp")
