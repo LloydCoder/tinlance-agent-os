@@ -10,6 +10,7 @@ import contextlib
 import ipaddress
 import os
 import signal
+import socket
 import subprocess
 import sqlite3
 from collections.abc import Callable, Mapping, Sequence
@@ -72,17 +73,41 @@ class NetworkPolicy:
             raise PermissionError("remote endpoint must use an approved secure scheme")
         if not parsed.hostname:
             raise PermissionError("remote endpoint hostname is required")
-        hostname = parsed.hostname.lower()
-        if self.allowed_hosts and hostname not in self.allowed_hosts:
+        if parsed.username is not None or parsed.password is not None:
+            raise PermissionError("remote endpoint URL must not contain embedded credentials")
+        if not self.allowed_hosts:
+            raise PermissionError("remote endpoint host allowlist is empty")
+        hostname = parsed.hostname.rstrip(".").lower()
+        allowed_hosts = {host.rstrip(".").lower() for host in self.allowed_hosts}
+        if hostname not in allowed_hosts:
             raise PermissionError("remote endpoint is not allowed by network policy")
         try:
-            resolved = ipaddress.ip_address(hostname)
-        except ValueError:
+            port = parsed.port
+        except ValueError as exc:
+            raise PermissionError("remote endpoint port is invalid") from exc
+        if self.allow_private_addresses:
             return
-        if not self.allow_private_addresses and (
-            resolved.is_private or resolved.is_loopback or resolved.is_link_local
-        ):
-            raise PermissionError("private remote address is denied")
+        addresses: set[ipaddress.IPv4Address | ipaddress.IPv6Address] = set()
+        try:
+            addresses.add(ipaddress.ip_address(hostname))
+        except ValueError:
+            try:
+                records = socket.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)
+                for record in records:
+                    sockaddr = record[4]
+                    if not isinstance(sockaddr, tuple) or not sockaddr:
+                        continue
+                    address_text = sockaddr[0]
+                    if isinstance(address_text, str):
+                        addresses.add(ipaddress.ip_address(address_text.split("%", maxsplit=1)[0]))
+            except (OSError, ValueError) as exc:
+                raise PermissionError(
+                    "remote endpoint hostname could not be safely resolved"
+                ) from exc
+        if not addresses:
+            raise PermissionError("remote endpoint hostname returned no addresses")
+        if any(not resolved.is_global for resolved in addresses):
+            raise PermissionError("non-public remote address is denied")
 
 
 @dataclass(frozen=True, slots=True)
