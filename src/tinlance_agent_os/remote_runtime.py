@@ -92,10 +92,16 @@ class NetworkPolicy:
         except ValueError:
             try:
                 records = socket.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)
-                addresses = {
-                    ipaddress.ip_address(record[4][0].split("%", maxsplit=1)[0])
-                    for record in records
-                }
+                addresses: set[ipaddress.IPv4Address | ipaddress.IPv6Address] = set()
+                for record in records:
+                    sockaddr = record[4]
+                    if not isinstance(sockaddr, tuple) or not sockaddr:
+                        continue
+                    address_text = sockaddr[0]
+                    if isinstance(address_text, str):
+                        addresses.add(
+                            ipaddress.ip_address(address_text.split("%", maxsplit=1)[0])
+                        )
             except (OSError, ValueError) as exc:
                 raise PermissionError(
                     "remote endpoint hostname could not be safely resolved"
