@@ -97,7 +97,9 @@ class NetworkPolicy:
                     for record in records
                 }
             except (OSError, ValueError) as exc:
-                raise PermissionError("remote endpoint hostname could not be safely resolved") from exc
+                raise PermissionError(
+                    "remote endpoint hostname could not be safely resolved"
+                ) from exc
         if not addresses:
             raise PermissionError("remote endpoint hostname returned no addresses")
         if any(not resolved.is_global for resolved in addresses):
