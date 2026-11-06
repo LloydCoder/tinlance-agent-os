@@ -99,9 +99,7 @@ class NetworkPolicy:
                         continue
                     address_text = sockaddr[0]
                     if isinstance(address_text, str):
-                        addresses.add(
-                            ipaddress.ip_address(address_text.split("%", maxsplit=1)[0])
-                        )
+                        addresses.add(ipaddress.ip_address(address_text.split("%", maxsplit=1)[0]))
             except (OSError, ValueError) as exc:
                 raise PermissionError(
                     "remote endpoint hostname could not be safely resolved"
