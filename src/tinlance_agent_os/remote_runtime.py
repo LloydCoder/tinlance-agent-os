@@ -87,12 +87,12 @@ class NetworkPolicy:
             raise PermissionError("remote endpoint port is invalid") from exc
         if self.allow_private_addresses:
             return
+        addresses: set[ipaddress.IPv4Address | ipaddress.IPv6Address] = set()
         try:
-            addresses = {ipaddress.ip_address(hostname)}
+            addresses.add(ipaddress.ip_address(hostname))
         except ValueError:
             try:
                 records = socket.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)
-                addresses: set[ipaddress.IPv4Address | ipaddress.IPv6Address] = set()
                 for record in records:
                     sockaddr = record[4]
                     if not isinstance(sockaddr, tuple) or not sockaddr:
