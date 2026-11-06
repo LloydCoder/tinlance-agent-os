@@ -287,3 +287,13 @@ def test_network_policy_rejects_embedded_url_credentials():
 
     with pytest.raises(PermissionError, match="embedded credentials"):
         policy.validate("https://agent:secret@8.8.8.8/mcp")
+
+
+def test_network_policy_validates_port_even_when_private_addresses_are_enabled():
+    policy = NetworkPolicy(
+        allowed_hosts=frozenset({"8.8.8.8"}),
+        allow_private_addresses=True,
+    )
+
+    with pytest.raises(PermissionError, match="port is invalid"):
+        policy.validate("https://8.8.8.8:99999/mcp")
