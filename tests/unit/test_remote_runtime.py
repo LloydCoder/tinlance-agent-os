@@ -57,7 +57,7 @@ def seed(tmp_path: Path):
         platform,
         Authenticator(),
         MCPRemoteTransport(MCPClient()),
-        NetworkPolicy(allowed_hosts=frozenset({"agent.example"})),
+        NetworkPolicy(allowed_hosts=frozenset({"8.8.8.8"})),
     )
     return store, platform, runtime
 
@@ -76,7 +76,7 @@ def test_enrollment_authentication_heartbeat_and_reconnect(tmp_path: Path):
         workspace_id="ws-1",
         tenant_id="tenant-1",
         identity=identity(),
-        address="https://agent.example/mcp",
+        address="https://8.8.8.8/mcp",
     )
     assert endpoint.state is EndpointState.ENROLLED
     healthy = runtime.heartbeat(identity())
@@ -93,14 +93,14 @@ def test_forged_endpoint_and_cross_workspace_enrollment_fail(tmp_path: Path):
             workspace_id="ws-1",
             tenant_id="tenant-1",
             identity=EndpointIdentity("endpoint-1", "forged", "bad"),
-            address="https://agent.example/mcp",
+            address="https://8.8.8.8/mcp",
         )
     with pytest.raises(PermissionError):
         runtime.enroll(
             workspace_id="ws-1",
             tenant_id="tenant-1",
             identity=identity("ws-2", "fp-2"),
-            address="https://agent.example/mcp",
+            address="https://8.8.8.8/mcp",
         )
 
 
@@ -121,7 +121,7 @@ def test_assign_uses_platform_authority_and_stable_idempotency(tmp_path: Path):
         workspace_id="ws-1",
         tenant_id="tenant-1",
         identity=identity(),
-        address="https://agent.example/mcp",
+        address="https://8.8.8.8/mcp",
     )
     runtime.heartbeat(identity())
     task = runtime.assign(
@@ -142,7 +142,7 @@ def test_cancel_propagates_to_remote_and_platform(tmp_path: Path):
         workspace_id="ws-1",
         tenant_id="tenant-1",
         identity=identity(),
-        address="https://agent.example/mcp",
+        address="https://8.8.8.8/mcp",
     )
     runtime.heartbeat(identity())
     runtime.assign(
@@ -164,7 +164,7 @@ def test_drain_blocks_new_assignment(tmp_path: Path):
         workspace_id="ws-1",
         tenant_id="tenant-1",
         identity=identity(),
-        address="https://agent.example/mcp",
+        address="https://8.8.8.8/mcp",
     )
     runtime.heartbeat(identity())
     runtime.drain("endpoint-1")
@@ -227,3 +227,49 @@ def test_mcp_transport_uses_mcp_method_surface(tmp_path: Path):
         idempotency_key="remote:task-1",
     )
     assert client.requests[0][0:2] == ("tools/call", "tinlance.agent.assign")
+
+
+def test_network_policy_fails_closed_without_explicit_host_allowlist():
+    with pytest.raises(PermissionError, match="allowlist"):
+        NetworkPolicy().validate("https://8.8.8.8/mcp")
+
+
+def test_network_policy_rejects_hostname_resolving_to_private_address(monkeypatch):
+    import socket
+
+    def resolve_private(host, port, *, type):
+        return [
+            (
+                socket.AF_INET,
+                socket.SOCK_STREAM,
+                socket.IPPROTO_TCP,
+                "",
+                ("10.20.30.40", port or 443),
+            )
+        ]
+
+    monkeypatch.setattr(socket, "getaddrinfo", resolve_private)
+    policy = NetworkPolicy(allowed_hosts=frozenset({"agent.example"}))
+
+    with pytest.raises(PermissionError, match="non-public"):
+        policy.validate("https://agent.example/mcp")
+
+
+def test_network_policy_allows_allowlisted_hostname_with_public_resolution(monkeypatch):
+    import socket
+
+    def resolve_public(host, port, *, type):
+        return [
+            (
+                socket.AF_INET,
+                socket.SOCK_STREAM,
+                socket.IPPROTO_TCP,
+                "",
+                ("93.184.216.34", port or 443),
+            )
+        ]
+
+    monkeypatch.setattr(socket, "getaddrinfo", resolve_public)
+    policy = NetworkPolicy(allowed_hosts=frozenset({"agent.example"}))
+
+    policy.validate("https://agent.example/mcp")
