@@ -81,12 +81,12 @@ class NetworkPolicy:
         allowed_hosts = {host.rstrip(".").lower() for host in self.allowed_hosts}
         if hostname not in allowed_hosts:
             raise PermissionError("remote endpoint is not allowed by network policy")
-        if self.allow_private_addresses:
-            return
         try:
             port = parsed.port
         except ValueError as exc:
             raise PermissionError("remote endpoint port is invalid") from exc
+        if self.allow_private_addresses:
+            return
         try:
             addresses = {ipaddress.ip_address(hostname)}
         except ValueError:
