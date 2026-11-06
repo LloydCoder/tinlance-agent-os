@@ -409,13 +409,13 @@ def test_remote_replay_requires_current_endpoint_identity(tmp_path):
         Platform(),
         EndpointVerifier(),
         Transport(),
-        NetworkPolicy(allowed_hosts=frozenset({"agent.example"})),
+        NetworkPolicy(allowed_hosts=frozenset({"8.8.8.8"})),
     )
     endpoint = runtime.enroll(
         workspace_id="ws",
         tenant_id="tenant-1",
         identity=EndpointIdentity("ep", "good", "attestation"),
-        address="https://agent.example",
+        address="https://8.8.8.8",
     )
     with pytest.raises(PermissionError):
         runtime.heartbeat(EndpointIdentity("ep", "bad", "attestation"))
