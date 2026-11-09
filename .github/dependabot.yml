@@ -4,6 +4,13 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    groups:
+      codeql-actions:
+        patterns:
+          - github/codeql-action/*
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: pip
     directory: /
     schedule:
